@@ -23,6 +23,10 @@ export interface PercursoDoDocente {
   turma: Turma | undefined;
   modalidade: Modalidade | undefined;
   macrotemaNome: string | undefined;
+  /** id do macrotema da inscrição — usado para casar a oferta, nunca o nome */
+  macrotemaId: string | undefined;
+  /** id da modalidade da turma — usado para casar a oferta, nunca o nome */
+  modalidadeId: string | undefined;
 }
 
 export function percursoDoDocente(
@@ -31,13 +35,20 @@ export function percursoDoDocente(
 ): PercursoDoDocente {
   const inscricao = estado.inscricoes.find((i) => i.pessoaId === pessoa.id);
   const turma = estado.turmas.find((t) => t.id === inscricao?.turmaId);
+  const macrotemaId = turma?.macrotemaId ?? inscricao?.macrotemaId;
   const modalidade = estado.cicloConfig.modalidades.find(
     (m) => m.id === turma?.modalidadeId,
   );
   const macrotemaNome = estado.cicloConfig.macrotemas.find(
-    (m) => m.id === (turma?.macrotemaId ?? inscricao?.macrotemaId),
+    (m) => m.id === macrotemaId,
   )?.nome;
-  return { turma, modalidade, macrotemaNome };
+  return {
+    turma,
+    modalidade,
+    macrotemaNome,
+    macrotemaId,
+    modalidadeId: turma?.modalidadeId,
+  };
 }
 
 export function aulasConcluidas(
