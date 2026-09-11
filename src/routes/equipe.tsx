@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { FunilEtapas } from "@/components/acompanhamento/FunilEtapas";
 import { PainelPresencas } from "@/components/conteudo/PainelPresencas";
 import { PainelEquipe } from "@/components/coordenador/PainelEquipe";
+import { useStore } from "@/data/store";
+import { linhasDaEquipe } from "@/lib/equipe";
 
 export const Route = createFileRoute("/equipe")({
   head: () => ({
@@ -26,6 +29,9 @@ export const Route = createFileRoute("/equipe")({
 });
 
 function EquipePage() {
+  const { estado, pessoaAtiva } = useStore();
+  const linhas = linhasDaEquipe(estado, { coordenadorId: pessoaAtiva.id });
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <div>
@@ -35,6 +41,7 @@ function EquipePage() {
           devolutiva sem sair daqui.
         </p>
       </div>
+      <FunilEtapas estado={estado} linhas={linhas} />
       <PainelEquipe escopo="coordenador" />
       <PainelPresencas apenasMinhaEquipe />
     </div>
