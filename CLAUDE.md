@@ -105,6 +105,8 @@ Referência completa: Notion → Jornada → Reuniões, Decisões e Aprovações
   ```
   Isso é infraestrutura de build, não faz parte do desenho do protótipo — não é uma mudança a "preservar" na lógica do app, é um arquivo que sempre falta e sempre precisa voltar.
 
+**Armadilha conhecida — deploy fora do Lovable/Cloudflare:** `vite.config.ts` fixa `nitro.defaultPreset: "cloudflare-module"` — é o alvo do build quando nenhuma plataforma é detectada (ex.: `npm run build` local, ou `.output/` com `wrangler.json`). O Nitro detecta a plataforma sozinho por variável de ambiente: quando `NETLIFY=true` está presente (a Netlify seta isso automaticamente durante o build), o preset vira `netlify` e a saída vai para `.netlify/functions-internal/` + `dist/`, sem precisar mexer em código. `netlify.toml` (raiz do repo) só torna isso explícito — comando de build, diretório de publicação (`dist`) e a versão do Node (`nitro`/`vite` exigem `^20.19` ou `>=22.12`; sem fixar, a Netlify pode usar uma imagem mais antiga). Testado localmente com `NETLIFY=true npm run build`: preset `netlify`, build limpo.
+
 **Armadilha conhecida — `eslint.config.js`:** o export do Lovable também **não traz** este arquivo, apesar de `tsconfig.json` já listá-lo em `include` e o `package.json` já ter o script `"lint": "eslint ."`. Sem ele, `npm run lint` falha com "ESLint couldn't find an eslint.config.(js|mjs|cjs) file" — não por causa de código, por ausência do arquivo. O projeto já tem todas as devDependencies certas para reconstruí-lo (`@eslint/js`, `typescript-eslint`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`, `eslint-plugin-prettier`/`eslint-config-prettier`, `globals`) — é só faltar o arquivo de configuração flat (ESLint 9) que os une.
 
 ---
