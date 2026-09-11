@@ -8,9 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Modalidade, Turma } from "@/data/types";
-import { novoId, usoDaTurma } from "@/lib/ciclo";
-
-const ROTULO_DIA_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+import { ROTULO_DIA_SEMANA, novoId, usoDaTurma } from "@/lib/ciclo";
 
 export function AbaTurmas() {
   const { estado, atualizar } = useCicloConfig();

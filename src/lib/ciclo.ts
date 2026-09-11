@@ -36,6 +36,17 @@ export const ROTULO_TELA_ETAPA: Record<TelaEtapa, string> = {
   painel: "Nenhuma — abre um painel de detalhes",
 };
 
+/** Índice 0 = domingo ... 6 = sábado, igual a Turma.diasSemana. */
+export const ROTULO_DIA_SEMANA = [
+  "Dom",
+  "Seg",
+  "Ter",
+  "Qua",
+  "Qui",
+  "Sex",
+  "Sáb",
+];
+
 export const TELAS_ETAPA: TelaEtapa[] = [
   "autoavaliacao",
   "percurso",

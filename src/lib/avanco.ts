@@ -67,7 +67,7 @@ export function itensDaOferta(
 }
 
 /** Encontros distintos em que o docente foi contado presente (ou liberado). */
-function encontrosRegistrados(
+export function encontrosRegistrados(
   estado: EstadoApp,
   pessoaId: string,
   turmaId: string,

@@ -1,8 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowRight, CalendarCheck, Send } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarCheck,
+  CheckCircle2,
+  ExternalLink,
+  Send,
+  Video,
+} from "lucide-react";
 import { toast } from "sonner";
 
+import { AvisoConteudoIndisponivel } from "@/components/conteudo/AvisoConteudoIndisponivel";
 import { LeituraTextoBase } from "@/components/conteudo/LeituraTextoBase";
 import { PlayerAulas } from "@/components/conteudo/PlayerAulas";
 import { EstadoBadge } from "@/components/EstadoBadge";
@@ -12,11 +20,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import type { AulaConteudo, TextoBase } from "@/data/conteudos";
 import { materialDaEtapa } from "@/data/conteudos";
 import { useStore } from "@/data/store";
 import type { EstadoApp } from "@/data/types";
-import { etapaConcluidaPorCriterios, ofertaDoDocente } from "@/lib/avanco";
-import { formatarData, novoId, prazoDaEtapa } from "@/lib/ciclo";
+import {
+  criteriosDoDocente,
+  encontrosRegistrados,
+  etapaConcluidaPorCriterios,
+  itensDaOferta,
+  ofertaDoDocente,
+} from "@/lib/avanco";
+import {
+  ROTULO_DIA_SEMANA,
+  formatarData,
+  novoId,
+  prazoDaEtapa,
+} from "@/lib/ciclo";
 import {
   aulasConcluidas,
   entregaDaEtapa,
@@ -26,6 +46,7 @@ import {
   percursoDoDocente,
   presencaDaEtapa,
 } from "@/lib/conteudo";
+import { trilhaDoDocente } from "@/lib/jornada";
 
 export const Route = createFileRoute("/aulas")({
   head: () => ({
@@ -64,6 +85,7 @@ function AulasPage() {
     [macrotemaNome],
   );
   const [tarefa, setTarefa] = useState("");
+  const [abaConteudoBruta, setAbaConteudoBruta] = useState("");
 
   if (!etapa) {
     return (
@@ -88,6 +110,88 @@ function AulasPage() {
   const percentualAulas = Math.round(
     (feitas.size / Math.max(1, material.aulas.length)) * 100,
   );
+
+  // Oferta configurada pela operadora para a combinação (etapa, macrotema,
+  // modalidade) do docente. Sem oferta, a tela segue no comportamento
+  // anterior (material mock acima, três abas fixas) — "acrescida, não
+  // redesenhada".
+  const oferta = ofertaDoDocente(estado, pessoaAtiva, etapa);
+  const itensOferta = oferta ? itensDaOferta(estado, oferta.id) : [];
+  const usaOferta = itensOferta.length > 0;
+  const criterios = usaOferta
+    ? criteriosDoDocente(estado, pessoaAtiva, etapa)
+    : [];
+
+  const trilha = trilhaDoDocente(estado, pessoaAtiva);
+  const itemTrilha = trilha.find((i) => i.etapa.id === etapa.id);
+  const etapaConcluidaPeloCriterio =
+    usaOferta && etapaConcluidaPorCriterios(estado, pessoaAtiva, etapa);
+
+  // Adapta ItemConteudo + Midia para os tipos que PlayerAulas/LeituraTextoBase
+  // já exigem, para os dois componentes ficarem intactos ("acrescida, não
+  // redesenhada"). Item sem mídia resolvível é filtrado — se TODOS falharem,
+  // a aba mostra o aviso de conteúdo indisponível (D11) em vez de um player
+  // vazio ou quebrado.
+  const aulasResolvidas: AulaConteudo[] = itensOferta
+    .filter((i) => i.tipo === "video")
+    .map((item): AulaConteudo | null => {
+      const midia = estado.midias.find((m) => m.id === item.midiaId);
+      if (!midia) return null;
+      return {
+        id: item.id,
+        titulo: item.titulo,
+        resumo: item.descricao,
+        duracaoMin: midia.duracaoMin ?? 0,
+        arquivoDrive: midia.referenciaDrive ?? midia.nome,
+      };
+    })
+    .filter((a): a is AulaConteudo => a !== null);
+
+  const itemTexto = itensOferta.find((i) => i.tipo === "texto");
+  const midiaTexto = itemTexto
+    ? estado.midias.find((m) => m.id === itemTexto.midiaId)
+    : undefined;
+  const textoResolvido: TextoBase | null =
+    itemTexto && midiaTexto?.corpo
+      ? {
+          titulo: itemTexto.titulo,
+          autoria: "Equipe operadora",
+          tempoLeituraMin: Math.max(
+            1,
+            Math.round(midiaTexto.corpo.split(/\s+/).length / 200),
+          ),
+          paragrafos: midiaTexto.corpo
+            .split(/\n{2,}/)
+            .map((p) => p.trim())
+            .filter((p) => p.length > 0),
+        }
+      : null;
+
+  const itemWebconferencia = itensOferta.find(
+    (i) => i.tipo === "webconferencia",
+  );
+  const midiaWebconferencia = itemWebconferencia
+    ? estado.midias.find((m) => m.id === itemWebconferencia.midiaId)
+    : undefined;
+
+  const itemTarefa = itensOferta.find((i) => i.tipo === "tarefa");
+
+  const abasDisponiveis = [
+    itensOferta.some((i) => i.tipo === "video")
+      ? { valor: "video", rotulo: "Aulas em vídeo" }
+      : null,
+    itemTexto ? { valor: "texto", rotulo: "Texto-base" } : null,
+    itemWebconferencia
+      ? { valor: "webconferencia", rotulo: "Encontro ao vivo" }
+      : null,
+    itemTarefa ? { valor: "tarefa", rotulo: "Tarefa da etapa" } : null,
+  ].filter((a): a is { valor: string; rotulo: string } => a !== null);
+
+  const abaConteudoAtiva = abasDisponiveis.some(
+    (a) => a.valor === abaConteudoBruta,
+  )
+    ? abaConteudoBruta
+    : (abasDisponiveis[0]?.valor ?? "");
 
   function marcarProgressoEtapa(estadoAtual: EstadoApp): EstadoApp {
     const existe = estadoAtual.progressoEtapas.some(
@@ -255,6 +359,54 @@ function AulasPage() {
     );
   }
 
+  function cardTarefa(instrucoes: React.ReactNode, valorAba: string) {
+    return (
+      <TabsContent value={valorAba} className="mt-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Registro da etapa{" "}
+              {modalidade?.presencaAutomatica && "· presença automática"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">{instrucoes}</p>
+
+            {entrega ? (
+              <div className="rounded-xl border border-border bg-muted/40 p-3 text-sm">
+                <p className="font-medium">
+                  Tarefa enviada em {formatarDataHora(entrega.enviadaEmISO)}
+                </p>
+                <p className="mt-1 text-muted-foreground">{entrega.texto}</p>
+              </div>
+            ) : (
+              <>
+                <Textarea
+                  value={tarefa}
+                  onChange={(e) => setTarefa(e.target.value)}
+                  rows={6}
+                  placeholder="O que você vai experimentar na sua sala nas próximas duas semanas?"
+                  aria-label="Registro da tarefa da etapa"
+                />
+                <Button onClick={enviarTarefa} className="gap-1.5">
+                  <Send className="size-4" aria-hidden />
+                  Enviar tarefa da etapa
+                </Button>
+              </>
+            )}
+
+            <Button asChild variant="ghost" className="gap-1.5 px-0">
+              <Link to="/jornada">
+                Voltar para Minha Jornada
+                <ArrowRight className="size-4" aria-hidden />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -287,7 +439,7 @@ function AulasPage() {
         </div>
       )}
 
-      {presenca && (
+      {presenca && modalidade?.presencaAutomatica && (
         <p className="mt-4 flex items-start gap-2 rounded-xl border border-sucesso/30 bg-sucesso-suave p-3 text-sm text-sucesso">
           <CalendarCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
           <span>
@@ -297,92 +449,202 @@ function AulasPage() {
         </p>
       )}
 
+      {usaOferta && (
+        <p
+          className={`mt-4 rounded-xl border p-3 text-sm ${
+            etapaConcluidaPeloCriterio
+              ? "border-sucesso/30 bg-sucesso-suave text-sucesso"
+              : "border-border bg-muted/40 text-foreground"
+          }`}
+        >
+          {etapaConcluidaPeloCriterio
+            ? "Você já atendeu a todos os critérios desta etapa — ela está concluída."
+            : (itemTrilha?.oQueFalta ?? "Continue para concluir esta etapa.")}
+        </p>
+      )}
+
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <ResumoProgresso
-          titulo="Aulas assistidas"
-          detalhe={`${feitas.size} de ${material.aulas.length}`}
-          valor={percentualAulas}
-        />
-        <ResumoProgresso
-          titulo="Leitura do texto-base"
-          detalhe={`${percentualLeitura}% lido`}
-          valor={percentualLeitura}
-        />
+        {usaOferta ? (
+          criterios.map((c) => (
+            <ResumoProgresso
+              key={c.tipo}
+              titulo={c.rotulo}
+              detalhe={c.detalhe}
+              valor={c.percentual}
+              atendido={c.atendido}
+            />
+          ))
+        ) : (
+          <>
+            <ResumoProgresso
+              titulo="Aulas assistidas"
+              detalhe={`${feitas.size} de ${material.aulas.length}`}
+              valor={percentualAulas}
+            />
+            <ResumoProgresso
+              titulo="Leitura do texto-base"
+              detalhe={`${percentualLeitura}% lido`}
+              valor={percentualLeitura}
+            />
+          </>
+        )}
       </div>
 
-      <Tabs defaultValue="aulas" className="mt-6">
-        <TabsList>
-          <TabsTrigger value="aulas">Aulas em vídeo</TabsTrigger>
-          <TabsTrigger value="texto">Texto-base</TabsTrigger>
-          <TabsTrigger value="tarefa">Tarefa da etapa</TabsTrigger>
-        </TabsList>
+      {usaOferta ? (
+        <Tabs
+          value={abaConteudoAtiva}
+          onValueChange={setAbaConteudoBruta}
+          className="mt-6"
+        >
+          <TabsList>
+            {abasDisponiveis.map((a) => (
+              <TabsTrigger key={a.valor} value={a.valor}>
+                {a.rotulo}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        <TabsContent value="aulas" className="mt-4">
-          <PlayerAulas
-            aulas={material.aulas}
-            concluidas={feitas}
-            aoConcluir={concluirAula}
-          />
-        </TabsContent>
+          {abasDisponiveis.some((a) => a.valor === "video") && (
+            <TabsContent value="video" className="mt-4">
+              {aulasResolvidas.length > 0 ? (
+                <PlayerAulas
+                  aulas={aulasResolvidas}
+                  concluidas={feitas}
+                  aoConcluir={concluirAula}
+                />
+              ) : (
+                <AvisoConteudoIndisponivel titulo="O vídeo não carregou">
+                  Tente novamente mais tarde ou avise a equipe operadora — o
+                  material desta etapa pode ter sido movido no Drive
+                  institucional.
+                </AvisoConteudoIndisponivel>
+              )}
+            </TabsContent>
+          )}
 
-        <TabsContent value="texto" className="mt-4">
-          <LeituraTextoBase
-            texto={material.texto}
-            percentual={percentualLeitura}
-            aoAvancar={avancarLeitura}
-          />
-        </TabsContent>
+          {itemTexto && (
+            <TabsContent value="texto" className="mt-4">
+              {textoResolvido ? (
+                <LeituraTextoBase
+                  texto={textoResolvido}
+                  percentual={percentualLeitura}
+                  aoAvancar={avancarLeitura}
+                />
+              ) : (
+                <AvisoConteudoIndisponivel titulo="Este texto-base ainda não pode ser lido aqui">
+                  Foi anexado como arquivo, e este protótipo não abre arquivos
+                  embutidos na tela. Peça à equipe operadora a referência no
+                  Drive institucional.
+                </AvisoConteudoIndisponivel>
+              )}
+            </TabsContent>
+          )}
 
-        <TabsContent value="tarefa" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">
-                Registro da etapa{" "}
-                {modalidade?.presencaAutomatica && "· presença automática"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Escreva a prática que você escolheu experimentar a partir das
-                aulas e do texto-base.
+          {itemWebconferencia && (
+            <TabsContent value="webconferencia" className="mt-4">
+              {midiaWebconferencia?.url ? (
+                <Card>
+                  <CardHeader className="flex-row items-center gap-3 space-y-0">
+                    <Video className="size-5 text-primary" aria-hidden />
+                    <CardTitle className="text-base">
+                      {itemWebconferencia.titulo}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      {turma?.nome ?? "Turma"}
+                      {turma?.professorNome
+                        ? ` · Professor: ${turma.professorNome}`
+                        : ""}
+                      {turma?.horario ? ` · ${turma.horario}` : ""}
+                    </p>
+                    {turma && turma.diasSemana.length > 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        {turma.diasSemana
+                          .map((d) => ROTULO_DIA_SEMANA[d])
+                          .join(", ")}
+                      </p>
+                    ) : null}
+                    <Button asChild className="gap-1.5">
+                      <a
+                        href={midiaWebconferencia.url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Entrar no encontro
+                        <ExternalLink className="size-4" aria-hidden />
+                      </a>
+                    </Button>
+                    {turma ? (
+                      <p className="text-sm text-muted-foreground">
+                        {encontrosRegistrados(
+                          estado,
+                          pessoaAtiva.id,
+                          turma.id,
+                          etapa.id,
+                        )}{" "}
+                        de {turma.encontrosPrevistos} encontro(s) registrados
+                      </p>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              ) : (
+                <AvisoConteudoIndisponivel titulo="O link do encontro não está disponível">
+                  Avise a equipe operadora para cadastrar o link de acesso desta
+                  turma na aba Turmas.
+                </AvisoConteudoIndisponivel>
+              )}
+            </TabsContent>
+          )}
+
+          {itemTarefa &&
+            cardTarefa(
+              <>
+                {itemTarefa.enunciado ??
+                  "Escreva a prática que você escolheu experimentar a partir das aulas e do texto-base."}
                 {modalidade?.presencaAutomatica
                   ? " Na modalidade assíncrona, este envio registra a sua presença na hora."
-                  : " Nesta modalidade, a presença é registrada no encontro ao vivo."}
-              </p>
+                  : ""}
+              </>,
+              "tarefa",
+            )}
+        </Tabs>
+      ) : (
+        <Tabs defaultValue="aulas" className="mt-6">
+          <TabsList>
+            <TabsTrigger value="aulas">Aulas em vídeo</TabsTrigger>
+            <TabsTrigger value="texto">Texto-base</TabsTrigger>
+            <TabsTrigger value="tarefa">Tarefa da etapa</TabsTrigger>
+          </TabsList>
 
-              {entrega ? (
-                <div className="rounded-xl border border-border bg-muted/40 p-3 text-sm">
-                  <p className="font-medium">
-                    Tarefa enviada em {formatarDataHora(entrega.enviadaEmISO)}
-                  </p>
-                  <p className="mt-1 text-muted-foreground">{entrega.texto}</p>
-                </div>
-              ) : (
-                <>
-                  <Textarea
-                    value={tarefa}
-                    onChange={(e) => setTarefa(e.target.value)}
-                    rows={6}
-                    placeholder="O que você vai experimentar na sua sala nas próximas duas semanas?"
-                    aria-label="Registro da tarefa da etapa"
-                  />
-                  <Button onClick={enviarTarefa} className="gap-1.5">
-                    <Send className="size-4" aria-hidden />
-                    Enviar tarefa da etapa
-                  </Button>
-                </>
-              )}
+          <TabsContent value="aulas" className="mt-4">
+            <PlayerAulas
+              aulas={material.aulas}
+              concluidas={feitas}
+              aoConcluir={concluirAula}
+            />
+          </TabsContent>
 
-              <Button asChild variant="ghost" className="gap-1.5 px-0">
-                <Link to="/jornada">
-                  Voltar para Minha Jornada
-                  <ArrowRight className="size-4" aria-hidden />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="texto" className="mt-4">
+            <LeituraTextoBase
+              texto={material.texto}
+              percentual={percentualLeitura}
+              aoAvancar={avancarLeitura}
+            />
+          </TabsContent>
+
+          {cardTarefa(
+            <>
+              Escreva a prática que você escolheu experimentar a partir das
+              aulas e do texto-base.
+              {modalidade?.presencaAutomatica
+                ? " Na modalidade assíncrona, este envio registra a sua presença na hora."
+                : " Nesta modalidade, a presença é registrada no encontro ao vivo."}
+            </>,
+            "tarefa",
+          )}
+        </Tabs>
+      )}
     </div>
   );
 }
@@ -391,16 +653,37 @@ function ResumoProgresso({
   titulo,
   detalhe,
   valor,
+  atendido,
 }: {
   titulo: string;
   detalhe: string;
   valor: number;
+  /** critério de avanço já atendido — some/omite o selo se não vier (medidores antigos) */
+  atendido?: boolean | undefined;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="mb-2 flex items-baseline justify-between">
-        <span className="text-sm font-medium">{titulo}</span>
-        <span className="text-sm text-muted-foreground">{detalhe}</span>
+    <div
+      className={`rounded-xl border p-4 ${
+        atendido
+          ? "border-sucesso/30 bg-sucesso-suave"
+          : "border-border bg-card"
+      }`}
+    >
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <span className="flex items-center gap-1.5 text-sm font-medium">
+          {atendido ? (
+            <CheckCircle2
+              className="size-4 shrink-0 text-sucesso"
+              aria-hidden
+            />
+          ) : null}
+          {titulo}
+        </span>
+        <span
+          className={`text-sm ${atendido ? "text-sucesso" : "text-muted-foreground"}`}
+        >
+          {detalhe}
+        </span>
       </div>
       <Progress value={valor} aria-label={titulo} />
     </div>
