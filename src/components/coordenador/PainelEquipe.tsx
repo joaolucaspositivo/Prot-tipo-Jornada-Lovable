@@ -39,7 +39,7 @@ const TODOS = "todos";
 export function PainelEquipe({
   escopo,
 }: {
-  escopo: "coordenador" | "operadora";
+  escopo: "coordenador" | "operadora" | "diretor";
 }) {
   const { estado, pessoaAtiva, atualizar } = useStore();
 
@@ -47,9 +47,13 @@ export function PainelEquipe({
     () =>
       linhasDaEquipe(
         estado,
-        escopo === "coordenador" ? { coordenadorId: pessoaAtiva.id } : {},
+        escopo === "coordenador"
+          ? { coordenadorId: pessoaAtiva.id }
+          : escopo === "diretor"
+            ? { unidade: pessoaAtiva.unidade }
+            : {},
       ),
-    [estado, escopo, pessoaAtiva.id],
+    [estado, escopo, pessoaAtiva.id, pessoaAtiva.unidade],
   );
 
   const [fEtapa, setFEtapa] = useState(TODOS);
@@ -283,6 +287,9 @@ export function PainelEquipe({
                   <span className="block text-xs text-muted-foreground">
                     {l.pessoa.unidade} ·{" "}
                     {l.pessoa.cargo === "corregente" ? "corregente" : "regente"}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {l.macrotemaNome ?? "Sem escolha"} · {l.turmaNome ?? "—"}
                   </span>
                 </TableCell>
                 <TableCell className="text-sm">
