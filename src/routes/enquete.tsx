@@ -88,7 +88,8 @@ function EnquetePage() {
         id: novoId("enq"),
         docenteId,
         respondenteTipoId: publicoId,
-        respondenteNome: nome.trim() || `${publico?.nome ?? "Respondente"} (anônimo)`,
+        respondenteNome:
+          nome.trim() || `${publico?.nome ?? "Respondente"} (anônimo)`,
         escalas,
         textos,
         enviadaEmISO: agora,

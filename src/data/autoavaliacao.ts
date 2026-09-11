@@ -62,7 +62,8 @@ export const DIMENSOES_AUTOAVALIACAO: DimensaoAutoavaliacao[] = [
       },
       {
         id: "avaliacao-2",
-        texto: "Dou devolutivas que ajudam o estudante a saber o próximo passo.",
+        texto:
+          "Dou devolutivas que ajudam o estudante a saber o próximo passo.",
       },
       {
         id: "avaliacao-3",

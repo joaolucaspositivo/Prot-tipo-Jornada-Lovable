@@ -24,10 +24,7 @@ export function FormularioAutoavaliacao({
   const dimensao = DIMENSOES_AUTOAVALIACAO[passo]!;
   const total = DIMENSOES_AUTOAVALIACAO.length;
 
-  const respondidas = useMemo(
-    () => Object.keys(respostas).length,
-    [respostas],
-  );
+  const respondidas = useMemo(() => Object.keys(respostas).length, [respostas]);
   const faltaNoPasso = dimensao.afirmacoes.some(
     (a) => typeof respostas[a.id] !== "number",
   );

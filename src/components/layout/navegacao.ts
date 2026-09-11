@@ -64,7 +64,11 @@ export const NAVEGACAO_POR_PERFIL: Record<PerfilId, ItemNav[]> = {
   ],
   operadora: [
     painel,
-    { para: "/configuracao", rotulo: "Configuração do Ciclo", Icone: Settings2 },
+    {
+      para: "/configuracao",
+      rotulo: "Configuração do Ciclo",
+      Icone: Settings2,
+    },
     { para: "/gestao", rotulo: "Gestão do ciclo", Icone: Gauge },
     { para: "/conteudo", rotulo: "Conteúdo do ciclo", Icone: FolderUp },
     { para: "/enquete", rotulo: "Enquete 360°", Icone: MessagesSquare },

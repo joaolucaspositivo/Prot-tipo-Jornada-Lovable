@@ -93,7 +93,8 @@ export function resumoDaEnquete(
       return {
         pergunta,
         mediaGeral: media(notas),
-        respostas: pergunta.tipo === "escala" ? notas.length : comentarios.length,
+        respostas:
+          pergunta.tipo === "escala" ? notas.length : comentarios.length,
         porPublico: publicos
           .map((publico) => {
             const doPublico = base

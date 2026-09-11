@@ -3,11 +3,7 @@
 // que é editável em runtime pela equipe operadora.
 
 export type TipoEtapa =
-  | "autoavaliacao"
-  | "conteudo"
-  | "entrega"
-  | "encontro"
-  | "avaliacao";
+  "autoavaliacao" | "conteudo" | "entrega" | "encontro" | "avaliacao";
 
 export type Cargo = "regente" | "corregente";
 
@@ -147,7 +143,6 @@ export interface CicloConfig {
   enquete: ConfigEnquete;
 }
 
-
 export interface Pessoa {
   id: string;
   nome: string;
@@ -278,7 +273,6 @@ export interface HistoricoMacrotema {
   devolutivaAutor?: string | undefined;
   conquistas?: string[] | undefined;
 }
-
 
 /** Aula em vídeo marcada como assistida dentro de uma etapa de conteúdo. */
 export interface ProgressoAula {

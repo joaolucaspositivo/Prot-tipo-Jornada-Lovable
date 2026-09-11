@@ -57,7 +57,10 @@ export function ofertaDoDocente(
   );
 }
 
-export function itensDaOferta(estado: EstadoApp, ofertaId: string): ItemConteudo[] {
+export function itensDaOferta(
+  estado: EstadoApp,
+  ofertaId: string,
+): ItemConteudo[] {
   return estado.itensConteudo
     .filter((i) => i.ofertaId === ofertaId)
     .sort((a, b) => a.ordem - b.ordem);
@@ -105,7 +108,9 @@ function statusDoCriterio(
   const rotulo = ROTULO_CRITERIO[criterio.tipo];
   switch (criterio.tipo) {
     case "aulas_assistidas": {
-      const videos = itensDaOferta(estado, ofertaId).filter((i) => i.tipo === "video");
+      const videos = itensDaOferta(estado, ofertaId).filter(
+        (i) => i.tipo === "video",
+      );
       const feitas = aulasConcluidas(estado, pessoa.id, etapa.id);
       const assistidas = videos.filter((v) => feitas.has(v.id)).length;
       const total = Math.max(1, videos.length);
@@ -118,7 +123,8 @@ function statusDoCriterio(
       };
     }
     case "leitura_concluida": {
-      const percentual = leituraDaEtapa(estado, pessoa.id, etapa.id)?.percentual ?? 0;
+      const percentual =
+        leituraDaEtapa(estado, pessoa.id, etapa.id)?.percentual ?? 0;
       return {
         tipo: criterio.tipo,
         rotulo,
@@ -130,7 +136,8 @@ function statusDoCriterio(
     case "presenca": {
       const { modalidade, turma } = percursoDoDocente(estado, pessoa);
       if (modalidade?.presencaAutomatica) {
-        const atendido = presencaDaEtapa(estado, pessoa.id, etapa.id) !== undefined;
+        const atendido =
+          presencaDaEtapa(estado, pessoa.id, etapa.id) !== undefined;
         return {
           tipo: criterio.tipo,
           rotulo,
@@ -147,12 +154,16 @@ function statusDoCriterio(
         ? encontrosRegistrados(estado, pessoa.id, turma.id, etapa.id)
         : 0;
       const percentual =
-        previstos > 0 ? Math.min(100, Math.round((feitos / previstos) * 100)) : 0;
+        previstos > 0
+          ? Math.min(100, Math.round((feitos / previstos) * 100))
+          : 0;
       return {
         tipo: criterio.tipo,
         rotulo,
         detalhe:
-          previstos > 0 ? `${feitos} de ${previstos} encontros` : "Sem encontros previstos",
+          previstos > 0
+            ? `${feitos} de ${previstos} encontros`
+            : "Sem encontros previstos",
         percentual,
         atendido: previstos > 0 && percentual >= minimo,
       };

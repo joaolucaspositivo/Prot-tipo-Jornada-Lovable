@@ -37,7 +37,8 @@ export function EditorTextoRico({
   function listar() {
     const el = ref.current;
     if (!el) return;
-    const inicio = valor.lastIndexOf("\n", Math.max(0, el.selectionStart - 1)) + 1;
+    const inicio =
+      valor.lastIndexOf("\n", Math.max(0, el.selectionStart - 1)) + 1;
     aoMudar(`${valor.slice(0, inicio)}- ${valor.slice(inicio)}`);
     requestAnimationFrame(() => el.focus());
   }

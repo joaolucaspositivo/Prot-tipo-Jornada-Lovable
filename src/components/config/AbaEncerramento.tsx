@@ -211,7 +211,9 @@ export function AbaEncerramento() {
                     }
                   />
                   <Label htmlFor={`tipo-${pg.id}`}>
-                    {pg.tipo === "escala" ? "Escala de 1 a 5" : "Resposta aberta"}
+                    {pg.tipo === "escala"
+                      ? "Escala de 1 a 5"
+                      : "Resposta aberta"}
                   </Label>
                 </div>
               </div>

@@ -76,7 +76,10 @@ export function AgendaObservacoes({ escopo }: Props) {
     [estado, escopo, pessoaAtiva.id],
   );
 
-  const grade = useMemo(() => gradeDoMes(mes, compromissos), [mes, compromissos]);
+  const grade = useMemo(
+    () => gradeDoMes(mes, compromissos),
+    [mes, compromissos],
+  );
   const semana = useMemo(() => daSemana(compromissos), [compromissos]);
   const pendentes = useMemo(
     () => pendentesDoCoordenador(compromissos),
@@ -86,7 +89,11 @@ export function AgendaObservacoes({ escopo }: Props) {
 
   function salvarParecer(
     c: Compromisso,
-    dados: { dataISO: string; criterios: Record<string, number>; comentario: string },
+    dados: {
+      dataISO: string;
+      criterios: Record<string, number>;
+      comentario: string;
+    },
   ) {
     const agora = new Date().toISOString();
     const etapaId = c.etapaObservacao?.id ?? "";
@@ -107,7 +114,9 @@ export function AgendaObservacoes({ escopo }: Props) {
       return {
         ...anterior,
         observacoes: existente
-          ? anterior.observacoes.map((o) => (o.id === existente.id ? registro : o))
+          ? anterior.observacoes.map((o) =>
+              o.id === existente.id ? registro : o,
+            )
           : [...anterior.observacoes, registro],
         progressoEtapas: anterior.progressoEtapas.map((p) =>
           p.pessoaId === c.entrega.pessoaId && p.etapaId === etapaId
@@ -223,8 +232,8 @@ export function AgendaObservacoes({ escopo }: Props) {
           </div>
           <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
-              <span className="size-3 rounded bg-pendente-suave" aria-hidden /> a
-              observar
+              <span className="size-3 rounded bg-pendente-suave" aria-hidden />{" "}
+              a observar
             </span>
             <span className="flex items-center gap-1">
               <span className="size-3 rounded bg-sucesso-suave" aria-hidden />{" "}
@@ -282,7 +291,10 @@ export function AgendaObservacoes({ escopo }: Props) {
         </CardContent>
       </Card>
 
-      <Sheet open={Boolean(aberto)} onOpenChange={(v) => !v && setAbertoId(null)}>
+      <Sheet
+        open={Boolean(aberto)}
+        onOpenChange={(v) => !v && setAbertoId(null)}
+      >
         <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-xl">
           {aberto && (
             <DetalheObservacao
@@ -377,11 +389,14 @@ function DetalheObservacao({
                     (crit) => c.observacao?.criterios?.[crit.id],
                   ).map((crit) => (
                     <li key={crit.id} className="flex justify-between gap-3">
-                      <span className="text-muted-foreground">{crit.rotulo}</span>
+                      <span className="text-muted-foreground">
+                        {crit.rotulo}
+                      </span>
                       <span>
                         {
                           ESCALA_OBSERVACAO.find(
-                            (e) => e.valor === c.observacao?.criterios?.[crit.id],
+                            (e) =>
+                              e.valor === c.observacao?.criterios?.[crit.id],
                           )?.rotulo
                         }
                       </span>
@@ -421,7 +436,9 @@ function DetalheObservacao({
                         type="button"
                         size="sm"
                         variant={
-                          criterios[crit.id] === op.valor ? "default" : "outline"
+                          criterios[crit.id] === op.valor
+                            ? "default"
+                            : "outline"
                         }
                         onClick={() =>
                           setCriterios((a) => ({ ...a, [crit.id]: op.valor }))
@@ -453,7 +470,9 @@ function DetalheObservacao({
               <Button
                 onClick={() => {
                   if (!dataObs) return setErro("Informe a data da observação.");
-                  if (Object.keys(criterios).length < CRITERIOS_OBSERVACAO.length)
+                  if (
+                    Object.keys(criterios).length < CRITERIOS_OBSERVACAO.length
+                  )
                     return setErro("Avalie todos os critérios observáveis.");
                   if (comentario.trim().length < 10)
                     return setErro("Escreva um comentário para o docente.");

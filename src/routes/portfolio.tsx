@@ -215,7 +215,8 @@ function PortfolioPage() {
         </p>
         <h1 className="text-2xl sm:text-3xl">{etapa.nome}</h1>
         <p className="text-muted-foreground">
-          {etapa.descricao} Prazo: {formatarData(prazoDaEtapa(estado.cicloConfig, etapa))}.
+          {etapa.descricao} Prazo:{" "}
+          {formatarData(prazoDaEtapa(estado.cicloConfig, etapa))}.
         </p>
         {enviado && salvo?.enviadoEmISO && (
           <Badge className="mt-1 bg-sucesso text-primary-foreground">
@@ -246,7 +247,10 @@ function PortfolioPage() {
                     value={reflexoes[campo.id] ?? ""}
                     disabled={enviado}
                     onChange={(e) =>
-                      setReflexoes((r) => ({ ...r, [campo.id]: e.target.value }))
+                      setReflexoes((r) => ({
+                        ...r,
+                        [campo.id]: e.target.value,
+                      }))
                     }
                     placeholder="Escreva aqui…"
                   />
@@ -275,7 +279,10 @@ function PortfolioPage() {
                     className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 text-sm"
                   >
                     <span className="flex items-center gap-2">
-                      <FileText className="size-4 text-muted-foreground" aria-hidden />
+                      <FileText
+                        className="size-4 text-muted-foreground"
+                        aria-hidden
+                      />
                       {a.nome}
                     </span>
                     <span className="text-xs text-muted-foreground">

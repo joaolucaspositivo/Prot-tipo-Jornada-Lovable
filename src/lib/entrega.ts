@@ -1,7 +1,13 @@
 // Leituras da etapa de entrega. Nada é fixo: as etapas, prazos e a regra de
 // presença vêm sempre da configuração do ciclo e da inscrição do docente.
 
-import type { Devolutiva, Entrega, EstadoApp, Etapa, Pessoa } from "@/data/types";
+import type {
+  Devolutiva,
+  Entrega,
+  EstadoApp,
+  Etapa,
+  Pessoa,
+} from "@/data/types";
 import { etapasDoSegmento, prazoDaEtapa } from "@/lib/ciclo";
 
 export const DESTINO_EQUIPE_CENTRAL = "equipe-central";
@@ -11,7 +17,9 @@ export function etapasDeEntrega(estado: EstadoApp, pessoa: Pessoa): Etapa[] {
   const config = estado.cicloConfig;
   return etapasDoSegmento(
     config,
-    config.cenarioSegmentacao === "trilha_por_segmento" ? pessoa.segmentoId : null,
+    config.cenarioSegmentacao === "trilha_por_segmento"
+      ? pessoa.segmentoId
+      : null,
   ).filter((e) => e.tipo === "entrega");
 }
 
@@ -59,7 +67,9 @@ export function janelaDaAula(estado: EstadoApp, etapa: Etapa) {
     ? prazoDaEtapa(config, seguintes[0])
     : new Date(prazoDaEtapa(config, etapa).getTime() + 30 * 86400000);
   const hoje = new Date();
-  const inicio = new Date(Math.max(hoje.getTime(), new Date(config.aberturaISO).getTime()));
+  const inicio = new Date(
+    Math.max(hoje.getTime(), new Date(config.aberturaISO).getTime()),
+  );
   return { inicio, fim };
 }
 
@@ -125,7 +135,8 @@ export function entregasRecebidas(
       devolutiva: estado.devolutivas.find((d) => d.entregaId === entrega.id),
     }))
     .filter((item) => {
-      if (filtro.apenasEquipeCentral) return item.entrega.destino === "equipe_central";
+      if (filtro.apenasEquipeCentral)
+        return item.entrega.destino === "equipe_central";
       if (filtro.coordenadorId) {
         return (
           item.entrega.destino === "coordenador" &&
@@ -134,7 +145,9 @@ export function entregasRecebidas(
       }
       return true;
     })
-    .sort((a, b) => b.entrega.enviadaEmISO.localeCompare(a.entrega.enviadaEmISO));
+    .sort((a, b) =>
+      b.entrega.enviadaEmISO.localeCompare(a.entrega.enviadaEmISO),
+    );
 }
 
 export function formatarTamanho(bytes: number | undefined): string {

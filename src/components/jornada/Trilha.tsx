@@ -69,7 +69,9 @@ function EtapaDaTrilha({
       <span
         className={cn(
           "z-10 mt-4 flex size-12 shrink-0 items-center justify-center rounded-full border-2 bg-card",
-          alcancada ? "border-primary text-primary" : "border-border text-muted-foreground",
+          alcancada
+            ? "border-primary text-primary"
+            : "border-border text-muted-foreground",
         )}
       >
         <Icone className="size-5" aria-hidden />

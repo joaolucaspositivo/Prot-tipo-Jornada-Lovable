@@ -9,20 +9,21 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { CenarioSegmentacao, Segmento } from "@/data/types";
 import { etapasDoSegmento, novoId } from "@/lib/ciclo";
 
-const CENARIOS: { valor: CenarioSegmentacao; titulo: string; texto: string }[] = [
-  {
-    valor: "trilha_unica",
-    titulo: "Trilha única para todos",
-    texto:
-      "Todos os segmentos percorrem exatamente as mesmas etapas, na mesma ordem.",
-  },
-  {
-    valor: "trilha_por_segmento",
-    titulo: "Trilhas distintas por segmento",
-    texto:
-      "Cada etapa passa a indicar quais segmentos a enxergam, na aba Etapas da trilha.",
-  },
-];
+const CENARIOS: { valor: CenarioSegmentacao; titulo: string; texto: string }[] =
+  [
+    {
+      valor: "trilha_unica",
+      titulo: "Trilha única para todos",
+      texto:
+        "Todos os segmentos percorrem exatamente as mesmas etapas, na mesma ordem.",
+    },
+    {
+      valor: "trilha_por_segmento",
+      titulo: "Trilhas distintas por segmento",
+      texto:
+        "Cada etapa passa a indicar quais segmentos a enxergam, na aba Etapas da trilha.",
+    },
+  ];
 
 export function AbaSegmentos() {
   const { estado, config, salvarConfig } = useCicloConfig();

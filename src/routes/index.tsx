@@ -14,7 +14,10 @@ export const Route = createFileRoute("/")({
         content:
           "Protótipo navegável da Jornada Pedagógica de Desenvolvimento do Ciclo 2 (2027–2030).",
       },
-      { property: "og:title", content: "Jornada Pedagógica de Desenvolvimento" },
+      {
+        property: "og:title",
+        content: "Jornada Pedagógica de Desenvolvimento",
+      },
       {
         property: "og:description",
         content:
@@ -57,7 +60,10 @@ function Painel() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Resumo titulo="Docentes na base" valor={docentes.length} />
         <Resumo titulo="Turmas do ciclo" valor={estado.turmas.length} />
-        <Resumo titulo="Inscrições confirmadas" valor={estado.inscricoes.length} />
+        <Resumo
+          titulo="Inscrições confirmadas"
+          valor={estado.inscricoes.length}
+        />
         <Resumo titulo="Entregas recebidas" valor={estado.entregas.length} />
       </div>
 

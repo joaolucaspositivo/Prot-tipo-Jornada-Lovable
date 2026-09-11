@@ -15,7 +15,9 @@ interface StoreContexto {
   estado: EstadoApp;
   /** true depois que o estado salvo no navegador foi carregado */
   pronto: boolean;
-  atualizar: (mudanca: Partial<EstadoApp> | ((e: EstadoApp) => EstadoApp)) => void;
+  atualizar: (
+    mudanca: Partial<EstadoApp> | ((e: EstadoApp) => EstadoApp),
+  ) => void;
   trocarPerfil: (perfil: PerfilId) => void;
   resetarDemonstracao: () => void;
   pessoaAtiva: Pessoa;
@@ -101,7 +103,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [estado.pessoas, estado.pessoaAtivaId]);
 
   const valor = useMemo(
-    () => ({ estado, pronto, atualizar, trocarPerfil, resetarDemonstracao, pessoaAtiva }),
+    () => ({
+      estado,
+      pronto,
+      atualizar,
+      trocarPerfil,
+      resetarDemonstracao,
+      pessoaAtiva,
+    }),
     [estado, pronto, atualizar, trocarPerfil, resetarDemonstracao, pessoaAtiva],
   );
 

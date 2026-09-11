@@ -45,7 +45,8 @@ function derivadas(
           id: `der-etapa-${pessoa.id}-${etapa.id}`,
           pessoaId: pessoa.id,
           titulo: `Etapa concluída: ${etapa.nome}`,
-          descricao: "Você avançou na sua jornada. A próxima etapa já está liberada.",
+          descricao:
+            "Você avançou na sua jornada. A próxima etapa já está liberada.",
           criadaEmISO: p.atualizadoEmISO,
           lida: false,
           tipo: "mudanca_etapa",

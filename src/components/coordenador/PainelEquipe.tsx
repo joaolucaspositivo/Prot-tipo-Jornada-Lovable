@@ -126,7 +126,10 @@ export function PainelEquipe({
               <p className="text-sm text-muted-foreground">
                 {emAlerta
                   .slice(0, 4)
-                  .map((l) => `${l.pessoa.nome}${l.diasAtraso > 0 ? ` (${l.diasAtraso}d)` : ""}`)
+                  .map(
+                    (l) =>
+                      `${l.pessoa.nome}${l.diasAtraso > 0 ? ` (${l.diasAtraso}d)` : ""}`,
+                  )
                   .join(" · ")}
                 {emAlerta.length > 4 ? " …" : ""}
               </p>
@@ -202,10 +205,20 @@ export function PainelEquipe({
         <Table>
           <TableHeader>
             <TableRow>
-              <Coluna id="nome" atual={coluna} asc={ascendente} aoClicar={ordenarPor}>
+              <Coluna
+                id="nome"
+                atual={coluna}
+                asc={ascendente}
+                aoClicar={ordenarPor}
+              >
                 Docente
               </Coluna>
-              <Coluna id="etapa" atual={coluna} asc={ascendente} aoClicar={ordenarPor}>
+              <Coluna
+                id="etapa"
+                atual={coluna}
+                asc={ascendente}
+                aoClicar={ordenarPor}
+              >
                 Etapa atual
               </Coluna>
               <Coluna
@@ -224,7 +237,12 @@ export function PainelEquipe({
               >
                 Pendências
               </Coluna>
-              <Coluna id="prazo" atual={coluna} asc={ascendente} aoClicar={ordenarPor}>
+              <Coluna
+                id="prazo"
+                atual={coluna}
+                asc={ascendente}
+                aoClicar={ordenarPor}
+              >
                 Prazo mais próximo
               </Coluna>
               <Coluna
@@ -282,7 +300,9 @@ export function PainelEquipe({
                 </TableCell>
                 <TableCell>
                   <Badge
-                    variant={l.situacao === "atrasado" ? "destructive" : "outline"}
+                    variant={
+                      l.situacao === "atrasado" ? "destructive" : "outline"
+                    }
                   >
                     {ROTULO_SITUACAO[l.situacao]}
                   </Badge>
@@ -324,7 +344,11 @@ function Contador({
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
           {rotulo}
         </p>
-        <p className={destaque && valor > 0 ? "text-2xl text-atraso" : "text-2xl"}>
+        <p
+          className={
+            destaque && valor > 0 ? "text-2xl text-atraso" : "text-2xl"
+          }
+        >
           {valor}
         </p>
       </CardContent>
@@ -390,7 +414,9 @@ function Coluna({
           }
           aria-hidden
         />
-        {atual === id && <span className="sr-only">{asc ? "crescente" : "decrescente"}</span>}
+        {atual === id && (
+          <span className="sr-only">{asc ? "crescente" : "decrescente"}</span>
+        )}
       </button>
     </TableHead>
   );

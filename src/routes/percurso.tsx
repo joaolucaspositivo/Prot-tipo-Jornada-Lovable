@@ -42,7 +42,9 @@ function PercursoPage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
   const config = estado.cicloConfig;
 
-  const inscricao = estado.inscricoes.find((i) => i.pessoaId === pessoaAtiva.id);
+  const inscricao = estado.inscricoes.find(
+    (i) => i.pessoaId === pessoaAtiva.id,
+  );
   const [macrotemaEscolhido, setMacrotemaEscolhido] = useState<string | null>(
     null,
   );
@@ -80,7 +82,8 @@ function PercursoPage() {
 
   // Etapa da trilha que representa a escolha do percurso, vinda da configuração.
   const etapasOrdenadas = [...config.etapas].sort((a, b) => a.ordem - b.ordem);
-  const etapaEscolha = etapasOrdenadas.find((e) => e.tela === "percurso") ?? null;
+  const etapaEscolha =
+    etapasOrdenadas.find((e) => e.tela === "percurso") ?? null;
 
   function inscrever(turma: Turma, turmaAnteriorId?: string) {
     const agora = new Date().toISOString();
@@ -171,7 +174,10 @@ function PercursoPage() {
         <Cabecalho />
         <Card className="border-sucesso/40 bg-sucesso-suave">
           <CardHeader className="flex-row items-start gap-3 space-y-0">
-            <CheckCircle2 className="mt-0.5 size-6 shrink-0 text-sucesso" aria-hidden />
+            <CheckCircle2
+              className="mt-0.5 size-6 shrink-0 text-sucesso"
+              aria-hidden
+            />
             <div>
               <CardTitle className="text-lg">Inscrição confirmada</CardTitle>
               <p className="text-sm text-muted-foreground">
@@ -195,9 +201,8 @@ function PercursoPage() {
               </Button>
               {conteudoIniciado ? (
                 <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Lock className="size-4" aria-hidden />
-                  A troca de turma não está mais disponível: o conteúdo já
-                  começou.
+                  <Lock className="size-4" aria-hidden />A troca de turma não
+                  está mais disponível: o conteúdo já começou.
                 </p>
               ) : (
                 <Button variant="outline" onClick={() => setTrocando(true)}>
@@ -237,8 +242,7 @@ function PercursoPage() {
                   ?.nome ?? ""
               })`
             : ""}
-          . A
-          vaga da turma atual volta a ficar disponível na hora.
+          . A vaga da turma atual volta a ficar disponível na hora.
         </p>
         {opcoes.length === 0 ? (
           <Card>
@@ -253,8 +257,8 @@ function PercursoPage() {
                 key={t.id}
                 turma={t}
                 modalidadeNome={
-                  config.modalidades.find((m) => m.id === t.modalidadeId)?.nome ??
-                  "Modalidade"
+                  config.modalidades.find((m) => m.id === t.modalidadeId)
+                    ?.nome ?? "Modalidade"
                 }
                 aoEscolher={() => inscrever(t, turmaAtual?.id)}
                 rotulo="Trocar para esta turma"
@@ -299,8 +303,8 @@ function PercursoPage() {
                 key={t.id}
                 turma={t}
                 modalidadeNome={
-                  config.modalidades.find((m) => m.id === t.modalidadeId)?.nome ??
-                  "Modalidade"
+                  config.modalidades.find((m) => m.id === t.modalidadeId)
+                    ?.nome ?? "Modalidade"
                 }
                 aoEscolher={() => inscrever(t)}
                 rotulo="Inscrever-me nesta turma"

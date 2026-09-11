@@ -155,9 +155,7 @@ export function conferencias(
   const semCiencia: ItemConferencia[] = [];
 
   linhas.forEach((l) => {
-    const inscricao = estado.inscricoes.find(
-      (i) => i.pessoaId === l.pessoa.id,
-    );
+    const inscricao = estado.inscricoes.find((i) => i.pessoaId === l.pessoa.id);
     if (!inscricao) {
       semInscricao.push({
         pessoa: l.pessoa,
@@ -269,7 +267,11 @@ export function ocupacaoDasTurmas(estado: EstadoApp): OcupacaoTurma[] {
         ? Math.round((turma.vagasOcupadas / turma.vagas) * 100)
         : 0,
       alerta:
-        livres === 0 ? "esgotada" : turma.vagasOcupadas === 0 ? "vazia" : undefined,
+        livres === 0
+          ? "esgotada"
+          : turma.vagasOcupadas === 0
+            ? "vazia"
+            : undefined,
     };
   });
 }

@@ -10,7 +10,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { EditorTextoRico, TextoFormatado } from "@/components/entrega/EditorTextoRico";
+import {
+  EditorTextoRico,
+  TextoFormatado,
+} from "@/components/entrega/EditorTextoRico";
 import { EstadoBadge } from "@/components/EstadoBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -87,7 +90,9 @@ function EntregaPage() {
       : null,
   );
   const [dataAula, setDataAula] = useState(
-    entrega?.dataAulaISO ? paraInputDateTime(new Date(entrega.dataAulaISO)) : "",
+    entrega?.dataAulaISO
+      ? paraInputDateTime(new Date(entrega.dataAulaISO))
+      : "",
   );
   const [erroData, setErroData] = useState<string | null>(null);
   const [editando, setEditando] = useState(!entrega);
@@ -102,8 +107,8 @@ function EntregaPage() {
       <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
         <h1 className="text-2xl">Envio da tarefa</h1>
         <p className="mt-2 text-muted-foreground">
-          A trilha configurada para você não tem, neste momento, nenhuma etapa de
-          entrega.
+          A trilha configurada para você não tem, neste momento, nenhuma etapa
+          de entrega.
         </p>
       </div>
     );
@@ -189,7 +194,9 @@ function EntregaPage() {
         .filter((e) => e.tipo === "encontro" && e.ordem > etapa!.ordem)
         .sort((a, b) => a.ordem - b.ordem)[0];
       const responsavelId =
-        destino.tipo === "coordenador" ? destino.responsavelId : DESTINO_EQUIPE_CENTRAL;
+        destino.tipo === "coordenador"
+          ? destino.responsavelId
+          : DESTINO_EQUIPE_CENTRAL;
       const jaAgendada = anterior.observacoes.find(
         (o) => o.pessoaId === pessoaAtiva.id && !o.realizadaEmISO,
       );
@@ -241,7 +248,13 @@ function EntregaPage() {
         ...anterior.notificacoes,
       ];
 
-      return { ...anterior, entregas, progressoEtapas, observacoes, notificacoes };
+      return {
+        ...anterior,
+        entregas,
+        progressoEtapas,
+        observacoes,
+        notificacoes,
+      };
     });
 
     setEditando(false);
@@ -292,9 +305,13 @@ function EntregaPage() {
       )}
 
       <p className="mt-5 flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm">
-        <UserCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+        <UserCheck
+          className="mt-0.5 size-4 shrink-0 text-primary"
+          aria-hidden
+        />
         <span>
-          <strong>Quem vai receber: {destino.rotulo}.</strong> {destino.explicacao}
+          <strong>Quem vai receber: {destino.rotulo}.</strong>{" "}
+          {destino.explicacao}
         </span>
       </p>
 
@@ -309,7 +326,9 @@ function EntregaPage() {
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant={
-                  entrega.status === "devolutiva_disponivel" ? "secondary" : "outline"
+                  entrega.status === "devolutiva_disponivel"
+                    ? "secondary"
+                    : "outline"
                 }
               >
                 {ROTULO_STATUS_ENTREGA[entrega.status]}
@@ -321,8 +340,10 @@ function EntregaPage() {
             {entrega.dataAulaISO && (
               <p className="flex items-center gap-2 text-sm">
                 <CalendarClock className="size-4 text-primary" aria-hidden />
-                Aula a ser observada em {formatarDataHora(entrega.dataAulaISO)} — já
-                na agenda de {destino.rotulo}.
+                Aula a ser observada em {formatarDataHora(
+                  entrega.dataAulaISO,
+                )}{" "}
+                — já na agenda de {destino.rotulo}.
               </p>
             )}
             {progresso?.presencaEmISO && (
@@ -389,7 +410,9 @@ function EntregaPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="planejamento">Planejamento de aula (arquivo)</Label>
+              <Label htmlFor="planejamento">
+                Planejamento de aula (arquivo)
+              </Label>
               <div className="flex flex-wrap items-center gap-3">
                 <Button asChild variant="outline">
                   <label htmlFor="planejamento" className="cursor-pointer">

@@ -268,7 +268,11 @@ function Indicador({
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
           {rotulo}
         </p>
-        <p className={destaque && valor > 0 ? "text-2xl text-atraso" : "text-2xl"}>
+        <p
+          className={
+            destaque && valor > 0 ? "text-2xl text-atraso" : "text-2xl"
+          }
+        >
           {valor}
         </p>
       </CardContent>

@@ -30,11 +30,12 @@ export const ESCALA_OBSERVACAO = [
 
 export type SituacaoCompromisso = "agendada" | "realizada" | "pendente";
 
-export const ROTULO_SITUACAO_COMPROMISSO: Record<SituacaoCompromisso, string> = {
-  agendada: "A observar",
-  realizada: "Observada",
-  pendente: "Parecer pendente",
-};
+export const ROTULO_SITUACAO_COMPROMISSO: Record<SituacaoCompromisso, string> =
+  {
+    agendada: "A observar",
+    realizada: "Observada",
+    pendente: "Parecer pendente",
+  };
 
 export interface Compromisso {
   id: string;
@@ -159,11 +160,7 @@ export function gradeDoMes(
     porDia.set(k, [...(porDia.get(k) ?? []), c]);
   });
 
-  const primeiro = new Date(
-    referencia.getFullYear(),
-    referencia.getMonth(),
-    1,
-  );
+  const primeiro = new Date(referencia.getFullYear(), referencia.getMonth(), 1);
   const inicio = new Date(primeiro);
   inicio.setDate(1 - primeiro.getDay());
 
@@ -184,9 +181,7 @@ export function daSemana(compromissos: Compromisso[]): Compromisso[] {
   const inicio = new Date();
   inicio.setHours(0, 0, 0, 0);
   const fim = new Date(inicio.getTime() + 7 * 86400000);
-  return compromissos.filter(
-    (c) => c.dataAula >= inicio && c.dataAula < fim,
-  );
+  return compromissos.filter((c) => c.dataAula >= inicio && c.dataAula < fim);
 }
 
 export function pendentesDoCoordenador(
@@ -210,4 +205,12 @@ export const NOMES_MES = [
   "dezembro",
 ];
 
-export const NOMES_DIA_CURTOS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+export const NOMES_DIA_CURTOS = [
+  "dom",
+  "seg",
+  "ter",
+  "qua",
+  "qui",
+  "sex",
+  "sáb",
+];

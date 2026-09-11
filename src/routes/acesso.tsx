@@ -1,5 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { BadgeCheck, Building2, GraduationCap, ShieldCheck } from "lucide-react";
+import {
+  BadgeCheck,
+  Building2,
+  GraduationCap,
+  ShieldCheck,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,7 +57,9 @@ function AcessoPage() {
     atualizar({
       pessoaAtivaId: pessoa.id,
       perfilAtivo:
-        pessoa.cargo === "corregente" ? "docente-corregente" : "docente-regente",
+        pessoa.cargo === "corregente"
+          ? "docente-corregente"
+          : "docente-regente",
     });
   }
 
@@ -89,7 +96,9 @@ function AcessoPage() {
             <Dado
               Icone={BadgeCheck}
               rotulo="Cargo"
-              valor={pessoaAtiva.cargo === "corregente" ? "Corregente" : "Regente"}
+              valor={
+                pessoaAtiva.cargo === "corregente" ? "Corregente" : "Regente"
+              }
             />
           </dl>
 
@@ -130,7 +139,8 @@ function AcessoPage() {
             <SelectContent>
               {docentes.map((d) => (
                 <SelectItem key={d.id} value={d.id}>
-                  {d.nome} · {d.cargo === "corregente" ? "Corregente" : "Regente"}
+                  {d.nome} ·{" "}
+                  {d.cargo === "corregente" ? "Corregente" : "Regente"}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -90,8 +90,8 @@ export function linhaDoDocente(
   // prazos no futuro, a etapa marcada como atrasada já entra no alerta.
   const alertaCoordenador = Boolean(
     atrasada &&
-      (diasAtraso >= atrasada.etapa.alerta.diasParaCoordenador ||
-        atrasada.prazo > agora),
+    (diasAtraso >= atrasada.etapa.alerta.diasParaCoordenador ||
+      atrasada.prazo > agora),
   );
 
   const situacao: SituacaoDocente =

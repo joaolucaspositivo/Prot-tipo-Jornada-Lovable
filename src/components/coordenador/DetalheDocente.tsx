@@ -142,7 +142,9 @@ export function DetalheDocente({
             {linha.etapaAtual && (
               <Badge variant="outline">Etapa: {linha.etapaAtual.nome}</Badge>
             )}
-            {linha.turmaNome && <Badge variant="outline">{linha.turmaNome}</Badge>}
+            {linha.turmaNome && (
+              <Badge variant="outline">{linha.turmaNome}</Badge>
+            )}
           </div>
         </SheetHeader>
 
@@ -195,8 +197,9 @@ export function DetalheDocente({
                 <div className="space-y-2 rounded-xl border border-border p-3">
                   <p className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MessageSquareQuote className="size-4" aria-hidden />
-                    {estado.pessoas.find((p) => p.id === linha.devolutiva!.autorId)
-                      ?.nome ?? "Equipe central"}{" "}
+                    {estado.pessoas.find(
+                      (p) => p.id === linha.devolutiva!.autorId,
+                    )?.nome ?? "Equipe central"}{" "}
                     · {formatarData(new Date(linha.devolutiva.criadaEmISO))}
                   </p>
                   <p className="text-sm">{linha.devolutiva.texto}</p>

@@ -47,8 +47,7 @@ export function OcupacaoTurmas() {
                       {t.macrotemaNome}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {t.modalidadeNome} · {t.turma.periodo} ·{" "}
-                      {t.turma.horario}
+                      {t.modalidadeNome} · {t.turma.periodo} · {t.turma.horario}
                     </p>
                   </div>
                   {t.alerta === "esgotada" && (

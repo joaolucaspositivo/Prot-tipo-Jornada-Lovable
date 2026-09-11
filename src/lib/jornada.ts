@@ -19,7 +19,11 @@ import type {
   TipoCriterioAvanco,
   TipoEtapa,
 } from "@/data/types";
-import { criteriosDoDocente, etapaConcluidaPorCriterios, ofertaDoDocente } from "@/lib/avanco";
+import {
+  criteriosDoDocente,
+  etapaConcluidaPorCriterios,
+  ofertaDoDocente,
+} from "@/lib/avanco";
 import { etapasDoSegmento, prazoDaEtapa } from "@/lib/ciclo";
 
 export const ICONE_TIPO_ETAPA: Record<TipoEtapa, typeof BookOpen> = {
@@ -124,7 +128,8 @@ export function trilhaDoDocente(
     // seed e todo progresso existente dependem do status persistido, e
     // trocar por substituição regrediria etapas já concluídas.
     const temOferta =
-      etapa.tipo === "conteudo" && ofertaDoDocente(estado, pessoa, etapa) !== undefined;
+      etapa.tipo === "conteudo" &&
+      ofertaDoDocente(estado, pessoa, etapa) !== undefined;
     const concluida =
       progresso?.status === "concluida" ||
       (temOferta && etapaConcluidaPorCriterios(estado, pessoa, etapa));
@@ -166,7 +171,10 @@ export function trilhaDoDocente(
       prazo,
       motivoBloqueio,
       oQueFalta,
-      acao: { rotulo: rotuloDaAcao(etapa.tipo, status), para: rotaDaEtapa(etapa) },
+      acao: {
+        rotulo: rotuloDaAcao(etapa.tipo, status),
+        para: rotaDaEtapa(etapa),
+      },
     });
   });
 
@@ -175,7 +183,9 @@ export function trilhaDoDocente(
 
 /** Primeira etapa que ainda depende do docente. */
 export function proximaEtapa(trilha: ItemTrilha[]): ItemTrilha | undefined {
-  return trilha.find((i) => i.status !== "concluida" && i.status !== "bloqueada");
+  return trilha.find(
+    (i) => i.status !== "concluida" && i.status !== "bloqueada",
+  );
 }
 
 export function progressoDaTrilha(trilha: ItemTrilha[]) {

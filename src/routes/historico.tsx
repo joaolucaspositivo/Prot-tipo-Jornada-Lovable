@@ -41,8 +41,8 @@ function HistoricoPage() {
         </p>
         <h1 className="text-2xl sm:text-3xl">Histórico de ciclos anteriores</h1>
         <p className="text-muted-foreground">
-          Estes macrotemas já foram cumpridos e, por isso, aparecem bloqueados na
-          escolha do percurso deste ciclo.
+          Estes macrotemas já foram cumpridos e, por isso, aparecem bloqueados
+          na escolha do percurso deste ciclo.
         </p>
       </header>
 
@@ -77,7 +77,9 @@ function HistoricoPage() {
                 {(h.turmaNome || h.modalidadeNome) && (
                   <p className="flex items-center gap-2 text-muted-foreground">
                     <Users className="size-4" aria-hidden />
-                    {[h.turmaNome, h.modalidadeNome].filter(Boolean).join(" · ")}
+                    {[h.turmaNome, h.modalidadeNome]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </p>
                 )}
                 {h.entregaTitulo && (

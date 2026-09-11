@@ -52,54 +52,58 @@ export function PainelEntregasRecebidas({
           </p>
         ) : (
           <Accordion type="single" collapsible className="w-full">
-            {lista.slice(0, 15).map(({ entrega, docente, etapa, devolutiva }) => (
-              <AccordionItem key={entrega.id} value={entrega.id}>
-                <AccordionTrigger className="text-left">
-                  <span className="flex flex-1 flex-wrap items-center gap-2 pr-3">
-                    <span className="font-medium">{docente?.nome}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {etapa?.nome}
-                    </span>
-                    <Badge
-                      variant={
-                        entrega.status === "devolutiva_disponivel"
-                          ? "secondary"
-                          : "outline"
-                      }
-                    >
-                      {ROTULO_STATUS_ENTREGA[entrega.status]}
-                    </Badge>
-                    {entrega.destino === "equipe_central" && (
-                      <Badge variant="outline">Equipe central</Badge>
-                    )}
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-3">
-                  <p className="text-xs text-muted-foreground">
-                    Enviada em {formatarDataHora(entrega.enviadaEmISO)}
-                    {entrega.dataAulaISO
-                      ? ` · Aula a observar: ${formatarDataHora(entrega.dataAulaISO)}`
-                      : ""}
-                  </p>
-                  <TextoFormatado texto={entrega.texto} />
-                  {entrega.arquivoNome && (
-                    <p className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-2 text-sm">
-                      <FileText className="size-4 text-primary" aria-hidden />
-                      {entrega.arquivoNome}
-                      <span className="text-muted-foreground">
-                        {formatarTamanho(entrega.arquivoTamanho)}
+            {lista
+              .slice(0, 15)
+              .map(({ entrega, docente, etapa, devolutiva }) => (
+                <AccordionItem key={entrega.id} value={entrega.id}>
+                  <AccordionTrigger className="text-left">
+                    <span className="flex flex-1 flex-wrap items-center gap-2 pr-3">
+                      <span className="font-medium">{docente?.nome}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {etapa?.nome}
                       </span>
+                      <Badge
+                        variant={
+                          entrega.status === "devolutiva_disponivel"
+                            ? "secondary"
+                            : "outline"
+                        }
+                      >
+                        {ROTULO_STATUS_ENTREGA[entrega.status]}
+                      </Badge>
+                      {entrega.destino === "equipe_central" && (
+                        <Badge variant="outline">Equipe central</Badge>
+                      )}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-3">
+                    <p className="text-xs text-muted-foreground">
+                      Enviada em {formatarDataHora(entrega.enviadaEmISO)}
+                      {entrega.dataAulaISO
+                        ? ` · Aula a observar: ${formatarDataHora(entrega.dataAulaISO)}`
+                        : ""}
                     </p>
-                  )}
-                  {devolutiva && (
-                    <div className="rounded-lg border border-border p-3 text-sm">
-                      <p className="font-medium">Devolutiva já registrada</p>
-                      <p className="text-muted-foreground">{devolutiva.texto}</p>
-                    </div>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
+                    <TextoFormatado texto={entrega.texto} />
+                    {entrega.arquivoNome && (
+                      <p className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-2 text-sm">
+                        <FileText className="size-4 text-primary" aria-hidden />
+                        {entrega.arquivoNome}
+                        <span className="text-muted-foreground">
+                          {formatarTamanho(entrega.arquivoTamanho)}
+                        </span>
+                      </p>
+                    )}
+                    {devolutiva && (
+                      <div className="rounded-lg border border-border p-3 text-sm">
+                        <p className="font-medium">Devolutiva já registrada</p>
+                        <p className="text-muted-foreground">
+                          {devolutiva.texto}
+                        </p>
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
           </Accordion>
         )}
       </CardContent>

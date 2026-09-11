@@ -12,7 +12,9 @@ import { alertasDisparados } from "@/lib/gestao";
 /** O que está configurado, o que já disparou e para quem. */
 export function PainelAlertas() {
   const { estado } = useStore();
-  const etapas = [...estado.cicloConfig.etapas].sort((a, b) => a.ordem - b.ordem);
+  const etapas = [...estado.cicloConfig.etapas].sort(
+    (a, b) => a.ordem - b.ordem,
+  );
   const historico = alertasDisparados(estado);
 
   return (

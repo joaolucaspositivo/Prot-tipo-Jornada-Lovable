@@ -175,7 +175,9 @@ function AulasPage() {
   function enviarTarefa() {
     const texto = tarefa.trim();
     if (texto.length < 10) {
-      toast.error("Escreva um registro um pouco mais completo antes de enviar.");
+      toast.error(
+        "Escreva um registro um pouco mais completo antes de enviar.",
+      );
       return;
     }
     const agora = new Date().toISOString();
@@ -335,7 +337,8 @@ function AulasPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
-                Registro da etapa {modalidade?.presencaAutomatica && "· presença automática"}
+                Registro da etapa{" "}
+                {modalidade?.presencaAutomatica && "· presença automática"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">

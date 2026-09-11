@@ -52,7 +52,9 @@ export function LeituraTextoBase({ texto, percentual, aoAvancar }: Props) {
           Cerca de {texto.tempoLeituraMin} min de leitura · {texto.autoria}
         </p>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Tamanho do texto</span>
+          <span className="text-sm text-muted-foreground">
+            Tamanho do texto
+          </span>
           <Button
             size="icon"
             variant="outline"
@@ -67,7 +69,9 @@ export function LeituraTextoBase({ texto, percentual, aoAvancar }: Props) {
             size="icon"
             variant="outline"
             aria-label="Aumentar tamanho do texto"
-            onClick={() => setTamanho((t) => Math.min(TAMANHOS.length - 1, t + 1))}
+            onClick={() =>
+              setTamanho((t) => Math.min(TAMANHOS.length - 1, t + 1))
+            }
             disabled={tamanho === TAMANHOS.length - 1}
           >
             <Plus className="size-4" aria-hidden />
@@ -81,7 +85,10 @@ export function LeituraTextoBase({ texto, percentual, aoAvancar }: Props) {
       >
         <div className="mx-auto max-w-[38rem]">
           <h3 className="flex items-start gap-2 text-xl leading-snug">
-            <BookOpenText className="mt-1 size-5 shrink-0 text-primary" aria-hidden />
+            <BookOpenText
+              className="mt-1 size-5 shrink-0 text-primary"
+              aria-hidden
+            />
             {texto.titulo}
           </h3>
           <div className={`mt-4 space-y-5 ${estilo.classe}`}>

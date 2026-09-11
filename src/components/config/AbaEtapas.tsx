@@ -42,7 +42,11 @@ export function AbaEtapas() {
   const editar = (id: string, mudanca: Partial<Etapa>) =>
     gravar(etapas.map((e) => (e.id === id ? { ...e, ...mudanca } : e)));
 
-  const editarComAviso = (etapa: Etapa, mudanca: Partial<Etapa>, oQue: string) => {
+  const editarComAviso = (
+    etapa: Etapa,
+    mudanca: Partial<Etapa>,
+    oQue: string,
+  ) => {
     const afetados = docentesComProgressoNaEtapa(estado, etapa.id);
     confirmar({
       titulo: `Alterar ${oQue} de “${etapa.nome}”?`,
@@ -142,11 +146,17 @@ export function AbaEtapas() {
                     <Select
                       value={etapa.tipo}
                       onValueChange={(v) =>
-                        editarComAviso(etapa, { tipo: v as TipoEtapa }, "o tipo")
+                        editarComAviso(
+                          etapa,
+                          { tipo: v as TipoEtapa },
+                          "o tipo",
+                        )
                       }
                     >
                       <SelectTrigger id={`tipo-${etapa.id}`} className="h-10">
-                        <SelectValue>{ROTULO_TIPO_ETAPA[etapa.tipo]}</SelectValue>
+                        <SelectValue>
+                          {ROTULO_TIPO_ETAPA[etapa.tipo]}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {TIPOS_ETAPA.map((t) => (
@@ -172,7 +182,9 @@ export function AbaEtapas() {
                       }
                     >
                       <SelectTrigger id={`tela-${etapa.id}`} className="h-10">
-                        <SelectValue>{ROTULO_TELA_ETAPA[etapa.tela]}</SelectValue>
+                        <SelectValue>
+                          {ROTULO_TELA_ETAPA[etapa.tela]}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {TELAS_ETAPA.map((t) => (
@@ -217,7 +229,9 @@ export function AbaEtapas() {
                         const bruto = e.target.value;
                         editar(etapa.id, {
                           cargaHoraria:
-                            bruto === "" ? undefined : Math.max(0, Number(bruto) || 0),
+                            bruto === ""
+                              ? undefined
+                              : Math.max(0, Number(bruto) || 0),
                         });
                       }}
                       className="h-10"
@@ -246,7 +260,9 @@ export function AbaEtapas() {
                           <Checkbox
                             id={`seg-${etapa.id}-${s.id}`}
                             checked={etapa.segmentos.includes(s.id)}
-                            onCheckedChange={() => alternarSegmento(etapa, s.id)}
+                            onCheckedChange={() =>
+                              alternarSegmento(etapa, s.id)
+                            }
                           />
                           <Label htmlFor={`seg-${etapa.id}-${s.id}`}>
                             {s.nome}

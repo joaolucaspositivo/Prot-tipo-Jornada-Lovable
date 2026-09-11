@@ -23,8 +23,8 @@ export function AbaAlertas() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Para cada etapa, defina os avisos antes do prazo, no vencimento e
-        depois dele — e quem recebe cada um.
+        Para cada etapa, defina os avisos antes do prazo, no vencimento e depois
+        dele — e quem recebe cada um.
       </p>
 
       <ul className="space-y-3">
@@ -52,7 +52,9 @@ export function AbaAlertas() {
                   {i + 1}
                 </span>
                 <span className="font-medium">{etapa.nome}</span>
-                <Badge variant="secondary">{ROTULO_TIPO_ETAPA[etapa.tipo]}</Badge>
+                <Badge variant="secondary">
+                  {ROTULO_TIPO_ETAPA[etapa.tipo]}
+                </Badge>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">

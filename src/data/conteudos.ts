@@ -57,8 +57,7 @@ const aulasPadrao: AulaConteudo[] = [
   {
     id: "aula-3",
     titulo: "Estudo de caso comentado",
-    resumo:
-      "Uma aula real analisada passo a passo, com pausas para reflexão.",
+    resumo: "Uma aula real analisada passo a passo, com pausas para reflexão.",
     duracaoMin: 21,
     arquivoDrive: "drive-institucional/estudo-de-caso.mp4",
   },

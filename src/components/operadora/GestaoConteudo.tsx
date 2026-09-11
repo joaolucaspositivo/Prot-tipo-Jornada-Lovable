@@ -30,7 +30,9 @@ function tamanhoLegivel(bytes: number): string {
  */
 export function GestaoConteudo() {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  const etapas = [...estado.cicloConfig.etapas].sort((a, b) => a.ordem - b.ordem);
+  const etapas = [...estado.cicloConfig.etapas].sort(
+    (a, b) => a.ordem - b.ordem,
+  );
   const macrotemas = macrotemasAtivos(estado.cicloConfig);
   const arquivos = estado.arquivosConteudo ?? [];
 
@@ -96,7 +98,9 @@ export function GestaoConteudo() {
       <Card>
         <CardHeader className="flex-row items-center gap-3 space-y-0">
           <CloudUpload className="size-5 text-primary" aria-hidden />
-          <CardTitle className="text-base">Enviar vídeo ou texto-base</CardTitle>
+          <CardTitle className="text-base">
+            Enviar vídeo ou texto-base
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
@@ -108,7 +112,10 @@ export function GestaoConteudo() {
             <div className="min-w-0 space-y-1.5">
               <Label htmlFor="etapa-conteudo">Etapa da trilha</Label>
               <Select value={etapaId} onValueChange={setEtapaId}>
-                <SelectTrigger id="etapa-conteudo" className="[&>span]:truncate">
+                <SelectTrigger
+                  id="etapa-conteudo"
+                  className="[&>span]:truncate"
+                >
                   <SelectValue placeholder="Escolha a etapa" />
                 </SelectTrigger>
                 <SelectContent>
@@ -123,7 +130,10 @@ export function GestaoConteudo() {
             <div className="min-w-0 space-y-1.5">
               <Label htmlFor="macro-conteudo">Macrotema</Label>
               <Select value={macrotemaId} onValueChange={setMacrotemaId}>
-                <SelectTrigger id="macro-conteudo" className="[&>span]:truncate">
+                <SelectTrigger
+                  id="macro-conteudo"
+                  className="[&>span]:truncate"
+                >
                   <SelectValue placeholder="Escolha o macrotema" />
                 </SelectTrigger>
                 <SelectContent>
@@ -199,7 +209,9 @@ export function GestaoConteudo() {
                         aria-hidden
                       />
                       <div className="min-w-0">
-                        <p className="break-words text-sm font-medium">{a.nome}</p>
+                        <p className="break-words text-sm font-medium">
+                          {a.nome}
+                        </p>
                         <p className="text-sm text-muted-foreground">
                           {etapa?.nome ?? "Etapa removida"} ·{" "}
                           {macro?.nome ?? "Macrotema removido"}

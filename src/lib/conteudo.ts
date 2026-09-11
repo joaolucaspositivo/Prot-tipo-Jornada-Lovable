@@ -1,13 +1,7 @@
 // Leituras da etapa de conteúdo. Nada é fixo: a etapa, a turma e a regra de
 // presença vêm sempre da configuração do ciclo e da inscrição do docente.
 
-import type {
-  EstadoApp,
-  Etapa,
-  Modalidade,
-  Pessoa,
-  Turma,
-} from "@/data/types";
+import type { EstadoApp, Etapa, Modalidade, Pessoa, Turma } from "@/data/types";
 import { etapasDoSegmento } from "@/lib/ciclo";
 
 /** Etapas de conteúdo visíveis para o docente, na ordem configurada. */
@@ -15,7 +9,9 @@ export function etapasDeConteudo(estado: EstadoApp, pessoa: Pessoa): Etapa[] {
   const config = estado.cicloConfig;
   return etapasDoSegmento(
     config,
-    config.cenarioSegmentacao === "trilha_por_segmento" ? pessoa.segmentoId : null,
+    config.cenarioSegmentacao === "trilha_por_segmento"
+      ? pessoa.segmentoId
+      : null,
   ).filter((e) => e.tipo === "conteudo");
 }
 
@@ -113,7 +109,9 @@ export function presencasAutomaticas(
     .filter((p) => Boolean(p.presencaEmISO))
     .map((p) => {
       const pessoa = estado.pessoas.find((x) => x.id === p.pessoaId);
-      const inscricao = estado.inscricoes.find((i) => i.pessoaId === p.pessoaId);
+      const inscricao = estado.inscricoes.find(
+        (i) => i.pessoaId === p.pessoaId,
+      );
       const turma = estado.turmas.find((t) => t.id === inscricao?.turmaId);
       return {
         pessoa,

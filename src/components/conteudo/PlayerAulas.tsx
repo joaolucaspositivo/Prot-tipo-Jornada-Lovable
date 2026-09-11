@@ -60,7 +60,9 @@ export function PlayerAulas({ aulas, concluidas, aoConcluir }: Props) {
         <div className="relative overflow-hidden rounded-2xl border border-border bg-foreground/90">
           <div className="flex aspect-video flex-col items-center justify-center gap-3 p-6 text-center">
             <Video className="size-10 text-background/70" aria-hidden />
-            <p className="text-background text-lg leading-snug">{aula.titulo}</p>
+            <p className="text-background text-lg leading-snug">
+              {aula.titulo}
+            </p>
             <p className="max-w-sm text-sm text-background/70">
               Vídeo hospedado no Drive institucional da rede. Reprodução dentro
               do sistema, sem login e sem sair desta tela.

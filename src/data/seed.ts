@@ -137,7 +137,8 @@ const etapasSeed: Etapa[] = [
   {
     id: "et-5",
     nome: "Envio do planejamento de aula",
-    descricao: "Envie a tarefa, o planejamento e a data da aula a ser observada.",
+    descricao:
+      "Envie a tarefa, o planejamento e a data da aula a ser observada.",
     tipo: "entrega",
     ordem: 5,
     obrigatoria: true,
@@ -309,7 +310,6 @@ export const cicloConfigSeed: CicloConfig = {
     ],
   },
 };
-
 
 const unidades = [
   "Unidade Centro",
@@ -491,7 +491,6 @@ function construirProgresso() {
             ? ["Ponto de partida", "Percurso escolhido"]
             : ["Prática compartilhada", "Ciclo completo"],
       });
-
     });
 
     // 0 = início, 1 = meio, 2 = pendência vencida, 3 = concluído
@@ -694,4 +693,3 @@ export function criarEstadoInicial(): EstadoApp {
     respostasEnquete: construirRespostasEnquete(),
   };
 }
-

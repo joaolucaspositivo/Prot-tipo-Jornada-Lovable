@@ -33,8 +33,8 @@ function AgendaPage() {
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
       <h1 className="text-2xl sm:text-3xl">Agenda de observações</h1>
       <p className="mt-1 text-muted-foreground">
-        As datas chegam automaticamente das entregas dos docentes. Ninguém agenda
-        à mão.
+        As datas chegam automaticamente das entregas dos docentes. Ninguém
+        agenda à mão.
       </p>
       {!ehOperadora && (
         <p className="mt-2 text-sm text-muted-foreground">

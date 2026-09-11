@@ -54,7 +54,11 @@ export function ResultadoAutoavaliacao({
                   dataKey="dimensao"
                   tick={{ fill: "var(--muted-foreground)", fontSize: 13 }}
                 />
-                <PolarRadiusAxis domain={[0, 5]} tick={false} axisLine={false} />
+                <PolarRadiusAxis
+                  domain={[0, 5]}
+                  tick={false}
+                  axisLine={false}
+                />
                 <Radar
                   name="Sua prática"
                   dataKey="valor"
@@ -75,7 +79,10 @@ export function ResultadoAutoavaliacao({
       {fragil && (
         <Card className="border-conquista/40 bg-conquista-suave">
           <CardHeader className="flex flex-row items-start gap-3">
-            <Target className="mt-0.5 size-5 shrink-0 text-conquista" aria-hidden />
+            <Target
+              className="mt-0.5 size-5 shrink-0 text-conquista"
+              aria-hidden
+            />
             <div>
               <CardTitle className="text-base">
                 Aqui está sua maior oportunidade de desenvolvimento neste ciclo
