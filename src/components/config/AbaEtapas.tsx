@@ -15,9 +15,11 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import type { Etapa, TipoEtapa } from "@/data/types";
+import type { Etapa, TelaEtapa, TipoEtapa } from "@/data/types";
 import {
+  ROTULO_TELA_ETAPA,
   ROTULO_TIPO_ETAPA,
+  TELAS_ETAPA,
   TIPOS_ETAPA,
   docentesComProgressoNaEtapa,
   formatarData,
@@ -65,7 +67,13 @@ export function AbaEtapas() {
         obrigatoria: true,
         prazoDias: 30 * (etapas.length + 1),
         segmentos: [],
-        alerta: { diasParaCoordenador: 3, alertarDocente: true },
+        alerta: {
+          diasAntes: 3,
+          noVencimento: true,
+          diasParaCoordenador: 3,
+          alertarDocente: true,
+        },
+        tela: "conteudo",
       },
     ]);
 
@@ -128,7 +136,7 @@ export function AbaEtapas() {
                   ) : null}
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-1.5">
                     <Label htmlFor={`tipo-${etapa.id}`}>Tipo da etapa</Label>
                     <Select
@@ -144,6 +152,32 @@ export function AbaEtapas() {
                         {TIPOS_ETAPA.map((t) => (
                           <SelectItem key={t} value={t}>
                             {ROTULO_TIPO_ETAPA[t]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`tela-${etapa.id}`}>
+                      Tela que esta etapa abre para o docente
+                    </Label>
+                    <Select
+                      value={etapa.tela}
+                      onValueChange={(v) =>
+                        editarComAviso(
+                          etapa,
+                          { tela: v as TelaEtapa },
+                          "a tela desta etapa",
+                        )
+                      }
+                    >
+                      <SelectTrigger id={`tela-${etapa.id}`} className="h-10">
+                        <SelectValue>{ROTULO_TELA_ETAPA[etapa.tela]}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TELAS_ETAPA.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {ROTULO_TELA_ETAPA[t]}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -168,6 +202,26 @@ export function AbaEtapas() {
                     <p className="text-xs text-muted-foreground">
                       Vence em {formatarData(prazoDaEtapa(config, etapa))}
                     </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`carga-${etapa.id}`}>
+                      Carga horária (opcional)
+                    </Label>
+                    <Input
+                      id={`carga-${etapa.id}`}
+                      type="number"
+                      min={0}
+                      placeholder="Sem carga horária declarada"
+                      value={etapa.cargaHoraria ?? ""}
+                      onChange={(e) => {
+                        const bruto = e.target.value;
+                        editar(etapa.id, {
+                          cargaHoraria:
+                            bruto === "" ? undefined : Math.max(0, Number(bruto) || 0),
+                        });
+                      }}
+                      className="h-10"
+                    />
                   </div>
                 </div>
 

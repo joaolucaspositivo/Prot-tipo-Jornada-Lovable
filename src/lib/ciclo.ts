@@ -6,6 +6,7 @@ import type {
   EstadoApp,
   Etapa,
   Macrotema,
+  TelaEtapa,
   TipoEtapa,
 } from "@/data/types";
 
@@ -23,6 +24,26 @@ export const TIPOS_ETAPA: TipoEtapa[] = [
   "entrega",
   "encontro",
   "avaliacao",
+];
+
+export const ROTULO_TELA_ETAPA: Record<TelaEtapa, string> = {
+  autoavaliacao: "Autoavaliação",
+  percurso: "Escolha do percurso",
+  conteudo: "Conteúdo (Aulas e texto-base)",
+  entrega: "Envio da tarefa",
+  portfolio: "Portfólio do ciclo",
+  enquete: "Enquete 360°",
+  painel: "Nenhuma — abre um painel de detalhes",
+};
+
+export const TELAS_ETAPA: TelaEtapa[] = [
+  "autoavaliacao",
+  "percurso",
+  "conteudo",
+  "entrega",
+  "portfolio",
+  "enquete",
+  "painel",
 ];
 
 /** Etapas visíveis para um segmento, já na ordem configurada. */

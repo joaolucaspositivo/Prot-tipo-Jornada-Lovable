@@ -29,7 +29,7 @@ export function useCicloConfig() {
     [atualizar],
   );
 
-  return { estado, config: estado.cicloConfig, salvarConfig };
+  return { estado, config: estado.cicloConfig, salvarConfig, atualizar };
 }
 
 interface PedidoConfirmacao {
