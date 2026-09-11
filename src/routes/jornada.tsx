@@ -46,6 +46,18 @@ function JornadaPage() {
   const { concluidas, total, percentual } = progressoDaTrilha(trilha);
   const proxima = proximaEtapa(trilha);
   const conquistas = conquistasDoDocente(estado, pessoaAtiva);
+
+  const inscricao = estado.inscricoes.find(
+    (i) => i.pessoaId === pessoaAtiva.id,
+  );
+  const turmaDoDocente = inscricao
+    ? estado.turmas.find((t) => t.id === inscricao.turmaId)
+    : undefined;
+  const macrotemaDoDocente = inscricao
+    ? estado.cicloConfig.macrotemas.find(
+        (m) => m.id === (turmaDoDocente?.macrotemaId ?? inscricao.macrotemaId),
+      )
+    : undefined;
   const preenchidoAte = proxima
     ? trilha.findIndex((i) => i.etapa.id === proxima.etapa.id)
     : trilha.length - 1;
@@ -57,6 +69,12 @@ function JornadaPage() {
       <p className="text-xs uppercase tracking-wide text-muted-foreground">
         {estado.cicloConfig.nome} · {estado.cicloConfig.periodo}
       </p>
+      {inscricao && (
+        <p className="text-sm text-muted-foreground">
+          {turmaDoDocente?.nome ?? "Turma removida"} ·{" "}
+          {macrotemaDoDocente?.nome ?? "Macrotema removido"}
+        </p>
+      )}
       <h1 className="mt-1 text-2xl sm:text-3xl">Minha Jornada</h1>
 
       {pessoaAtiva.cargo === "corregente" && (
