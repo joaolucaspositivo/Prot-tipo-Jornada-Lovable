@@ -2,7 +2,7 @@
 // Nada aqui presume quantidade ou nome de etapas, macrotemas ou unidades:
 // tudo é derivado da configuração em runtime e do estado persistido.
 
-import type { EstadoApp, Etapa, Pessoa, Turma } from "@/data/types";
+import type { EstadoApp, Etapa, Modalidade, Pessoa, Turma } from "@/data/types";
 import { etapasDoSegmento } from "@/lib/ciclo";
 import type { LinhaEquipe } from "@/lib/equipe";
 
@@ -172,9 +172,13 @@ export function conferencias(
       });
     }
 
-    const temPresenca = estado.progressoEtapas.some(
-      (p) => p.pessoaId === l.pessoa.id && p.presencaEmISO,
-    );
+    const temPresenca =
+      estado.progressoEtapas.some(
+        (p) => p.pessoaId === l.pessoa.id && p.presencaEmISO,
+      ) ||
+      estado.presencas.some(
+        (p) => p.pessoaId === l.pessoa.id && (p.presente || p.justificada),
+      );
     if (!temPresenca && entregas.length > 0) {
       semPresenca.push({
         pessoa: l.pessoa,
@@ -246,6 +250,8 @@ export interface OcupacaoTurma {
   turma: Turma;
   macrotemaNome: string;
   modalidadeNome: string;
+  /** objeto completo, não só o nome — usado para saber se a turma é síncrona */
+  modalidade: Modalidade | undefined;
   livres: number;
   percentual: number;
   alerta: "esgotada" | "vazia" | undefined;
@@ -254,14 +260,16 @@ export interface OcupacaoTurma {
 export function ocupacaoDasTurmas(estado: EstadoApp): OcupacaoTurma[] {
   return estado.turmas.map((turma) => {
     const livres = Math.max(0, turma.vagas - turma.vagasOcupadas);
+    const modalidade = estado.cicloConfig.modalidades.find(
+      (m) => m.id === turma.modalidadeId,
+    );
     return {
       turma,
       macrotemaNome:
         estado.cicloConfig.macrotemas.find((m) => m.id === turma.macrotemaId)
           ?.nome ?? "Macrotema removido",
-      modalidadeNome:
-        estado.cicloConfig.modalidades.find((m) => m.id === turma.modalidadeId)
-          ?.nome ?? "Modalidade removida",
+      modalidadeNome: modalidade?.nome ?? "Modalidade removida",
+      modalidade,
       livres,
       percentual: turma.vagas
         ? Math.round((turma.vagasOcupadas / turma.vagas) * 100)
@@ -286,10 +294,20 @@ export interface AlertaDisparado {
   descricao: string;
   quandoISO: string;
   tipo: string;
+  /** antes do prazo / no vencimento / em atraso — plantado pelo seed, mesmo padrão do status "atrasada" */
+  momento: "antes" | "vencimento" | "atraso" | undefined;
 }
 
 const TIPOS_ALERTA = new Set(["pendencia", "prazo_proximo"]);
 
+/**
+ * Lê os alertas já plantados em estado.notificacoes — não recalcula prazo
+ * contra o relógio real. O cálculo dinâmico de "dias antes do prazo" (ver
+ * lib/notificacoes.ts) não serve para esta demonstração: com
+ * `cicloConfig.aberturaISO` em 2027, nenhum prazo cai perto da janela de
+ * aviso sob a data real, exatamente como `trilhaDoDocente` já contorna isso
+ * para o status "atrasada" usando o que está gravado, não o cálculo.
+ */
 export function alertasDisparados(estado: EstadoApp): AlertaDisparado[] {
   return estado.notificacoes
     .filter((n) => TIPOS_ALERTA.has(n.tipo))
@@ -303,6 +321,7 @@ export function alertasDisparados(estado: EstadoApp): AlertaDisparado[] {
         descricao: n.descricao,
         quandoISO: n.criadaEmISO,
         tipo: n.tipo,
+        momento: n.momento,
       };
     })
     .sort((a, b) => b.quandoISO.localeCompare(a.quandoISO));

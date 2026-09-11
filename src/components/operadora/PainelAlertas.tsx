@@ -31,25 +31,35 @@ export function PainelAlertas() {
         </CardHeader>
         <CardContent>
           <ul className="divide-y divide-border">
-            {etapas.map((e) => (
-              <li key={e.id} className="py-3">
-                <span className="block text-sm font-medium">
-                  {e.nome}{" "}
-                  <Badge variant="secondary" className="ml-1">
-                    {ROTULO_TIPO_ETAPA[e.tipo]}
-                  </Badge>
-                </span>
+            {etapas.map((e) => {
+              const a = e.alerta;
+              const antes =
+                a.diasAntes > 0
+                  ? `docente avisado ${a.diasAntes}d antes`
+                  : "sem aviso antes do prazo";
+              const vencimento = a.noVencimento
+                ? "avisa no vencimento"
+                : "sem aviso no vencimento";
+              const atraso =
+                a.diasParaCoordenador === 0
+                  ? "coordenador avisado no mesmo dia do atraso"
+                  : `coordenador avisado após ${a.diasParaCoordenador}d de atraso`;
+              return (
+                <li key={e.id} className="py-3">
+                  <span className="block text-sm font-medium">
+                    {e.nome}{" "}
+                    <Badge variant="secondary" className="ml-1">
+                      {ROTULO_TIPO_ETAPA[e.tipo]}
+                    </Badge>
+                  </span>
 
-                <p className="text-sm text-muted-foreground">
-                  {e.alerta.diasParaCoordenador === 0
-                    ? "Avisa no mesmo dia do vencimento"
-                    : `Avisa ${e.alerta.diasParaCoordenador} dia(s) após o vencimento`}
-                  {e.alerta.alertarDocente
-                    ? " · coordenador e docente"
-                    : " · somente coordenador"}
-                </p>
-              </li>
-            ))}
+                  <p className="text-sm text-muted-foreground">
+                    {antes} · {vencimento} · {atraso}
+                    {a.alertarDocente ? " (+ docente no atraso)" : ""}
+                  </p>
+                </li>
+              );
+            })}
           </ul>
         </CardContent>
       </Card>
@@ -81,7 +91,27 @@ export function PainelAlertas() {
                       {formatarDataHora(a.quandoISO)}
                     </span>
                   </div>
-                  <p className="text-sm">{a.titulo}</p>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                    {a.momento ? (
+                      <Badge
+                        variant="outline"
+                        className={
+                          a.momento === "atraso"
+                            ? "border-atraso/40 text-atraso"
+                            : a.momento === "vencimento"
+                              ? "border-andamento/40 text-andamento"
+                              : "border-sucesso/40 text-sucesso"
+                        }
+                      >
+                        {a.momento === "antes"
+                          ? "Antes do prazo"
+                          : a.momento === "vencimento"
+                            ? "No vencimento"
+                            : "Em atraso"}
+                      </Badge>
+                    ) : null}
+                    <p className="text-sm">{a.titulo}</p>
+                  </div>
                   <p className="text-sm text-muted-foreground">{a.descricao}</p>
                 </li>
               ))}

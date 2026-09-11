@@ -98,8 +98,9 @@ export interface RegistroPresenca {
 }
 
 /**
- * Presenças registradas automaticamente pelo envio da tarefa.
- * Nenhuma tela lança presença à mão: esta lista é sempre derivada.
+ * Presenças registradas automaticamente pelo envio da tarefa, derivadas de
+ * `ProgressoEtapa.presencaEmISO`. Não inclui as lançadas à mão na
+ * modalidade síncrona — essas ficam em `estado.presencas` (D16).
  */
 export function presencasAutomaticas(
   estado: EstadoApp,

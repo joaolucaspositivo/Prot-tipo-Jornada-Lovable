@@ -6,8 +6,9 @@ import { useStore } from "@/data/store";
 import { formatarDataHora, presencasAutomaticas } from "@/lib/conteudo";
 
 /**
- * Presenças registradas automaticamente pelo envio da tarefa.
- * Não existe lançamento manual em nenhuma tela: esta lista só é lida.
+ * Presenças registradas automaticamente pelo envio da tarefa, na
+ * modalidade assíncrona. Na síncrona, a presença é lançada pela equipe
+ * operadora na aba Turmas da Gestão do ciclo (D16) — ver `estado.presencas`.
  */
 export function PainelPresencas({
   apenasMinhaEquipe = false,
@@ -31,7 +32,8 @@ export function PainelPresencas({
       <CardContent>
         <p className="mb-4 text-sm text-muted-foreground">
           Na modalidade assíncrona, o envio da tarefa registra a presença na
-          hora. Ninguém lança presença à mão.
+          hora. Na síncrona, a presença é lançada pela equipe operadora, na aba
+          Turmas.
         </p>
         {registros.length === 0 ? (
           <p className="text-sm text-muted-foreground">
