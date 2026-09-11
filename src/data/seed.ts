@@ -5,26 +5,39 @@
 import type {
   Autoavaliacao,
   CicloConfig,
+  CriterioAvanco,
   Devolutiva,
   Entrega,
   EstadoApp,
   Etapa,
   HistoricoMacrotema,
   Inscricao,
+  ItemConteudo,
+  Midia,
   Notificacao,
   Observacao,
+  OfertaConteudo,
   Pessoa,
+  Presenca,
+  ProgressoAula,
   ProgressoEtapa,
+  ProgressoLeitura,
   RespostaEnquete,
+  TipoCriterioAvanco,
   Turma,
 } from "./types";
 
-export const VERSAO_ESTADO = 6;
+export const VERSAO_ESTADO = 7;
 export const CHAVE_STORAGE = "jornada-prototipo-v1";
 
 const ABERTURA = "2027-02-08T00:00:00.000Z";
 
-const alertaPadrao = { diasParaCoordenador: 3, alertarDocente: true };
+const alertaPadrao = {
+  diasAntes: 3,
+  noVencimento: true,
+  diasParaCoordenador: 3,
+  alertarDocente: true,
+};
 
 const segmentosSeed = [
   { id: "seg-ei", nome: "Educação Infantil" },
@@ -100,6 +113,7 @@ const etapasSeed: Etapa[] = [
     prazoDias: 14,
     segmentos: [],
     alerta: alertaPadrao,
+    tela: "autoavaliacao",
   },
   {
     id: "et-2",
@@ -111,6 +125,7 @@ const etapasSeed: Etapa[] = [
     prazoDias: 21,
     segmentos: [],
     alerta: alertaPadrao,
+    tela: "percurso",
   },
   {
     id: "et-3",
@@ -122,6 +137,8 @@ const etapasSeed: Etapa[] = [
     prazoDias: 45,
     segmentos: [],
     alerta: alertaPadrao,
+    tela: "conteudo",
+    cargaHoraria: 20,
   },
   {
     id: "et-4",
@@ -132,7 +149,13 @@ const etapasSeed: Etapa[] = [
     obrigatoria: true,
     prazoDias: 60,
     segmentos: [],
-    alerta: { diasParaCoordenador: 2, alertarDocente: true },
+    alerta: {
+      diasAntes: 2,
+      noVencimento: true,
+      diasParaCoordenador: 2,
+      alertarDocente: true,
+    },
+    tela: "painel",
   },
   {
     id: "et-5",
@@ -145,6 +168,7 @@ const etapasSeed: Etapa[] = [
     prazoDias: 75,
     segmentos: [],
     alerta: alertaPadrao,
+    tela: "entrega",
   },
   {
     id: "et-6",
@@ -155,7 +179,13 @@ const etapasSeed: Etapa[] = [
     obrigatoria: true,
     prazoDias: 100,
     segmentos: [],
-    alerta: { diasParaCoordenador: 5, alertarDocente: false },
+    alerta: {
+      diasAntes: 5,
+      noVencimento: false,
+      diasParaCoordenador: 5,
+      alertarDocente: false,
+    },
+    tela: "painel",
   },
   {
     id: "et-7",
@@ -167,6 +197,7 @@ const etapasSeed: Etapa[] = [
     prazoDias: 130,
     segmentos: [],
     alerta: alertaPadrao,
+    tela: "portfolio",
   },
   {
     id: "et-8",
@@ -177,7 +208,13 @@ const etapasSeed: Etapa[] = [
     obrigatoria: false,
     prazoDias: 150,
     segmentos: [],
-    alerta: { diasParaCoordenador: 7, alertarDocente: false },
+    alerta: {
+      diasAntes: 7,
+      noVencimento: false,
+      diasParaCoordenador: 7,
+      alertarDocente: false,
+    },
+    tela: "enquete",
   },
 ];
 
@@ -412,24 +449,59 @@ export const pessoasSeed: Pessoa[] = [
 
 // Duas turmas por modalidade em cada macrotema: permite trocar de turma
 // mantendo a mesma modalidade.
-const horariosSeed = [
-  [
-    { sufixo: "Turma A", periodo: "Manhã", horario: "Terças, 8h30 às 10h30" },
-    { sufixo: "Turma B", periodo: "Tarde", horario: "Quintas, 14h às 16h" },
-  ],
-  [
-    { sufixo: "Turma A", periodo: "Livre", horario: "No seu ritmo" },
-    {
-      sufixo: "Turma B",
-      periodo: "Livre",
-      horario: "No seu ritmo, com tutoria quinzenal",
-    },
-  ],
+interface HorarioTurma {
+  sufixo: string;
+  periodo: string;
+  horario: string;
+  dia: number | undefined;
+}
+
+const horariosSincronos: HorarioTurma[] = [
+  {
+    sufixo: "Turma A",
+    periodo: "Manhã",
+    horario: "Terças, 8h30 às 10h30",
+    dia: 2,
+  },
+  {
+    sufixo: "Turma B",
+    periodo: "Tarde",
+    horario: "Quintas, 14h às 16h",
+    dia: 4,
+  },
+];
+const horariosAssincronos: HorarioTurma[] = [
+  {
+    sufixo: "Turma A",
+    periodo: "Livre",
+    horario: "No seu ritmo",
+    dia: undefined,
+  },
+  {
+    sufixo: "Turma B",
+    periodo: "Livre",
+    horario: "No seu ritmo, com tutoria quinzenal",
+    dia: undefined,
+  },
+];
+
+const nomesProfessores = [
+  "Prof. Marcos Vinícius Teles",
+  "Profa. Renata Aguiar Bittencourt",
+  "Prof. Eduardo Salgado Nunes",
+  "Profa. Camila Rezende Xavier",
+  "Prof. Otávio Barreto Lima",
+  "Profa. Juliana Prado Castilho",
 ];
 
 export const turmasSeed: Turma[] = macrotemasSeed.flatMap((mt, i) =>
-  modalidadesSeed.flatMap((mod, j) =>
-    (horariosSeed[j] ?? horariosSeed[0]!).map((h, k) => ({
+  modalidadesSeed.flatMap((mod, j) => {
+    // A condição é sempre `!mod.presencaAutomatica`, nunca a posição `j` no
+    // array — reordenar ou acrescentar modalidade não pode trocar quem
+    // ganha link e dias da semana.
+    const sincrona = !mod.presencaAutomatica;
+    const horarios = sincrona ? horariosSincronos : horariosAssincronos;
+    return horarios.map((h, k) => ({
       id: `turma-${i + 1}-${j + 1}-${k + 1}`,
       nome: `${mt.nome.split("—")[0]!.trim()} · ${mod.nome} · ${h.sufixo}`,
       macrotemaId: mt.id,
@@ -439,8 +511,14 @@ export const turmasSeed: Turma[] = macrotemasSeed.flatMap((mt, i) =>
       vagas: k === 0 ? 20 : 12,
       // uma turma já nasce esgotada para a demonstração
       vagasOcupadas: i === 1 && j === 0 && k === 1 ? 12 : 0,
-    })),
-  ),
+      professorNome: nomesProfessores[(i + j + k) % nomesProfessores.length]!,
+      linkAcesso: sincrona
+        ? `https://encontro.rede.edu.br/jornada/turma-${i + 1}-${j + 1}-${k + 1}`
+        : undefined,
+      diasSemana: h.dia !== undefined ? [h.dia] : [],
+      encontrosPrevistos: sincrona ? 4 : 0,
+    }));
+  }),
 );
 
 function dias(n: number): string {
@@ -510,9 +588,14 @@ function construirProgresso() {
       });
     }
 
-    if (etapasConcluidas >= 2) {
+    // i === 0 é doc-1, pessoa padrão do perfil docente-regente (store.tsx):
+    // sem esta exceção ele fica sem inscrição, sem turma e sem oferta — quem
+    // abre o protótipo pela primeira vez não veria conteúdo nenhum em /aulas.
+    let turmaDoDocente: Turma | undefined;
+    if (etapasConcluidas >= 2 || i === 0) {
       const turma = turmas[i % turmas.length]!;
       turma.vagasOcupadas += 1;
+      turmaDoDocente = turma;
       inscricoes.push({
         id: `insc-${doc.id}`,
         pessoaId: doc.id,
@@ -521,6 +604,9 @@ function construirProgresso() {
         criadaEmISO: dias(12 + (i % 5)),
       });
     }
+    const modalidadeDoDocente = turmaDoDocente
+      ? modalidadesSeed.find((m) => m.id === turmaDoDocente!.modalidadeId)
+      : undefined;
 
     etapasSeed.forEach((etapa, idx) => {
       let status: ProgressoEtapa["status"] = "nao_iniciada";
@@ -528,8 +614,12 @@ function construirProgresso() {
       else if (idx === etapasConcluidas)
         status = estagio === 2 ? "atrasada" : "em_andamento";
 
+      // Só a modalidade assíncrona registra presença pelo envio da tarefa
+      // (D16) — antes isto disparava para qualquer modalidade.
       const presencaAuto =
-        etapa.tipo === "conteudo" && status === "concluida"
+        etapa.tipo === "conteudo" &&
+        status === "concluida" &&
+        modalidadeDoDocente?.presencaAutomatica === true
           ? dias(30 + (i % 10))
           : undefined;
 
@@ -669,8 +759,416 @@ function construirRespostasEnquete(): RespostaEnquete[] {
   return respostas;
 }
 
+function criterio(
+  tipo: TipoCriterioAvanco,
+  ativo: boolean,
+  extra?: Partial<CriterioAvanco>,
+): CriterioAvanco {
+  return { tipo, ativo, ...extra };
+}
+
+/**
+ * Duas ofertas contrastantes do MESMO macrotema (mt-1), na etapa de
+ * conteúdo (et-3) — o centro da demonstração de P1: síncrono e assíncrono
+ * recebem itens e critérios diferentes. Mais uma oferta mínima de um
+ * segundo macrotema (mt-2), só para mostrar que trocar de macrotema na
+ * configuração troca o conteúdo.
+ *
+ * Docentes usados, todos já inscritos nas turmas certas por
+ * `construirProgresso()`: doc-1 (síncrona, turma-1-1-1, ainda em
+ * andamento), doc-2 (síncrona, turma-1-1-2, concluído), doc-3 (assíncrona,
+ * turma-1-2-1, concluído e validado), doc-4 (assíncrona, turma-1-2-2,
+ * parcial e com nota abaixo do corte).
+ */
+function construirConteudoDemonstravel() {
+  const midias: Midia[] = [
+    {
+      id: "midia-mt1-sync-webconf",
+      nome: "Encontro síncrono — Macrotema 1",
+      tipo: "link",
+      url: "https://encontro.rede.edu.br/jornada/mt1-sincrona",
+      enviadaEmISO: dias(20),
+      enviadaPorId: "oper-1",
+    },
+    {
+      id: "midia-mt1-sync-texto",
+      nome: "Texto-base — Planejamento e intencionalidade (síncrono)",
+      tipo: "texto",
+      corpo:
+        "O planejamento intencional parte de perguntas simples: o que os estudantes vão aprender, e como vou saber que aprenderam?\n\n" +
+        "Nesta etapa síncrona, o encontro ao vivo é o espaço para experimentar essas perguntas em grupo, antes de levá-las para a sala de aula.",
+      enviadaEmISO: dias(20),
+      enviadaPorId: "oper-1",
+    },
+    {
+      id: "midia-mt1-async-video-1",
+      nome: "Aula 1 — Introdução ao planejamento intencional",
+      tipo: "video",
+      arquivoTipo: "video/mp4",
+      tamanhoBytes: 84_000_000,
+      referenciaDrive:
+        "drive-institucional/biblioteca-de-midia/midia-mt1-async-video-1/aula-1.mp4",
+      duracaoMin: 12,
+      enviadaEmISO: dias(18),
+      enviadaPorId: "oper-1",
+    },
+    {
+      id: "midia-mt1-async-video-2",
+      nome: "Aula 2 — Da intenção ao objetivo de aprendizagem",
+      tipo: "video",
+      arquivoTipo: "video/mp4",
+      tamanhoBytes: 91_000_000,
+      referenciaDrive:
+        "drive-institucional/biblioteca-de-midia/midia-mt1-async-video-2/aula-2.mp4",
+      duracaoMin: 14,
+      enviadaEmISO: dias(18),
+      enviadaPorId: "oper-1",
+    },
+    {
+      id: "midia-mt1-async-video-3",
+      nome: "Aula 3 — Planejando por etapas",
+      tipo: "video",
+      arquivoTipo: "video/mp4",
+      tamanhoBytes: 77_000_000,
+      referenciaDrive:
+        "drive-institucional/biblioteca-de-midia/midia-mt1-async-video-3/aula-3.mp4",
+      duracaoMin: 11,
+      enviadaEmISO: dias(18),
+      enviadaPorId: "oper-1",
+    },
+    {
+      id: "midia-mt1-async-video-4",
+      nome: "Aula 4 — Registrando e ajustando o planejamento",
+      tipo: "video",
+      arquivoTipo: "video/mp4",
+      tamanhoBytes: 88_000_000,
+      referenciaDrive:
+        "drive-institucional/biblioteca-de-midia/midia-mt1-async-video-4/aula-4.mp4",
+      duracaoMin: 13,
+      enviadaEmISO: dias(18),
+      enviadaPorId: "oper-1",
+    },
+    {
+      id: "midia-mt1-async-texto",
+      nome: "Texto-base — Planejamento e intencionalidade (assíncrono)",
+      tipo: "texto",
+      corpo:
+        "O planejamento intencional parte de perguntas simples: o que os estudantes vão aprender, e como vou saber que aprenderam?\n\n" +
+        "Assista às quatro aulas na ordem e volte a este texto sempre que precisar — ele resume os pontos centrais de cada uma.\n\n" +
+        "Ao final, você vai registrar, na tarefa desta etapa, uma prática concreta que pretende experimentar.",
+      enviadaEmISO: dias(18),
+      enviadaPorId: "oper-1",
+    },
+    {
+      id: "midia-mt2-sync-texto",
+      nome: "Texto-base — Mediação e engajamento",
+      tipo: "texto",
+      corpo:
+        "Mediar não é só intervir quando algo dá errado: é sustentar o engajamento da turma enquanto o percurso acontece.",
+      enviadaEmISO: dias(20),
+      enviadaPorId: "oper-1",
+    },
+  ];
+
+  const ofertas: OfertaConteudo[] = [
+    {
+      id: "oferta-mt1-sync",
+      etapaId: "et-3",
+      macrotemaId: "mt-1",
+      modalidadeId: "mod-sincrona",
+      criterios: [
+        criterio("aulas_assistidas", false),
+        criterio("leitura_concluida", false),
+        criterio("presenca", true, { percentualMinimo: 75 }),
+        criterio("tarefa_entregue", true),
+        criterio("tarefa_validada", false),
+      ],
+    },
+    {
+      id: "oferta-mt1-async",
+      etapaId: "et-3",
+      macrotemaId: "mt-1",
+      modalidadeId: "mod-assincrona",
+      criterios: [
+        criterio("aulas_assistidas", true),
+        criterio("leitura_concluida", true),
+        criterio("presenca", false),
+        criterio("tarefa_entregue", false),
+        criterio("tarefa_validada", true, { notaCorte: 7 }),
+      ],
+    },
+    {
+      id: "oferta-mt2-sync",
+      etapaId: "et-3",
+      macrotemaId: "mt-2",
+      modalidadeId: "mod-sincrona",
+      criterios: [
+        criterio("aulas_assistidas", false),
+        criterio("leitura_concluida", true),
+        criterio("presenca", false),
+        criterio("tarefa_entregue", false),
+        criterio("tarefa_validada", false),
+      ],
+    },
+  ];
+
+  const itensConteudo: ItemConteudo[] = [
+    {
+      id: "item-mt1-sync-webconf",
+      ofertaId: "oferta-mt1-sync",
+      tipo: "webconferencia",
+      titulo: "Encontro síncrono do macrotema",
+      descricao: "Encontro ao vivo com a turma para o Macrotema 1.",
+      ordem: 1,
+      midiaId: "midia-mt1-sync-webconf",
+    },
+    {
+      id: "item-mt1-sync-texto",
+      ofertaId: "oferta-mt1-sync",
+      tipo: "texto",
+      titulo: "Texto-base do macrotema",
+      descricao: "Leitura de apoio para o encontro síncrono.",
+      ordem: 2,
+      midiaId: "midia-mt1-sync-texto",
+    },
+    {
+      id: "item-mt1-sync-tarefa",
+      ofertaId: "oferta-mt1-sync",
+      tipo: "tarefa",
+      titulo: "Registro da prática",
+      descricao: "",
+      ordem: 3,
+      enunciado:
+        "Depois do encontro síncrono, registre uma prática concreta que você vai experimentar na sua sala nas próximas duas semanas.",
+    },
+    {
+      id: "item-mt1-async-video-1",
+      ofertaId: "oferta-mt1-async",
+      tipo: "video",
+      titulo: "Aula 1 — Introdução ao planejamento intencional",
+      descricao: "",
+      ordem: 1,
+      midiaId: "midia-mt1-async-video-1",
+    },
+    {
+      id: "item-mt1-async-video-2",
+      ofertaId: "oferta-mt1-async",
+      tipo: "video",
+      titulo: "Aula 2 — Da intenção ao objetivo de aprendizagem",
+      descricao: "",
+      ordem: 2,
+      midiaId: "midia-mt1-async-video-2",
+    },
+    {
+      id: "item-mt1-async-video-3",
+      ofertaId: "oferta-mt1-async",
+      tipo: "video",
+      titulo: "Aula 3 — Planejando por etapas",
+      descricao: "",
+      ordem: 3,
+      midiaId: "midia-mt1-async-video-3",
+    },
+    {
+      id: "item-mt1-async-video-4",
+      ofertaId: "oferta-mt1-async",
+      tipo: "video",
+      titulo: "Aula 4 — Registrando e ajustando o planejamento",
+      descricao: "",
+      ordem: 4,
+      midiaId: "midia-mt1-async-video-4",
+    },
+    {
+      id: "item-mt1-async-texto",
+      ofertaId: "oferta-mt1-async",
+      tipo: "texto",
+      titulo: "Texto-base do macrotema",
+      descricao: "Leitura de apoio às quatro aulas.",
+      ordem: 5,
+      midiaId: "midia-mt1-async-texto",
+    },
+    {
+      id: "item-mt1-async-tarefa",
+      ofertaId: "oferta-mt1-async",
+      tipo: "tarefa",
+      titulo: "Registro da prática",
+      descricao: "",
+      ordem: 6,
+      enunciado:
+        "Depois de assistir às quatro aulas e ler o texto-base, registre uma prática concreta que você vai experimentar na sua sala nas próximas duas semanas.",
+    },
+    {
+      id: "item-mt2-sync-texto",
+      ofertaId: "oferta-mt2-sync",
+      tipo: "texto",
+      titulo: "Texto-base do macrotema",
+      descricao: "Leitura de apoio para o Macrotema 2.",
+      ordem: 1,
+      midiaId: "midia-mt2-sync-texto",
+    },
+  ];
+
+  // doc-1 (turma-1-1-1): 2 de 4 encontros lançados — nem zerado, nem
+  // completo, exatamente o roteiro pedido para a demonstração de presença.
+  const presencas: Presenca[] = [1, 2].map((encontro) => ({
+    id: `pres-doc-1-${encontro}`,
+    pessoaId: "doc-1",
+    turmaId: "turma-1-1-1",
+    etapaId: "et-3",
+    encontro,
+    presente: true,
+    lancadaEmISO: dias(35 + encontro),
+    lancadaPorId: "oper-1",
+  }));
+  // doc-2 (turma-1-1-2): os 4 encontros completos.
+  presencas.push(
+    ...[1, 2, 3, 4].map((encontro) => ({
+      id: `pres-doc-2-${encontro}`,
+      pessoaId: "doc-2",
+      turmaId: "turma-1-1-2",
+      etapaId: "et-3",
+      encontro,
+      presente: true,
+      lancadaEmISO: dias(35 + encontro),
+      lancadaPorId: "oper-1",
+    })),
+  );
+
+  // doc-2: tarefa da etapa de conteúdo entregue (síncrono, critério atendido).
+  const entregas: Entrega[] = [
+    {
+      id: "ent-conteudo-doc-2",
+      pessoaId: "doc-2",
+      etapaId: "et-3",
+      texto:
+        "Vou propor uma rotina semanal de intenção de aprendizagem escrita no quadro, revisitada no fechamento de cada aula.",
+      enviadaEmISO: dias(40),
+      destino: "coordenador",
+      status: "em_analise",
+    },
+    // doc-3: todas as aulas e a leitura concluídas, tarefa entregue e
+    // validada com nota acima do corte — critério de nota "atendido".
+    {
+      id: "ent-conteudo-doc-3",
+      pessoaId: "doc-3",
+      etapaId: "et-3",
+      texto:
+        "Vou registrar, em um diário de bordo, o objetivo de aprendizagem de cada aula antes de começar a turma.",
+      enviadaEmISO: dias(38),
+      destino: "coordenador",
+      status: "devolutiva_disponivel",
+    },
+    // doc-4: só 2 das 4 aulas e leitura parcial — tarefa entregue, mas com
+    // nota abaixo do corte — critério de nota "pendente".
+    {
+      id: "ent-conteudo-doc-4",
+      pessoaId: "doc-4",
+      etapaId: "et-3",
+      texto:
+        "Pretendo anotar os objetivos de aprendizagem no diário de classe.",
+      enviadaEmISO: dias(41),
+      destino: "coordenador",
+      status: "devolutiva_disponivel",
+    },
+  ];
+
+  const devolutivas: Devolutiva[] = [
+    {
+      id: "dev-conteudo-doc-3",
+      entregaId: "ent-conteudo-doc-3",
+      pessoaId: "doc-3",
+      autorId: "coord-1",
+      texto:
+        "Registro consistente e alinhado ao macrotema. A prática proposta é concreta e viável.",
+      parecer: "Atende",
+      nota: 8,
+      criadaEmISO: dias(44),
+    },
+    {
+      id: "dev-conteudo-doc-4",
+      entregaId: "ent-conteudo-doc-4",
+      pessoaId: "doc-4",
+      autorId: "coord-1",
+      texto:
+        "A prática ainda está genérica. Volte ao texto-base e detalhe como vai saber que os estudantes aprenderam.",
+      parecer: "Ajustar",
+      nota: 5,
+      criadaEmISO: dias(44),
+    },
+  ];
+
+  const progressoAulas: ProgressoAula[] = [
+    ...[
+      "item-mt1-async-video-1",
+      "item-mt1-async-video-2",
+      "item-mt1-async-video-3",
+      "item-mt1-async-video-4",
+    ].map((aulaId, k) => ({
+      id: `paula-doc-3-${k}`,
+      pessoaId: "doc-3",
+      etapaId: "et-3",
+      aulaId,
+      concluidaEmISO: dias(30 + k),
+    })),
+    ...["item-mt1-async-video-1", "item-mt1-async-video-2"].map(
+      (aulaId, k) => ({
+        id: `paula-doc-4-${k}`,
+        pessoaId: "doc-4",
+        etapaId: "et-3",
+        aulaId,
+        concluidaEmISO: dias(30 + k),
+      }),
+    ),
+  ];
+
+  const progressoLeituras: ProgressoLeitura[] = [
+    {
+      id: "leit-doc-3",
+      pessoaId: "doc-3",
+      etapaId: "et-3",
+      percentual: 100,
+      concluidaEmISO: dias(33),
+    },
+    {
+      id: "leit-doc-4",
+      pessoaId: "doc-4",
+      etapaId: "et-3",
+      percentual: 40,
+    },
+  ];
+
+  // Aviso "antes do prazo" já disparado, plantado no seed — o cálculo
+  // dinâmico contra o relógio real não serve para esta demonstração (ver
+  // lib/gestao.ts: alertasDisparados), então o momento vem pronto, no mesmo
+  // padrão do status "atrasada".
+  const notificacoesAlertas: Notificacao[] = [
+    {
+      id: "not-antes-doc-6",
+      pessoaId: "doc-6",
+      titulo: "Prazo próximo: Conteúdo base do macrotema",
+      descricao: "Faltam 3 dias para o prazo desta etapa.",
+      criadaEmISO: dias(42),
+      lida: false,
+      tipo: "prazo_proximo",
+      momento: "antes",
+    },
+  ];
+
+  return {
+    midias,
+    ofertas,
+    itensConteudo,
+    presencas,
+    entregas,
+    devolutivas,
+    progressoAulas,
+    progressoLeituras,
+    notificacoesAlertas,
+  };
+}
+
 export function criarEstadoInicial(): EstadoApp {
   const derivado = construirProgresso();
+  const conteudo = construirConteudoDemonstravel();
   return {
     versao: VERSAO_ESTADO,
     perfilAtivo: "docente-regente",
@@ -680,16 +1178,19 @@ export function criarEstadoInicial(): EstadoApp {
     turmas: derivado.turmas,
     inscricoes: derivado.inscricoes,
     progressoEtapas: derivado.progressoEtapas,
-    progressoAulas: [],
-    progressoLeituras: [],
-    entregas: derivado.entregas,
-    devolutivas: derivado.devolutivas,
+    progressoAulas: conteudo.progressoAulas,
+    progressoLeituras: conteudo.progressoLeituras,
+    entregas: [...derivado.entregas, ...conteudo.entregas],
+    devolutivas: [...derivado.devolutivas, ...conteudo.devolutivas],
     observacoes: derivado.observacoes,
-    notificacoes: derivado.notificacoes,
+    notificacoes: [...derivado.notificacoes, ...conteudo.notificacoesAlertas],
     autoavaliacoes: derivado.autoavaliacoes,
     historicoMacrotemas: derivado.historicoMacrotemas,
     portfolios: [],
-    arquivosConteudo: [],
+    midias: conteudo.midias,
+    ofertas: conteudo.ofertas,
+    itensConteudo: conteudo.itensConteudo,
+    presencas: conteudo.presencas,
     respostasEnquete: construirRespostasEnquete(),
   };
 }
