@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Download, Filter } from "lucide-react";
 import { toast } from "sonner";
 
+import { FunilEtapas } from "@/components/acompanhamento/FunilEtapas";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,13 +23,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useStore } from "@/data/store";
-import { ROTULO_TIPO_ETAPA } from "@/lib/ciclo";
 import { contadores, linhasDaEquipe } from "@/lib/equipe";
 import {
   aplicarFiltro,
   baixarCSV,
   csvDosDocentes,
-  funilDeEtapas,
   porMacrotema,
   porSegmento,
   porUnidade,
@@ -56,7 +55,6 @@ export function PainelGestaoCiclo() {
   });
 
   const c = contadores(filtradas);
-  const funil = funilDeEtapas(estado, filtradas);
   const unidadesAgregadas = porUnidade(filtradas);
 
   function exportar() {
@@ -121,40 +119,7 @@ export function PainelGestaoCiclo() {
         <Indicador rotulo="Concluídos" valor={c.concluidos} />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Funil das etapas do ciclo</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {funil.map((p) => (
-            <div key={p.etapa.id}>
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <span className="text-sm font-medium">
-                  {p.etapa.nome}{" "}
-                  <Badge variant="secondary" className="ml-1">
-                    {ROTULO_TIPO_ETAPA[p.etapa.tipo]}
-                  </Badge>
-                </span>
-
-                <p className="text-sm text-muted-foreground">
-                  {p.concluidas} concluíram · {p.emAndamento} em andamento ·{" "}
-                  {p.naoIniciadas} não começaram
-                </p>
-              </div>
-              <div
-                className="mt-1 h-3 w-full overflow-hidden rounded-full bg-secondary"
-                role="img"
-                aria-label={`${p.etapa.nome}: ${p.percentual}% concluído`}
-              >
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{ width: `${p.percentual}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      <FunilEtapas estado={estado} linhas={filtradas} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Agregado
