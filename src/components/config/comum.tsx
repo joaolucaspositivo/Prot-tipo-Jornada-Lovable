@@ -1,4 +1,9 @@
-import { GripVertical, ChevronDown, ChevronUp, TriangleAlert } from "lucide-react";
+import {
+  GripVertical,
+  ChevronDown,
+  ChevronUp,
+  TriangleAlert,
+} from "lucide-react";
 import { useCallback, useState, type ReactNode } from "react";
 
 import {
@@ -17,7 +22,7 @@ import type { CicloConfig } from "@/data/types";
 
 /** Lê e grava a configuração do ciclo (persistida em localStorage pelo store). */
 export function useCicloConfig() {
-  const { estado, atualizar } = useStore();
+  const { estado, atualizar, pessoaAtiva } = useStore();
 
   const salvarConfig = useCallback(
     (mudanca: (c: CicloConfig) => CicloConfig) => {
@@ -29,7 +34,13 @@ export function useCicloConfig() {
     [atualizar],
   );
 
-  return { estado, config: estado.cicloConfig, salvarConfig, atualizar };
+  return {
+    estado,
+    config: estado.cicloConfig,
+    salvarConfig,
+    atualizar,
+    pessoaAtiva,
+  };
 }
 
 interface PedidoConfirmacao {

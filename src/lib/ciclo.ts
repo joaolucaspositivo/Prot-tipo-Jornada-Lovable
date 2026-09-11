@@ -112,6 +112,88 @@ export function usoDaModalidade(estado: EstadoApp, modalidadeId: string) {
   return { turmas: turmas.length, inscricoes: inscricoes.length };
 }
 
+/** Docentes inscritos em uma turma (impacto de remover ou reduzir vagas). */
+export function usoDaTurma(estado: EstadoApp, turmaId: string) {
+  return {
+    inscricoes: estado.inscricoes.filter((i) => i.turmaId === turmaId).length,
+  };
+}
+
+/** Docentes inscritos em uma turma específica, para o Sheet de presença. */
+export function docentesDaTurma(estado: EstadoApp, turmaId: string) {
+  const idsInscritos = new Set(
+    estado.inscricoes
+      .filter((i) => i.turmaId === turmaId)
+      .map((i) => i.pessoaId),
+  );
+  return estado.pessoas.filter((p) => idsInscritos.has(p.id));
+}
+
+/** Se um passo do modo guiado da Configuração do Ciclo está travado. */
+export function passoGuiadoTravado(
+  estado: EstadoApp,
+  passo: string,
+  segmentacaoDecidida: boolean,
+): boolean {
+  const config = estado.cicloConfig;
+  if (passo === "modalidades") return macrotemasAtivos(config).length === 0;
+  if (passo === "turmas") {
+    return (
+      macrotemasAtivos(config).length === 0 ||
+      config.modalidades.filter((m) => m.ativa).length === 0
+    );
+  }
+  if (passo === "etapas") return !segmentacaoDecidida;
+  if (passo === "conteudo") {
+    return !config.etapas.some((e) => e.tipo === "conteudo");
+  }
+  return false;
+}
+
+export interface ResumoConferenciaCiclo {
+  macrotemasAtivos: number;
+  modalidadesAtivas: number;
+  totalTurmas: number;
+  totalVagas: number;
+  etapasEmOrdem: string[];
+  ofertasComConteudo: number;
+  ofertasVazias: number;
+}
+
+/** Resumo do ciclo para o passo de Conferência do modo guiado (3.4). */
+export function resumoConferenciaCiclo(
+  estado: EstadoApp,
+): ResumoConferenciaCiclo {
+  const config = estado.cicloConfig;
+  const etapasEmOrdem = [...config.etapas]
+    .sort((a, b) => a.ordem - b.ordem)
+    .map((e) => e.nome);
+
+  const itensPorOferta = new Map<string, number>();
+  for (const item of estado.itensConteudo) {
+    itensPorOferta.set(
+      item.ofertaId,
+      (itensPorOferta.get(item.ofertaId) ?? 0) + 1,
+    );
+  }
+  let ofertasComConteudo = 0;
+  let ofertasVazias = 0;
+  for (const oferta of estado.ofertas) {
+    if ((itensPorOferta.get(oferta.id) ?? 0) > 0) ofertasComConteudo += 1;
+    else ofertasVazias += 1;
+  }
+
+  return {
+    macrotemasAtivos: macrotemasAtivos(config).length,
+    modalidadesAtivas: config.modalidades.filter((m) => m.ativa).length,
+    totalTurmas: estado.turmas.length,
+    totalVagas: estado.turmas.reduce((soma, t) => soma + t.vagas, 0),
+    etapasEmOrdem,
+    ofertasComConteudo,
+    ofertasVazias,
+  };
+}
+
 /** Reordena um array movendo um item de posição e recalcula `ordem`. */
 export function moverItem<T>(itens: T[], de: number, para: number): T[] {
   const copia = [...itens];
