@@ -139,14 +139,18 @@ export function linhaDoDocente(
   };
 }
 
-/** Linhas da equipe do coordenador (ou de todos, para a operadora). */
+/** Linhas da equipe do coordenador, da unidade do diretor, ou de todos (operadora). */
 export function linhasDaEquipe(
   estado: EstadoApp,
-  filtro: { coordenadorId?: string } = {},
+  filtro: { coordenadorId?: string; unidade?: string } = {},
 ): LinhaEquipe[] {
   const pessoas = filtro.coordenadorId
     ? docentesDoCoordenador(estado, filtro.coordenadorId)
-    : estado.pessoas.filter((p) => p.perfil === "docente");
+    : filtro.unidade
+      ? estado.pessoas.filter(
+          (p) => p.perfil === "docente" && p.unidade === filtro.unidade,
+        )
+      : estado.pessoas.filter((p) => p.perfil === "docente");
   return pessoas.map((p) => linhaDoDocente(estado, p));
 }
 
