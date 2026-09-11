@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { materialDaEtapa } from "@/data/conteudos";
 import { useStore } from "@/data/store";
 import type { EstadoApp } from "@/data/types";
+import { etapaConcluidaPorCriterios, ofertaDoDocente } from "@/lib/avanco";
 import { formatarData, novoId, prazoDaEtapa } from "@/lib/ciclo";
 import {
   aulasConcluidas,
@@ -182,7 +183,7 @@ function AulasPage() {
 
     atualizar((anterior) => {
       const base = marcarProgressoEtapa(anterior);
-      return {
+      const comEntrega: EstadoApp = {
         ...base,
         entregas: [
           ...base.entregas,
@@ -199,11 +200,27 @@ function AulasPage() {
             status: "enviada" as const,
           },
         ],
-        progressoEtapas: base.progressoEtapas.map((p) =>
+      };
+
+      // Sem oferta ou sem nenhum critério ativo: mantém o comportamento
+      // sequencial (envio conclui a etapa). Com critério ativo, só conclui
+      // se todos os critérios — inclusive os que não são a própria tarefa,
+      // como aulas assistidas ou nota de corte — já estiverem atendidos.
+      const oferta = ofertaDoDocente(comEntrega, pessoaAtiva, etapa!);
+      const temCriterioAtivo = oferta?.criterios.some((c) => c.ativo) ?? false;
+      const concluidaAgora = temCriterioAtivo
+        ? etapaConcluidaPorCriterios(comEntrega, pessoaAtiva, etapa!)
+        : true;
+
+      return {
+        ...comEntrega,
+        progressoEtapas: comEntrega.progressoEtapas.map((p) =>
           p.pessoaId === pessoaAtiva.id && p.etapaId === etapa!.id
             ? {
                 ...p,
-                status: "concluida" as const,
+                status: concluidaAgora
+                  ? ("concluida" as const)
+                  : ("em_andamento" as const),
                 atualizadoEmISO: agora,
                 presencaEmISO: registraPresenca ? agora : p.presencaEmISO,
               }
@@ -216,12 +233,14 @@ function AulasPage() {
             titulo: registraPresenca
               ? "Tarefa enviada e presença registrada"
               : "Tarefa da etapa enviada",
-            descricao: `Etapa "${etapa!.nome}" concluída.`,
+            descricao: concluidaAgora
+              ? `Etapa "${etapa!.nome}" concluída.`
+              : `Tarefa da etapa "${etapa!.nome}" recebida. Ainda falta atender aos demais critérios de avanço.`,
             criadaEmISO: agora,
             lida: false,
             tipo: "mudanca_etapa" as const,
           },
-          ...base.notificacoes,
+          ...comEntrega.notificacoes,
         ],
       };
     });

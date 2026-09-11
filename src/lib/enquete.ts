@@ -21,11 +21,7 @@ export function etapaDeEnquete(
       ? null
       : pessoa.segmentoId,
   );
-  return etapas.find(
-    (e) =>
-      e.nome.toLowerCase().includes("enquete") ||
-      e.nome.toLowerCase().includes("360"),
-  );
+  return etapas.find((e) => e.tela === "enquete");
 }
 
 export function publicosDaEnquete(estado: EstadoApp): TipoRespondente[] {

@@ -21,12 +21,7 @@ export function etapaDePortfolio(
       ? null
       : pessoa.segmentoId,
   );
-  const porNome = etapas.find((e) =>
-    e.nome.toLowerCase().includes("portf"),
-  );
-  if (porNome) return porNome;
-  const deEntrega = etapas.filter((e) => e.tipo === "entrega");
-  return deEntrega[deEntrega.length - 1];
+  return etapas.find((e) => e.tela === "portfolio");
 }
 
 export function reflexoesConfiguradas(estado: EstadoApp): PerguntaReflexao[] {

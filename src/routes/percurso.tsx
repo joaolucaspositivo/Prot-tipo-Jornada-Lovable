@@ -80,10 +80,7 @@ function PercursoPage() {
 
   // Etapa da trilha que representa a escolha do percurso, vinda da configuração.
   const etapasOrdenadas = [...config.etapas].sort((a, b) => a.ordem - b.ordem);
-  const etapaEscolha =
-    etapasOrdenadas.find((e) => e.nome.toLowerCase().includes("escolha")) ??
-    etapasOrdenadas.find((e) => e.tipo === "avaliacao") ??
-    null;
+  const etapaEscolha = etapasOrdenadas.find((e) => e.tela === "percurso") ?? null;
 
   function inscrever(turma: Turma, turmaAnteriorId?: string) {
     const agora = new Date().toISOString();

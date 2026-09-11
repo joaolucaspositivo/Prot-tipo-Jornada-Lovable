@@ -15,8 +15,11 @@ import type {
   Etapa,
   Pessoa,
   StatusEtapa,
+  TelaEtapa,
+  TipoCriterioAvanco,
   TipoEtapa,
 } from "@/data/types";
+import { criteriosDoDocente, etapaConcluidaPorCriterios, ofertaDoDocente } from "@/lib/avanco";
 import { etapasDoSegmento, prazoDaEtapa } from "@/lib/ciclo";
 
 export const ICONE_TIPO_ETAPA: Record<TipoEtapa, typeof BookOpen> = {
@@ -48,19 +51,33 @@ export interface ItemTrilha {
   prazo: Date;
   /** por que a etapa está bloqueada, em linguagem direta */
   motivoBloqueio?: string | undefined;
+  /** critério de avanço que ainda falta, para etapa de conteúdo com oferta */
+  oQueFalta?: string | undefined;
   acao: AcaoEtapa;
 }
 
+/** Mapa total: toda TelaEtapa tem uma entrada, "painel" não tem rota própria. */
+const ROTA_DA_TELA: Record<TelaEtapa, RotaEtapa | undefined> = {
+  autoavaliacao: "/autoavaliacao",
+  percurso: "/percurso",
+  conteudo: "/aulas",
+  entrega: "/entrega",
+  portfolio: "/portfolio",
+  enquete: "/enquete",
+  painel: undefined,
+};
+
 function rotaDaEtapa(etapa: Etapa): RotaEtapa | undefined {
-  const nome = etapa.nome.toLowerCase();
-  if (nome.includes("portf")) return "/portfolio";
-  if (nome.includes("enquete") || nome.includes("360")) return "/enquete";
-  if (etapa.tipo === "autoavaliacao") return "/autoavaliacao";
-  if (etapa.tipo === "conteudo") return "/aulas";
-  if (etapa.tipo === "entrega") return "/entrega";
-  if (nome.includes("escolha") || nome.includes("turma")) return "/percurso";
-  return undefined;
+  return ROTA_DA_TELA[etapa.tela];
 }
+
+const FRASE_CRITERIO_PENDENTE: Record<TipoCriterioAvanco, string> = {
+  aulas_assistidas: "assistir a todas as aulas",
+  leitura_concluida: "concluir a leitura do texto-base",
+  presenca: "atingir a presença mínima no encontro",
+  tarefa_entregue: "entregar a tarefa",
+  tarefa_validada: "ter a tarefa validada pelo professor",
+};
 
 function rotuloDaAcao(tipo: TipoEtapa, status: StatusEtapa): string {
   if (status === "concluida") return "Rever esta etapa";
@@ -101,10 +118,20 @@ export function trilhaDoDocente(
       (p) => p.pessoaId === pessoa.id && p.etapaId === etapa.id,
     );
     const prazo = prazoDaEtapa(config, etapa);
-    const concluida = progresso?.status === "concluida";
+
+    // Etapa de conteúdo com oferta configurada conclui pelos critérios de
+    // avanço OU pelo ProgressoEtapa gravado — nunca só pelos critérios: o
+    // seed e todo progresso existente dependem do status persistido, e
+    // trocar por substituição regrediria etapas já concluídas.
+    const temOferta =
+      etapa.tipo === "conteudo" && ofertaDoDocente(estado, pessoa, etapa) !== undefined;
+    const concluida =
+      progresso?.status === "concluida" ||
+      (temOferta && etapaConcluidaPorCriterios(estado, pessoa, etapa));
 
     let status: StatusEtapa;
     let motivoBloqueio: string | undefined;
+    let oQueFalta: string | undefined;
 
     if (concluida) {
       status = "concluida";
@@ -120,6 +147,15 @@ export function trilhaDoDocente(
       status = prazo < agora ? "atrasada" : "pendente";
     }
 
+    if (temOferta && !concluida) {
+      const pendente = criteriosDoDocente(estado, pessoa, etapa).find(
+        (c) => !c.atendido,
+      );
+      if (pendente) {
+        oQueFalta = `Falta ${FRASE_CRITERIO_PENDENTE[pendente.tipo]}.`;
+      }
+    }
+
     if (!concluida && !anteriorPendente && etapa.obrigatoria) {
       anteriorPendente = etapa;
     }
@@ -129,6 +165,7 @@ export function trilhaDoDocente(
       status,
       prazo,
       motivoBloqueio,
+      oQueFalta,
       acao: { rotulo: rotuloDaAcao(etapa.tipo, status), para: rotaDaEtapa(etapa) },
     });
   });
