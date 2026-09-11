@@ -186,14 +186,13 @@ A troca de perfil é do seletor de demonstração. **Não implemente permissões
 - **Painel inicial (`/`)** é um espaço reservado para todos os perfis.
 - **`/unidade` (diretor)** é um espaço reservado — D18 mandou torná-lo real.
 - **Tipo de etapa `curso` com `referenciaExterna`**, previsto em D01/D10 como caminho secundário, ainda não existe. Fica para o MVP.
-- Navegação: itens do menu lateral do docente duplicam etapas que já se acessam pela Minha Jornada.
 
 **Da rodada P1+P2 (lapidação da etapa de conteúdo e configuração do ciclo):**
 
 - **Quem lança a presença da turma síncrona é a equipe operadora**, na aba Turmas da Gestão do Ciclo — foi onde a reunião apontou. D16 fala em "professor da turma", mas **não existe perfil de professor no sistema** (`Turma.professorNome` é texto livre, não `Pessoa`). Pergunta em aberto para a próxima reunião: esse lançamento deveria ser de um perfil novo?
 - **`Midia.corpo`** (texto-base escrito direto no sistema) é campo aditivo desta rodada, fora do texto literal da especificação — sem ele não havia onde guardar o texto digitado. Confirmar com o cliente.
 - **A regra "primeira turma esgota antes de ofertar a próxima"** (autoinscrição) **não foi implementada** — `percurso.tsx` continua deixando o docente escolher livremente entre as turmas com vaga da modalidade escolhida. Fica para uma próxima rodada se for necessária para a demonstração.
-- **Link do encontro ao vivo:** a tela do docente usa `Midia.url` do item de conteúdo (por oferta, compartilhado entre as turmas daquela combinação) para o botão "Entrar no encontro" — não `Turma.linkAcesso` (por turma, editado na aba Turmas). Os dois campos coexistem; confirmar com o cliente se cada turma deveria ter seu próprio link de fato, ou se um link único por oferta é aceitável para a demonstração.
+- **Link do encontro ao vivo — resolvido:** o botão "Entrar no encontro" usa `Turma.linkAcesso`, da turma em que o docente está inscrito — decisão de hoje, a favor do que a reunião de lapidação registrou ("a turma 1 vai usar esse link, a turma 2 usa outro link"). `ItemConteudo` tipo `webconferencia` / `Midia.url` viraram complementares (ex.: gravação anexada depois), não a fonte do link principal.
 - **`ItemConteudo.ordem`** nasce 0-based ao criar um item pela aba Conteúdo, mas vira 1-based depois de qualquer reordenação (arrasta-e-solta), porque usa `reindexar()` de `ciclo.ts`. Não tem efeito funcional (a ordenação é sempre relativa), só é uma inconsistência cosmética a arrumar se algum dia incomodar.
 - **`src/data/conteudos.ts`** (mock de aulas/texto) continua existindo como fallback: quando a etapa de conteúdo não tem oferta configurada, a tela do docente usa o mock, exatamente como antes desta rodada.
 

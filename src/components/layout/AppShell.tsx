@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/sheet";
 import { ROTULO_PERFIL, useStore } from "@/data/store";
 import type { PerfilId } from "@/data/types";
+import { trilhaDoDocente, type RotaEtapa } from "@/lib/jornada";
 import { cn } from "@/lib/utils";
 
 import { CentralNotificacoes } from "./CentralNotificacoes";
@@ -74,9 +75,26 @@ function SeletorPerfil() {
 }
 
 function ListaNav({ aoNavegar }: { aoNavegar?: () => void }) {
-  const { estado } = useStore();
+  const { estado, pessoaAtiva } = useStore();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const itens = NAVEGACAO_POR_PERFIL[estado.perfilAtivo];
+  const todosOsItens = NAVEGACAO_POR_PERFIL[estado.perfilAtivo];
+
+  // Um item do menu só aparece se a rota dele não for a rota de nenhuma
+  // etapa da trilha atual do docente — senão duplica o que já se acessa
+  // por Minha Jornada. Calculado a partir de trilhaDoDocente(), nunca de
+  // uma lista fixa de rotas: a trilha muda por cicloConfig e por segmento.
+  const ehDocente = pessoaAtiva.perfil.startsWith("docente");
+  const rotasNaJornada = ehDocente
+    ? new Set(
+        trilhaDoDocente(estado, pessoaAtiva)
+          .map((item) => item.acao.para)
+          .filter((rota): rota is RotaEtapa => rota !== undefined),
+      )
+    : new Set<RotaEtapa>();
+
+  const itens = todosOsItens.filter(
+    (item) => !rotasNaJornada.has(item.para as RotaEtapa),
+  );
 
   return (
     <nav className="flex flex-col gap-1 p-3" aria-label="Navegação principal">

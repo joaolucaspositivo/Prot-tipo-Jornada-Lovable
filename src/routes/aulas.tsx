@@ -542,7 +542,7 @@ function AulasPage() {
 
           {itemWebconferencia && (
             <TabsContent value="webconferencia" className="mt-4">
-              {midiaWebconferencia?.url ? (
+              {turma?.linkAcesso ? (
                 <Card>
                   <CardHeader className="flex-row items-center gap-3 space-y-0">
                     <Video className="size-5 text-primary" aria-hidden />
@@ -552,13 +552,13 @@ function AulasPage() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <p className="text-sm text-muted-foreground">
-                      {turma?.nome ?? "Turma"}
-                      {turma?.professorNome
+                      {turma.nome}
+                      {turma.professorNome
                         ? ` · Professor: ${turma.professorNome}`
                         : ""}
-                      {turma?.horario ? ` · ${turma.horario}` : ""}
+                      {turma.horario ? ` · ${turma.horario}` : ""}
                     </p>
-                    {turma && turma.diasSemana.length > 0 ? (
+                    {turma.diasSemana.length > 0 ? (
                       <p className="text-sm text-muted-foreground">
                         {turma.diasSemana
                           .map((d) => ROTULO_DIA_SEMANA[d])
@@ -566,8 +566,12 @@ function AulasPage() {
                       </p>
                     ) : null}
                     <Button asChild className="gap-1.5">
+                      {/* Link é da turma em que o docente está inscrito, não
+                          da oferta — cada turma tem o seu (D13/reunião de
+                          lapidação): "a turma 1 vai usar esse link, a turma
+                          2 usa outro link". */}
                       <a
-                        href={midiaWebconferencia.url}
+                        href={turma.linkAcesso}
                         target="_blank"
                         rel="noreferrer"
                       >
@@ -575,17 +579,27 @@ function AulasPage() {
                         <ExternalLink className="size-4" aria-hidden />
                       </a>
                     </Button>
-                    {turma ? (
-                      <p className="text-sm text-muted-foreground">
-                        {encontrosRegistrados(
-                          estado,
-                          pessoaAtiva.id,
-                          turma.id,
-                          etapa.id,
-                        )}{" "}
-                        de {turma.encontrosPrevistos} encontro(s) registrados
+                    {midiaWebconferencia?.url ? (
+                      <p className="text-sm">
+                        <a
+                          href={midiaWebconferencia.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-accent-foreground underline underline-offset-2"
+                        >
+                          Material complementar do encontro
+                        </a>
                       </p>
                     ) : null}
+                    <p className="text-sm text-muted-foreground">
+                      {encontrosRegistrados(
+                        estado,
+                        pessoaAtiva.id,
+                        turma.id,
+                        etapa.id,
+                      )}{" "}
+                      de {turma.encontrosPrevistos} encontro(s) registrados
+                    </p>
                   </CardContent>
                 </Card>
               ) : (
