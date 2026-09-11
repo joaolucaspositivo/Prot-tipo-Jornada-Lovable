@@ -53,11 +53,25 @@ export interface Segmento {
 export type CenarioSegmentacao = "trilha_unica" | "trilha_por_segmento";
 
 export interface AlertaPendencia {
+  /** dias ANTES do prazo para avisar o docente. 0 = não avisa antes */
+  diasAntes: number;
+  /** avisa também no dia do vencimento */
+  noVencimento: boolean;
   /** dias de atraso até alertar o coordenador */
   diasParaCoordenador: number;
-  /** o docente também é alertado */
+  /** o docente também é alertado no atraso */
   alertarDocente: boolean;
 }
+
+/** Tela do docente que uma etapa abre. Substitui a inferência por nome. */
+export type TelaEtapa =
+  | "autoavaliacao"
+  | "percurso"
+  | "conteudo"
+  | "entrega"
+  | "portfolio"
+  | "enquete"
+  | "painel";
 
 export interface Etapa {
   id: string;
@@ -71,6 +85,10 @@ export interface Etapa {
   /** quando vazio, vale para todos os segmentos */
   segmentos: string[];
   alerta: AlertaPendencia;
+  /** tela que esta etapa abre para o docente */
+  tela: TelaEtapa;
+  /** carga horária declarada da etapa (D10) */
+  cargaHoraria?: number | undefined;
 }
 
 export interface Conquista {
@@ -151,6 +169,14 @@ export interface Turma {
   horario: string;
   vagas: number;
   vagasOcupadas: number;
+  /** professor responsável — o docente não escolhe e não precisa ver */
+  professorNome: string;
+  /** link de acesso; só faz sentido na modalidade síncrona */
+  linkAcesso?: string | undefined;
+  /** dias da semana, 0 = domingo ... 6 = sábado. Vazio na assíncrona */
+  diasSemana: number[];
+  /** total de encontros previstos — base do cálculo de presença */
+  encontrosPrevistos: number;
 }
 
 export interface Inscricao {
@@ -192,6 +218,8 @@ export interface Devolutiva {
   autorId: string;
   texto: string;
   parecer?: string | undefined;
+  /** nota de 0 a 10 atribuída pelo professor — base do critério tarefa_validada */
+  nota?: number | undefined;
   criadaEmISO: string;
   cienciaEmISO?: string | undefined;
 }
@@ -221,6 +249,8 @@ export interface Notificacao {
     | "devolutiva"
     | "prazo_proximo"
     | "pendencia";
+  /** momento do alerta de prazo (antes/no vencimento/atraso) — só para tipo prazo_proximo/pendencia */
+  momento?: "antes" | "vencimento" | "atraso" | undefined;
 }
 
 export interface Autoavaliacao {
@@ -270,21 +300,94 @@ export interface ProgressoLeitura {
 }
 
 /**
- * Arquivo de conteúdo enviado pela equipe operadora de dentro do sistema.
- * O envio ao Drive institucional é simulado: ninguém copia URL.
+ * Arquivo na biblioteca de mídia (D11). Existe independentemente de etapa,
+ * turma ou ciclo, para poder ser reaproveitado. O upload ao Drive
+ * institucional é simulado: o operador nunca copia URL.
  */
-export interface ArquivoConteudo {
+export interface Midia {
   id: string;
   nome: string;
-  tipo: "video" | "texto";
-  arquivoTipo: string;
-  tamanhoBytes: number;
+  tipo: "video" | "texto" | "link";
+  arquivoTipo?: string | undefined;
+  tamanhoBytes?: number | undefined;
+  /** referência gerada automaticamente no Drive institucional (simulada) */
+  referenciaDrive?: string | undefined;
+  /** endereço externo — só para tipo `link` (webconferência) */
+  url?: string | undefined;
+  duracaoMin?: number | undefined;
+  /**
+   * Corpo do texto-base quando escrito diretamente no sistema — só para
+   * tipo `texto` sem arquivo anexado. Campo aditivo: a especificação P1+P2
+   * não previa onde o texto digitado ficaria guardado; sem ele o critério
+   * de aceite 6 (texto-base aparecendo na tela do docente) não fecha.
+   */
+  corpo?: string | undefined;
+  enviadaEmISO: string;
+  enviadaPorId: string;
+}
+
+export type TipoItemConteudo = "video" | "texto" | "webconferencia" | "tarefa";
+
+/**
+ * Oferta: o que existe para um macrotema, em uma modalidade, dentro de uma
+ * etapa de conteúdo (D14). É aqui que moram os itens e os critérios de avanço.
+ */
+export interface OfertaConteudo {
+  id: string;
   etapaId: string;
   macrotemaId: string;
-  /** referência gerada automaticamente no Drive institucional (simulada) */
-  referenciaDrive: string;
-  enviadoEmISO: string;
-  enviadoPorId: string;
+  modalidadeId: string;
+  criterios: CriterioAvanco[];
+}
+
+/** Item de conteúdo de uma oferta, na ordem em que o docente o encontra. */
+export interface ItemConteudo {
+  id: string;
+  ofertaId: string;
+  tipo: TipoItemConteudo;
+  titulo: string;
+  descricao: string;
+  ordem: number;
+  /** aponta para a biblioteca de mídia; ausente em itens do tipo `tarefa` */
+  midiaId?: string | undefined;
+  /** enunciado, só para itens do tipo `tarefa` */
+  enunciado?: string | undefined;
+}
+
+export type TipoCriterioAvanco =
+  | "aulas_assistidas"
+  | "leitura_concluida"
+  | "presenca"
+  | "tarefa_entregue"
+  | "tarefa_validada";
+
+/** Critério que libera o avanço de fase (D15). */
+export interface CriterioAvanco {
+  tipo: TipoCriterioAvanco;
+  ativo: boolean;
+  /** `presenca`: percentual mínimo de encontros (0 a 100) */
+  percentualMinimo?: number | undefined;
+  /** `tarefa_validada`: nota de corte de 0 a 10 */
+  notaCorte?: number | undefined;
+}
+
+/**
+ * Presença lançada pelo professor da turma (D16, modalidade síncrona).
+ * Na assíncrona a presença continua vindo do envio da tarefa (RF15).
+ */
+export interface Presenca {
+  id: string;
+  pessoaId: string;
+  turmaId: string;
+  etapaId: string;
+  /** número do encontro, de 1 até `Turma.encontrosPrevistos` */
+  encontro: number;
+  presente: boolean;
+  lancadaEmISO: string;
+  lancadaPorId: string;
+  /** liberação manual — atestado, por exemplo */
+  justificada?: boolean | undefined;
+  observacao?: string | undefined;
 }
 
 /** Anexo simulado do portfólio: guarda apenas os metadados do arquivo. */
@@ -337,7 +440,9 @@ export interface EstadoApp {
   autoavaliacoes: Autoavaliacao[];
   historicoMacrotemas: HistoricoMacrotema[];
   portfolios: Portfolio[];
-  arquivosConteudo: ArquivoConteudo[];
+  midias: Midia[];
+  ofertas: OfertaConteudo[];
+  itensConteudo: ItemConteudo[];
+  presencas: Presenca[];
   respostasEnquete: RespostaEnquete[];
-
 }
