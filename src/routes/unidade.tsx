@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { Placeholder } from "@/components/layout/Placeholder";
+import { PainelUnidade } from "@/components/diretor/PainelUnidade";
 
 export const Route = createFileRoute("/unidade")({
   head: () => ({
@@ -8,20 +8,16 @@ export const Route = createFileRoute("/unidade")({
       { title: "Minha unidade — Jornada Pedagógica de Desenvolvimento" },
       {
         name: "description",
-        content: "Visão do diretor sobre o andamento do ciclo na unidade.",
+        content:
+          "Acompanhamento por etapa dos docentes da unidade, organizado por coordenador (D18).",
       },
       { property: "og:title", content: "Minha unidade" },
       {
         property: "og:description",
-        content: "Visão do diretor sobre o andamento do ciclo na unidade.",
+        content:
+          "Acompanhamento por etapa dos docentes da unidade, organizado por coordenador (D18).",
       },
     ],
   }),
-  component: () => (
-    <Placeholder
-      titulo="Minha unidade"
-      descricao="Representação mínima: papel do diretor ainda a confirmar."
-      etapa="Transversais e ajustes finais"
-    />
-  ),
+  component: PainelUnidade,
 });
