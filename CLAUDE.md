@@ -129,7 +129,8 @@ src/
     conteudo.ts     percursoDoDocente, aulasConcluidas, leituraDaEtapa, presencasAutomaticas
                      (só a automática — a lançada à mão está em estado.presencas)
     entrega.ts      destino da entrega — regente vai ao coordenador, corregente à equipe central
-    equipe.ts       linhasDaEquipe — base compartilhada do painel do coordenador e do da operadora
+    equipe.ts       linhasDaEquipe — base compartilhada do painel do coordenador, do diretor
+                     (filtro por unidade) e da operadora
     gestao.ts       conferências, alertas disparados (lê estado.notificacoes, não recalcula prazo
                      — ver seção 7), ocupação de turmas, docentesDaTurma
     observacao.ts   agenda e parecer de observação de aula
@@ -141,9 +142,13 @@ src/
     jornada/        trilha, conquistas, painel de etapa (docente)
     conteudo/       player de aulas, leitura do texto-base, presenças automáticas,
                      AvisoConteudoIndisponivel (D11)
-    coordenador/    painel da equipe, detalhe do docente, agenda de observações
+    acompanhamento/ FunilEtapas — funil de etapas com detalhamento clicável e "avisar todos"
+                     (RF32), compartilhado por operadora, coordenador e diretor
+    coordenador/    painel da equipe (PainelEquipe, escopo coordenador/operadora/diretor),
+                     detalhe do docente, agenda de observações
     operadora/      gestão do ciclo, conferências, ocupação/lançamento de presença, alertas
                      (GestaoConteudo.tsx foi removido — virou a aba Conteúdo)
+    diretor/        PainelUnidade — acompanhamento da unidade por coordenador (D18)
     layout/         AppShell, navegação por perfil, central de notificações
   routes/           uma rota por arquivo (conteudo.tsx só redireciona para /configuracao)
 ```
@@ -183,8 +188,6 @@ A troca de perfil é do seletor de demonstração. **Não implemente permissões
 ## 9. O que está pendente e conhecido
 
 - **Regras de conclusão das demais etapas** (autoavaliação, encontro, avaliação) seguem provisórias — a regra sequencial. Resolvido apenas para a etapa de conteúdo, por D15.
-- **Painel inicial (`/`)** é um espaço reservado para todos os perfis.
-- **`/unidade` (diretor)** é um espaço reservado — D18 mandou torná-lo real.
 - **Tipo de etapa `curso` com `referenciaExterna`**, previsto em D01/D10 como caminho secundário, ainda não existe. Fica para o MVP.
 
 **Da rodada P1+P2 (lapidação da etapa de conteúdo e configuração do ciclo):**
@@ -195,6 +198,12 @@ A troca de perfil é do seletor de demonstração. **Não implemente permissões
 - **Link do encontro ao vivo — resolvido:** o botão "Entrar no encontro" usa `Turma.linkAcesso`, da turma em que o docente está inscrito — decisão de hoje, a favor do que a reunião de lapidação registrou ("a turma 1 vai usar esse link, a turma 2 usa outro link"). `ItemConteudo` tipo `webconferencia` / `Midia.url` viraram complementares (ex.: gravação anexada depois), não a fonte do link principal.
 - **`ItemConteudo.ordem`** nasce 0-based ao criar um item pela aba Conteúdo, mas vira 1-based depois de qualquer reordenação (arrasta-e-solta), porque usa `reindexar()` de `ciclo.ts`. Não tem efeito funcional (a ordenação é sempre relativa), só é uma inconsistência cosmética a arrumar se algum dia incomodar.
 - **`src/data/conteudos.ts`** (mock de aulas/texto) continua existindo como fallback: quando a etapa de conteúdo não tem oferta configurada, a tela do docente usa o mock, exatamente como antes desta rodada.
+
+**Da rodada P3 (acompanhamento — RF32, D18):**
+
+- **O painel do diretor (`/unidade`) agrupa por `Pessoa.coordenadorId` do docente, não pela `unidade` do coordenador.** É a única leitura consistente com o modelo atual — um coordenador pode liderar docentes de mais de uma unidade. Se o cliente esperava unidades com coordenadores fixos, isso muda o desenho. Confirmar com o cliente.
+- **"Avisar todos" no funil (`FunilEtapas`) alcança todo docente que não concluiu a etapa** (pendente, em andamento ou atrasado), não só quem está atrasado. Se o Lucas quiser um botão separado só para atrasados, é ajuste pequeno. Confirmar com o cliente.
+- **O painel inicial (`/`) virou um resumo com atalho por perfil, não um dashboard completo** — contadores + botão para a tela cheia (`/equipe`, `/gestao` ou `/unidade`; "Ver Minha Jornada" para o docente). Não duplica o funil nem a tabela. Se o cliente esperava o funil já na tela inicial, é uma adição pequena de trazer, não uma mudança de estrutura. Confirmar com o cliente.
 
 ---
 
