@@ -117,25 +117,35 @@ src/
     types.ts        Modelo de dados inteiro. Comece por aqui.
     seed.ts         SEED de demonstração. Nada aqui é regra do sistema.
     store.tsx       Contexto React + localStorage. useStore(), atualizar(), resetarDemonstracao().
-    conteudos.ts    Material mock da etapa de conteúdo.
+    conteudos.ts    Material mock — só usado quando a etapa de conteúdo NÃO tem oferta configurada.
   lib/              Leituras derivadas. Sem JSX, sem estado.
-    ciclo.ts        etapasDoSegmento, macrotemasAtivos, prazoDaEtapa, moverItem, reindexar, novoId
-    jornada.ts      trilhaDoDocente — status de cada etapa do docente
-    conteudo.ts     percursoDoDocente, aulasConcluidas, leituraDaEtapa, presencas
+    ciclo.ts        etapasDoSegmento, macrotemasAtivos, prazoDaEtapa, moverItem, reindexar, novoId,
+                     usoDaTurma, docentesDaTurma, passoGuiadoTravado, resumoConferenciaCiclo
+    avanco.ts       Critérios de avanço da etapa de conteúdo (D15): ofertaDoDocente,
+                     itensDaOferta, criteriosDoDocente, etapaConcluidaPorCriterios,
+                     percentualPresenca. NÃO importa de jornada.ts (evita ciclo — é o inverso).
+    jornada.ts      trilhaDoDocente — status de cada etapa do docente, agora OR'd com avanco.ts
+                     para etapa de conteúdo com oferta
+    conteudo.ts     percursoDoDocente, aulasConcluidas, leituraDaEtapa, presencasAutomaticas
+                     (só a automática — a lançada à mão está em estado.presencas)
     entrega.ts      destino da entrega — regente vai ao coordenador, corregente à equipe central
     equipe.ts       linhasDaEquipe — base compartilhada do painel do coordenador e do da operadora
-    gestao.ts       conferências, alertas disparados, ocupação de turmas
+    gestao.ts       conferências, alertas disparados (lê estado.notificacoes, não recalcula prazo
+                     — ver seção 7), ocupação de turmas, docentesDaTurma
     observacao.ts   agenda e parecer de observação de aula
     notificacoes.ts central de notificações
   components/
     ui/             shadcn. NÃO EDITE estes arquivos.
-    config/         abas da Configuração do Ciclo (operadora)
+    config/         abas da Configuração do Ciclo (operadora), incluindo AbaTurmas, AbaConteudo
+                     e ModoGuiado (cabeçalho de passos + Conferência)
     jornada/        trilha, conquistas, painel de etapa (docente)
-    conteudo/       player de aulas, leitura do texto-base, presenças
+    conteudo/       player de aulas, leitura do texto-base, presenças automáticas,
+                     AvisoConteudoIndisponivel (D11)
     coordenador/    painel da equipe, detalhe do docente, agenda de observações
-    operadora/      gestão do ciclo, conferências, ocupação, alertas, conteúdo
+    operadora/      gestão do ciclo, conferências, ocupação/lançamento de presença, alertas
+                     (GestaoConteudo.tsx foi removido — virou a aba Conteúdo)
     layout/         AppShell, navegação por perfil, central de notificações
-  routes/           uma rota por arquivo
+  routes/           uma rota por arquivo (conteudo.tsx só redireciona para /configuracao)
 ```
 
 **Padrão de trabalho:** leitura de dados vai para `src/lib/` como função pura sobre `EstadoApp`; componente só renderiza e chama `atualizar()`. Não coloque regra de negócio dentro de JSX.
@@ -151,6 +161,8 @@ src/
 - O botão de reiniciar demonstração chama `resetarDemonstracao()`.
 
 **O seed é o roteiro da demonstração.** Ele precisa deixar visível, no primeiro carregamento, cada coisa que a reunião vai mostrar — inclusive os dois caminhos (síncrono e assíncrono) e docentes em estágios diferentes do ciclo. Um recurso que só aparece depois de o usuário cadastrar algo não existe na demonstração.
+
+Desde a rodada P1+P2, `EstadoApp` também guarda `midias`, `ofertas`, `itensConteudo` e `presencas` (biblioteca de mídia, oferta de conteúdo por etapa×macrotema×modalidade, itens da oferta e presença lançada à mão na síncrona — D11/D14/D16). `arquivosConteudo`/`ArquivoConteudo` foram removidos.
 
 ---
 
@@ -175,6 +187,15 @@ A troca de perfil é do seletor de demonstração. **Não implemente permissões
 - **`/unidade` (diretor)** é um espaço reservado — D18 mandou torná-lo real.
 - **Tipo de etapa `curso` com `referenciaExterna`**, previsto em D01/D10 como caminho secundário, ainda não existe. Fica para o MVP.
 - Navegação: itens do menu lateral do docente duplicam etapas que já se acessam pela Minha Jornada.
+
+**Da rodada P1+P2 (lapidação da etapa de conteúdo e configuração do ciclo):**
+
+- **Quem lança a presença da turma síncrona é a equipe operadora**, na aba Turmas da Gestão do Ciclo — foi onde a reunião apontou. D16 fala em "professor da turma", mas **não existe perfil de professor no sistema** (`Turma.professorNome` é texto livre, não `Pessoa`). Pergunta em aberto para a próxima reunião: esse lançamento deveria ser de um perfil novo?
+- **`Midia.corpo`** (texto-base escrito direto no sistema) é campo aditivo desta rodada, fora do texto literal da especificação — sem ele não havia onde guardar o texto digitado. Confirmar com o cliente.
+- **A regra "primeira turma esgota antes de ofertar a próxima"** (autoinscrição) **não foi implementada** — `percurso.tsx` continua deixando o docente escolher livremente entre as turmas com vaga da modalidade escolhida. Fica para uma próxima rodada se for necessária para a demonstração.
+- **Link do encontro ao vivo:** a tela do docente usa `Midia.url` do item de conteúdo (por oferta, compartilhado entre as turmas daquela combinação) para o botão "Entrar no encontro" — não `Turma.linkAcesso` (por turma, editado na aba Turmas). Os dois campos coexistem; confirmar com o cliente se cada turma deveria ter seu próprio link de fato, ou se um link único por oferta é aceitável para a demonstração.
+- **`ItemConteudo.ordem`** nasce 0-based ao criar um item pela aba Conteúdo, mas vira 1-based depois de qualquer reordenação (arrasta-e-solta), porque usa `reindexar()` de `ciclo.ts`. Não tem efeito funcional (a ordenação é sempre relativa), só é uma inconsistência cosmética a arrumar se algum dia incomodar.
+- **`src/data/conteudos.ts`** (mock de aulas/texto) continua existindo como fallback: quando a etapa de conteúdo não tem oferta configurada, a tela do docente usa o mock, exatamente como antes desta rodada.
 
 ---
 
