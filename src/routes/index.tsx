@@ -1,9 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight } from "lucide-react";
 
-import { Placeholder } from "@/components/layout/Placeholder";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EstadoBadge } from "@/components/EstadoBadge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ROTULO_PERFIL, useStore } from "@/data/store";
+import type { PerfilId } from "@/data/types";
+import { contadores, linhasDaEquipe } from "@/lib/equipe";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -87,19 +90,101 @@ function Painel() {
         </Card>
       )}
 
-      <Placeholder
-        titulo="Painel do perfil"
-        descricao="Os indicadores completos deste perfil entram nas próximas etapas."
-        etapa={
-          perfil === "coordenador"
-            ? "Painel do coordenador e devolutivas"
-            : perfil === "operadora"
-              ? "Painel de gestão da operadora"
-              : perfil === "diretor"
-                ? "Visão da unidade"
-                : "Minha Jornada"
-        }
-      />
+      <AtalhoDoPerfil perfil={perfil} />
+    </div>
+  );
+}
+
+/** Resumo compacto + atalho por perfil — porta de entrada, não painel completo. */
+function AtalhoDoPerfil({ perfil }: { perfil: PerfilId }) {
+  const { estado, pessoaAtiva } = useStore();
+
+  if (perfil === "coordenador") {
+    const c = contadores(
+      linhasDaEquipe(estado, { coordenadorId: pessoaAtiva.id }),
+    );
+    return <CartaoAtalho dados={c} rotulo="Ver minha equipe" para="/equipe" />;
+  }
+
+  if (perfil === "operadora") {
+    const c = contadores(linhasDaEquipe(estado));
+    return (
+      <CartaoAtalho dados={c} rotulo="Ver gestão do ciclo" para="/gestao" />
+    );
+  }
+
+  if (perfil === "diretor") {
+    const c = contadores(
+      linhasDaEquipe(estado, { unidade: pessoaAtiva.unidade }),
+    );
+    return (
+      <CartaoAtalho dados={c} rotulo="Ver minha unidade" para="/unidade" />
+    );
+  }
+
+  return (
+    <div>
+      <Button asChild className="gap-1.5">
+        <Link to="/jornada">
+          Ver Minha Jornada
+          <ArrowRight className="size-4" aria-hidden />
+        </Link>
+      </Button>
+    </div>
+  );
+}
+
+function CartaoAtalho({
+  dados,
+  rotulo,
+  para,
+}: {
+  dados: ReturnType<typeof contadores>;
+  rotulo: string;
+  para: "/equipe" | "/gestao" | "/unidade";
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Acompanhamento por etapa</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Indicador rotulo="Em dia" valor={dados.emDia} />
+          <Indicador rotulo="Pendentes" valor={dados.pendentes} />
+          <Indicador rotulo="Atrasados" valor={dados.atrasados} destaque />
+          <Indicador rotulo="Concluídos" valor={dados.concluidos} />
+        </div>
+        <Button asChild className="gap-1.5">
+          <Link to={para}>
+            {rotulo}
+            <ArrowRight className="size-4" aria-hidden />
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Indicador({
+  rotulo,
+  valor,
+  destaque = false,
+}: {
+  rotulo: string;
+  valor: number;
+  destaque?: boolean;
+}) {
+  return (
+    <div className="rounded-lg border border-border p-3">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+        {rotulo}
+      </p>
+      <p
+        className={destaque && valor > 0 ? "text-2xl text-atraso" : "text-2xl"}
+      >
+        {valor}
+      </p>
     </div>
   );
 }
