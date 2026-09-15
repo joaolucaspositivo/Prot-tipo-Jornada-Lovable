@@ -10,7 +10,7 @@ import type {
   Pessoa,
   Turma,
 } from "@/data/types";
-import { etapasDoSegmento } from "@/lib/ciclo";
+import { coordenadoresDoDocente, etapasDoSegmento } from "@/lib/ciclo";
 import { DESTINO_EQUIPE_CENTRAL } from "@/lib/entrega";
 
 /** Critérios observáveis do parecer, com escala curta e explícita. */
@@ -131,7 +131,10 @@ export function compromissosDeObservacao(
       if (filtro.coordenadorId) {
         return (
           !c.daEquipeCentral &&
-          c.docente?.coordenadorId === filtro.coordenadorId
+          c.docente !== undefined &&
+          coordenadoresDoDocente(estado, c.docente.id).some(
+            (co) => co.id === filtro.coordenadorId,
+          )
         );
       }
       return true;

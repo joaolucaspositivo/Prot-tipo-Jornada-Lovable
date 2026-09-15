@@ -36,6 +36,7 @@ import {
   formatarData,
   novoId,
   prazoDaEtapa,
+  tipoParticipacaoDaPessoa,
 } from "@/lib/ciclo";
 import {
   aulasConcluidas,
@@ -300,7 +301,7 @@ function AulasPage() {
             texto,
             enviadaEmISO: agora,
             destino:
-              pessoaAtiva.cargo === "corregente"
+              tipoParticipacaoDaPessoa(estado, pessoaAtiva.id) === "corregente"
                 ? ("equipe_central" as const)
                 : ("coordenador" as const),
             status: "enviada" as const,

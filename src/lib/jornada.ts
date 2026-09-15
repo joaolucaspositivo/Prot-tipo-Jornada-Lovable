@@ -81,6 +81,7 @@ const FRASE_CRITERIO_PENDENTE: Record<TipoCriterioAvanco, string> = {
   presenca: "atingir a presença mínima no encontro",
   tarefa_entregue: "entregar a tarefa",
   tarefa_validada: "ter a tarefa validada pelo professor",
+  nota_minima: "atingir a nota mínima da etapa",
 };
 
 function rotuloDaAcao(tipo: TipoEtapa, status: StatusEtapa): string {

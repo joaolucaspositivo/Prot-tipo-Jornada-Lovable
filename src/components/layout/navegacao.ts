@@ -75,4 +75,7 @@ export const NAVEGACAO_POR_PERFIL: Record<PerfilId, ItemNav[]> = {
     painel,
     { para: "/unidade", rotulo: "Minha unidade", Icone: BookOpen },
   ],
+  // Área restrita às turmas do moderador chega no Bloco 6 (D33); por ora,
+  // só o suficiente para o perfil existir sem quebrar a navegação.
+  moderador: [painel],
 };

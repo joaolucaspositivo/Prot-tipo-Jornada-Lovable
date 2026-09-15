@@ -346,7 +346,7 @@ export function csvDosDocentes(linhas: LinhaEquipe[]): string {
     l.pessoa.nome,
     l.pessoa.matricula,
     l.pessoa.unidade,
-    l.pessoa.cargo,
+    l.tipoParticipacao,
     l.macrotemaNome ?? "",
     l.turmaNome ?? "",
     l.etapaAtual?.nome ?? "Trilha concluída",

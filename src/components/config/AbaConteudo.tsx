@@ -49,6 +49,7 @@ const CRITERIOS_ORDEM: TipoCriterioAvanco[] = [
   "presenca",
   "tarefa_entregue",
   "tarefa_validada",
+  "nota_minima",
 ];
 
 const ROTULO_CRITERIO: Record<TipoCriterioAvanco, string> = {
@@ -57,6 +58,7 @@ const ROTULO_CRITERIO: Record<TipoCriterioAvanco, string> = {
   presenca: "Presença no encontro",
   tarefa_entregue: "Entregar a tarefa",
   tarefa_validada: "Ter a tarefa validada pelo professor",
+  nota_minima: "Atingir nota mínima na etapa",
 };
 
 function criterioFazSentido(
@@ -77,6 +79,7 @@ function criterioFazSentido(
       return temWebconferencia || modalidade?.presencaAutomatica === false;
     case "tarefa_entregue":
     case "tarefa_validada":
+    case "nota_minima":
       return temTarefa;
   }
 }
@@ -93,6 +96,8 @@ function fraseCriterio(c: CriterioAvanco): string {
       return "entregar a tarefa";
     case "tarefa_validada":
       return `ter a tarefa validada com nota ${c.notaCorte ?? 0} ou mais`;
+    case "nota_minima":
+      return `atingir nota mínima ${c.notaCorte ?? 0} na etapa`;
   }
 }
 
@@ -442,7 +447,8 @@ export function AbaConteudo() {
                     </span>
                   </div>
                 ) : null}
-                {c.tipo === "tarefa_validada" && c.ativo ? (
+                {(c.tipo === "tarefa_validada" || c.tipo === "nota_minima") &&
+                c.ativo ? (
                   <div className="flex items-center gap-1.5">
                     <Input
                       type="number"
@@ -510,6 +516,8 @@ const ROTULO_TIPO_ITEM: Record<ItemConteudo["tipo"], string> = {
   texto: "Texto-base",
   webconferencia: "Webconferência",
   tarefa: "Tarefa",
+  // O item de adicionar questionário (separado de tarefa) entra no Bloco 4.
+  questionario: "Questionário",
 };
 
 function IconeItem({ tipo }: { tipo: ItemConteudo["tipo"] }) {

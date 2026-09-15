@@ -8,7 +8,13 @@ import type {
   Etapa,
   Pessoa,
 } from "@/data/types";
-import { etapasDoSegmento, prazoDaEtapa } from "@/lib/ciclo";
+import {
+  coordenadoresDoDocente,
+  coordenadorPrincipalDoDocente,
+  etapasDoSegmento,
+  prazoDaEtapa,
+  tipoParticipacaoDaPessoa,
+} from "@/lib/ciclo";
 
 export const DESTINO_EQUIPE_CENTRAL = "equipe-central";
 
@@ -38,7 +44,7 @@ export function destinoDaEntrega(
   estado: EstadoApp,
   pessoa: Pessoa,
 ): DestinoEntrega {
-  if (pessoa.cargo === "corregente") {
+  if (tipoParticipacaoDaPessoa(estado, pessoa.id) === "corregente") {
     return {
       tipo: "equipe_central",
       rotulo: "Equipe central",
@@ -47,7 +53,7 @@ export function destinoDaEntrega(
         "Como corregente, sua entrega e sua devolutiva são conduzidas pela equipe central, e não pelo coordenador da unidade.",
     };
   }
-  const coord = estado.pessoas.find((p) => p.id === pessoa.coordenadorId);
+  const coord = coordenadorPrincipalDoDocente(estado, pessoa.id);
   return {
     tipo: "coordenador",
     rotulo: coord?.nome ?? "Coordenador da unidade",
@@ -68,7 +74,7 @@ export function janelaDaAula(estado: EstadoApp, etapa: Etapa) {
     : new Date(prazoDaEtapa(config, etapa).getTime() + 30 * 86400000);
   const hoje = new Date();
   const inicio = new Date(
-    Math.max(hoje.getTime(), new Date(config.aberturaISO).getTime()),
+    Math.max(hoje.getTime(), new Date(config.dataInicioCiclo).getTime()),
   );
   return { inicio, fim };
 }
@@ -140,7 +146,10 @@ export function entregasRecebidas(
       if (filtro.coordenadorId) {
         return (
           item.entrega.destino === "coordenador" &&
-          item.docente?.coordenadorId === filtro.coordenadorId
+          item.docente !== undefined &&
+          coordenadoresDoDocente(estado, item.docente.id).some(
+            (c) => c.id === filtro.coordenadorId,
+          )
         );
       }
       return true;

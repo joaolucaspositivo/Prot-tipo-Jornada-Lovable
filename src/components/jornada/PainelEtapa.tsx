@@ -14,7 +14,12 @@ import {
 } from "@/components/ui/sheet";
 import { useStore } from "@/data/store";
 import type { Observacao } from "@/data/types";
-import { ROTULO_TIPO_ETAPA, formatarData, novoId } from "@/lib/ciclo";
+import {
+  ROTULO_TIPO_ETAPA,
+  coordenadoresDoDocente,
+  formatarData,
+  novoId,
+} from "@/lib/ciclo";
 import {
   ICONE_TIPO_ETAPA,
   devolutivaDaEtapa,
@@ -48,21 +53,25 @@ export function PainelEtapa({ item, aberto, aoFechar }: Props) {
             )}
             aoDarCienciaObservacao={(id) => {
               const agora = new Date().toISOString();
+              const coordenadores = coordenadoresDoDocente(
+                estado,
+                pessoaAtiva.id,
+              );
               atualizar((anterior) => ({
                 ...anterior,
                 observacoes: anterior.observacoes.map((o) =>
                   o.id === id ? { ...o, cienciaEmISO: agora } : o,
                 ),
                 notificacoes: [
-                  {
+                  ...coordenadores.map((coord) => ({
                     id: novoId("not"),
-                    pessoaId: pessoaAtiva.coordenadorId ?? "coord-1",
+                    pessoaId: coord.id,
                     titulo: `${pessoaAtiva.nome} deu ciência do parecer da observação`,
                     descricao: `Etapa "${item.etapa.nome}".`,
                     criadaEmISO: agora,
                     lida: false,
                     tipo: "devolutiva" as const,
-                  },
+                  })),
                   ...anterior.notificacoes,
                 ],
               }));
@@ -70,21 +79,25 @@ export function PainelEtapa({ item, aberto, aoFechar }: Props) {
             }}
             aoDarCiencia={(id) => {
               const agora = new Date().toISOString();
+              const coordenadores = coordenadoresDoDocente(
+                estado,
+                pessoaAtiva.id,
+              );
               atualizar((anterior) => ({
                 ...anterior,
                 devolutivas: anterior.devolutivas.map((d) =>
                   d.id === id ? { ...d, cienciaEmISO: agora } : d,
                 ),
                 notificacoes: [
-                  {
+                  ...coordenadores.map((coord) => ({
                     id: novoId("not"),
-                    pessoaId: pessoaAtiva.coordenadorId ?? "coord-1",
+                    pessoaId: coord.id,
                     titulo: `${pessoaAtiva.nome} deu ciência da devolutiva`,
                     descricao: `Etapa "${item.etapa.nome}".`,
                     criadaEmISO: agora,
                     lida: false,
                     tipo: "devolutiva" as const,
-                  },
+                  })),
                   ...anterior.notificacoes,
                 ],
               }));

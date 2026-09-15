@@ -2,7 +2,7 @@
 // presença vêm sempre da configuração do ciclo e da inscrição do docente.
 
 import type { EstadoApp, Etapa, Modalidade, Pessoa, Turma } from "@/data/types";
-import { etapasDoSegmento } from "@/lib/ciclo";
+import { coordenadoresDoDocente, etapasDoSegmento } from "@/lib/ciclo";
 
 /** Etapas de conteúdo visíveis para o docente, na ordem configurada. */
 export function etapasDeConteudo(estado: EstadoApp, pessoa: Pessoa): Etapa[] {
@@ -127,7 +127,9 @@ export function presencasAutomaticas(
     .filter((r): r is RegistroPresenca => {
       if (!r.pessoa) return false;
       if (filtro?.coordenadorId) {
-        return r.pessoa.coordenadorId === filtro.coordenadorId;
+        return coordenadoresDoDocente(estado, r.pessoa.id).some(
+          (c) => c.id === filtro.coordenadorId,
+        );
       }
       return true;
     })

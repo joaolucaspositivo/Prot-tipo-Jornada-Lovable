@@ -39,6 +39,7 @@ const ROTULO_CRITERIO: Record<TipoCriterioAvanco, string> = {
   presenca: "Presença no encontro",
   tarefa_entregue: "Tarefa entregue",
   tarefa_validada: "Tarefa validada",
+  nota_minima: "Nota mínima geral",
 };
 
 /** A oferta do docente nesta etapa, conforme a turma em que ele se inscreveu. */
@@ -178,7 +179,8 @@ function statusDoCriterio(
         atendido: Boolean(entrega),
       };
     }
-    case "tarefa_validada": {
+    case "tarefa_validada":
+    case "nota_minima": {
       const entrega = entregaDaEtapa(estado, pessoa.id, etapa.id);
       const devolutiva = entrega
         ? estado.devolutivas.find((d) => d.entregaId === entrega.id)

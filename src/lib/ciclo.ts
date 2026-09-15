@@ -6,8 +6,10 @@ import type {
   EstadoApp,
   Etapa,
   Macrotema,
+  Pessoa,
   TelaEtapa,
   TipoEtapa,
+  TipoParticipacao,
 } from "@/data/types";
 
 export const ROTULO_TIPO_ETAPA: Record<TipoEtapa, string> = {
@@ -77,11 +79,62 @@ export function macrotemasAtivos(config: CicloConfig): Macrotema[] {
     .sort((a, b) => a.ordem - b.ordem);
 }
 
-/** Data limite de uma etapa, contada a partir da abertura do ciclo. */
+/**
+ * Data limite de uma etapa. Encadeada (D38): cada etapa conta seus
+ * `prazoDias` a partir do vencimento da etapa anterior, começando de
+ * `dataInicioCiclo` — não mais um deslocamento fixo desde a abertura.
+ */
 export function prazoDaEtapa(config: CicloConfig, etapa: Etapa): Date {
-  const abertura = new Date(config.aberturaISO);
-  abertura.setDate(abertura.getDate() + etapa.prazoDias);
-  return abertura;
+  const ordenadas = [...config.etapas].sort((a, b) => a.ordem - b.ordem);
+  let data = new Date(config.dataInicioCiclo);
+  for (const e of ordenadas) {
+    data = new Date(data);
+    data.setDate(data.getDate() + e.prazoDias);
+    if (e.id === etapa.id) return data;
+  }
+  // Etapa fora da lista configurada (não deveria acontecer): mesma conta,
+  // isolada, a partir do início do ciclo.
+  const isolado = new Date(config.dataInicioCiclo);
+  isolado.setDate(isolado.getDate() + etapa.prazoDias);
+  return isolado;
+}
+
+/** Tipo de participação do docente (regente/corregente), resolvido pela
+ * inscrição atual — deixou de ser um atributo fixo da pessoa (D34). Sem
+ * inscrição ainda, assume "regente": ele simplesmente não escolheu. */
+export function tipoParticipacaoDaPessoa(
+  estado: EstadoApp,
+  pessoaId: string,
+): TipoParticipacao {
+  return (
+    estado.inscricoes.find((i) => i.pessoaId === pessoaId)?.tipoParticipacao ??
+    "regente"
+  );
+}
+
+/** Coordenadores que alocaram este docente como liderado (D35) — um docente
+ * pode ter mais de um líder. */
+export function coordenadoresDoDocente(
+  estado: EstadoApp,
+  docenteId: string,
+): Pessoa[] {
+  const ids = estado.alocacoes
+    .filter((a) => a.docenteId === docenteId)
+    .map((a) => a.coordenadorId);
+  return estado.pessoas.filter((p) => ids.includes(p.id));
+}
+
+/** Líder principal do docente — a alocação mais recente — para quando só
+ * um destino é possível (ex.: roteamento de entrega). */
+export function coordenadorPrincipalDoDocente(
+  estado: EstadoApp,
+  docenteId: string,
+): Pessoa | undefined {
+  const alocacao = [...estado.alocacoes]
+    .filter((a) => a.docenteId === docenteId)
+    .sort((a, b) => b.criadaEmISO.localeCompare(a.criadaEmISO))[0];
+  if (!alocacao) return undefined;
+  return estado.pessoas.find((p) => p.id === alocacao.coordenadorId);
 }
 
 export function formatarData(data: Date): string {

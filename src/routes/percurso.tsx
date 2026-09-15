@@ -96,6 +96,11 @@ function PercursoPage() {
         return t;
       });
 
+      // Preserva o tipo de participação já escolhido (D34): trocar de turma
+      // não deveria resetar se o docente é regente ou corregente.
+      const tipoParticipacao =
+        anterior.inscricoes.find((i) => i.pessoaId === pessoaAtiva.id)
+          ?.tipoParticipacao ?? "regente";
       const semAntiga = anterior.inscricoes.filter(
         (i) => i.pessoaId !== pessoaAtiva.id,
       );
@@ -106,6 +111,7 @@ function PercursoPage() {
           pessoaId: pessoaAtiva.id,
           turmaId: turma.id,
           macrotemaId: turma.macrotemaId,
+          tipoParticipacao,
           criadaEmISO: agora,
         },
       ];

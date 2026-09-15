@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useStore } from "@/data/store";
+import { tipoParticipacaoDaPessoa } from "@/lib/ciclo";
 
 export const Route = createFileRoute("/acesso")({
   head: () => ({
@@ -57,7 +58,7 @@ function AcessoPage() {
     atualizar({
       pessoaAtivaId: pessoa.id,
       perfilAtivo:
-        pessoa.cargo === "corregente"
+        tipoParticipacaoDaPessoa(estado, pessoa.id) === "corregente"
           ? "docente-corregente"
           : "docente-regente",
     });
@@ -97,7 +98,10 @@ function AcessoPage() {
               Icone={BadgeCheck}
               rotulo="Cargo"
               valor={
-                pessoaAtiva.cargo === "corregente" ? "Corregente" : "Regente"
+                tipoParticipacaoDaPessoa(estado, pessoaAtiva.id) ===
+                "corregente"
+                  ? "Corregente"
+                  : "Regente"
               }
             />
           </dl>
@@ -140,7 +144,9 @@ function AcessoPage() {
               {docentes.map((d) => (
                 <SelectItem key={d.id} value={d.id}>
                   {d.nome} ·{" "}
-                  {d.cargo === "corregente" ? "Corregente" : "Regente"}
+                  {tipoParticipacaoDaPessoa(estado, d.id) === "corregente"
+                    ? "Corregente"
+                    : "Regente"}
                 </SelectItem>
               ))}
             </SelectContent>

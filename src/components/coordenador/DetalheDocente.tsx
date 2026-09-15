@@ -133,8 +133,8 @@ export function DetalheDocente({
             {linha.pessoa.nome}
           </SheetTitle>
           <SheetDescription>
-            {linha.pessoa.cargo === "corregente" ? "Corregente" : "Regente"} ·{" "}
-            {linha.pessoa.unidade}
+            {linha.tipoParticipacao === "corregente" ? "Corregente" : "Regente"}{" "}
+            · {linha.pessoa.unidade}
             {linha.macrotemaNome ? ` · ${linha.macrotemaNome}` : ""}
           </SheetDescription>
           <div className="flex flex-wrap items-center gap-2 pt-1">

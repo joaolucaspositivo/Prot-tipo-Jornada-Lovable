@@ -8,7 +8,7 @@ import { Trilha } from "@/components/jornada/Trilha";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useStore } from "@/data/store";
-import { formatarData } from "@/lib/ciclo";
+import { formatarData, tipoParticipacaoDaPessoa } from "@/lib/ciclo";
 import {
   conquistasDoDocente,
   progressoDaTrilha,
@@ -77,7 +77,7 @@ function JornadaPage() {
       )}
       <h1 className="mt-1 text-2xl sm:text-3xl">Minha Jornada</h1>
 
-      {pessoaAtiva.cargo === "corregente" && (
+      {tipoParticipacaoDaPessoa(estado, pessoaAtiva.id) === "corregente" && (
         <p className="mt-3 rounded-xl border border-accent bg-accent/40 p-3 text-sm">
           Você atua como <strong>corregente</strong>: sua tarefa e a devolutiva
           sobre ela são acompanhadas pela <strong>equipe central</strong>, e não

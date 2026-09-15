@@ -3,6 +3,7 @@
 // dão um ponto de partida coerente para a validação do protótipo.
 
 import type {
+  Alocacao,
   Autoavaliacao,
   CicloConfig,
   CriterioAvanco,
@@ -23,11 +24,12 @@ import type {
   ProgressoEtapa,
   ProgressoLeitura,
   RespostaEnquete,
+  Subtipo,
   TipoCriterioAvanco,
   Turma,
 } from "./types";
 
-export const VERSAO_ESTADO = 7;
+export const VERSAO_ESTADO = 8;
 export const CHAVE_STORAGE = "jornada-prototipo-v1";
 
 const ABERTURA = "2027-02-08T00:00:00.000Z";
@@ -102,6 +104,67 @@ const modalidadesSeed = [
   },
 ];
 
+// Formulários/telas reutilizáveis (D30). A etapa escolhe um já cadastrado —
+// não cria mais o formulário inline. Dois subtipos de autoavaliação e dois
+// de encontro, de propósito: mostram, já no seed, que a lista de subtipos
+// filtrada por tipo genérico pode ter mais de uma opção.
+const subtiposSeed: Subtipo[] = [
+  {
+    id: "sub-autoaval-inicial",
+    nome: "Autoavaliação inicial",
+    tipoGenerico: "autoavaliacao",
+    tela: "autoavaliacao",
+  },
+  {
+    id: "sub-autoaval-coord",
+    nome: "Autoavaliação do coordenador",
+    tipoGenerico: "autoavaliacao",
+    tela: "autoavaliacao",
+  },
+  {
+    id: "sub-percurso",
+    nome: "Escolha de percurso",
+    tipoGenerico: "avaliacao",
+    tela: "percurso",
+  },
+  {
+    id: "sub-conteudo",
+    nome: "Conteúdo em vídeo e texto-base",
+    tipoGenerico: "conteudo",
+    tela: "conteudo",
+  },
+  {
+    id: "sub-encontro-formativo",
+    nome: "Encontro formativo",
+    tipoGenerico: "encontro",
+    tela: "painel",
+  },
+  {
+    id: "sub-observacao-aula",
+    nome: "Observação de aula",
+    tipoGenerico: "encontro",
+    tela: "painel",
+  },
+  {
+    id: "sub-entrega-planejamento",
+    nome: "Entrega de planejamento de aula",
+    tipoGenerico: "entrega",
+    tela: "entrega",
+  },
+  {
+    id: "sub-portfolio",
+    nome: "Portfólio de Inovação Docente",
+    tipoGenerico: "entrega",
+    tela: "portfolio",
+  },
+  {
+    id: "sub-enquete",
+    nome: "Enquete 360°",
+    tipoGenerico: "avaliacao",
+    tela: "enquete",
+  },
+];
+
 const etapasSeed: Etapa[] = [
   {
     id: "et-1",
@@ -112,8 +175,10 @@ const etapasSeed: Etapa[] = [
     obrigatoria: true,
     prazoDias: 14,
     segmentos: [],
+    perfisParticipantes: [],
     alerta: alertaPadrao,
     tela: "autoavaliacao",
+    subtipoId: "sub-autoaval-inicial",
   },
   {
     id: "et-2",
@@ -124,8 +189,10 @@ const etapasSeed: Etapa[] = [
     obrigatoria: true,
     prazoDias: 21,
     segmentos: [],
+    perfisParticipantes: [],
     alerta: alertaPadrao,
     tela: "percurso",
+    subtipoId: "sub-percurso",
   },
   {
     id: "et-3",
@@ -136,9 +203,11 @@ const etapasSeed: Etapa[] = [
     obrigatoria: true,
     prazoDias: 45,
     segmentos: [],
+    perfisParticipantes: [],
     alerta: alertaPadrao,
     tela: "conteudo",
     cargaHoraria: 20,
+    subtipoId: "sub-conteudo",
   },
   {
     id: "et-4",
@@ -149,6 +218,7 @@ const etapasSeed: Etapa[] = [
     obrigatoria: true,
     prazoDias: 60,
     segmentos: [],
+    perfisParticipantes: [],
     alerta: {
       diasAntes: 2,
       noVencimento: true,
@@ -156,6 +226,7 @@ const etapasSeed: Etapa[] = [
       alertarDocente: true,
     },
     tela: "painel",
+    subtipoId: "sub-encontro-formativo",
   },
   {
     id: "et-5",
@@ -167,8 +238,10 @@ const etapasSeed: Etapa[] = [
     obrigatoria: true,
     prazoDias: 75,
     segmentos: [],
+    perfisParticipantes: [],
     alerta: alertaPadrao,
     tela: "entrega",
+    subtipoId: "sub-entrega-planejamento",
   },
   {
     id: "et-6",
@@ -179,6 +252,7 @@ const etapasSeed: Etapa[] = [
     obrigatoria: true,
     prazoDias: 100,
     segmentos: [],
+    perfisParticipantes: [],
     alerta: {
       diasAntes: 5,
       noVencimento: false,
@@ -186,6 +260,7 @@ const etapasSeed: Etapa[] = [
       alertarDocente: false,
     },
     tela: "painel",
+    subtipoId: "sub-observacao-aula",
   },
   {
     id: "et-7",
@@ -196,8 +271,10 @@ const etapasSeed: Etapa[] = [
     obrigatoria: true,
     prazoDias: 130,
     segmentos: [],
+    perfisParticipantes: [],
     alerta: alertaPadrao,
     tela: "portfolio",
+    subtipoId: "sub-portfolio",
   },
   {
     id: "et-8",
@@ -208,6 +285,7 @@ const etapasSeed: Etapa[] = [
     obrigatoria: false,
     prazoDias: 150,
     segmentos: [],
+    perfisParticipantes: [],
     alerta: {
       diasAntes: 7,
       noVencimento: false,
@@ -215,19 +293,22 @@ const etapasSeed: Etapa[] = [
       alertarDocente: false,
     },
     tela: "enquete",
+    subtipoId: "sub-enquete",
   },
 ];
 
 export const cicloConfigSeed: CicloConfig = {
   id: "ciclo-2",
   nome: "Ciclo 2",
+  descricao: "Jornada 2027 a 2030",
   periodo: "2027–2030",
-  aberturaISO: ABERTURA,
+  dataInicioCiclo: ABERTURA,
   cenarioSegmentacao: "trilha_unica",
   segmentos: segmentosSeed,
   macrotemas: macrotemasSeed,
   modalidades: modalidadesSeed,
   etapas: etapasSeed,
+  subtipos: subtiposSeed,
   conquistas: [
     {
       id: "cq-1",
@@ -389,7 +470,6 @@ const coordenadoresSeed: Pessoa[] = [
     matricula: "C-1001",
     unidade: "Unidade Centro",
     segmentoId: "seg-fi",
-    cargo: "regente",
     perfil: "coordenador",
     email: "beatriz.coelho@rede.edu.br",
   },
@@ -399,9 +479,19 @@ const coordenadoresSeed: Pessoa[] = [
     matricula: "C-1002",
     unidade: "Unidade Norte",
     segmentoId: "seg-fii",
-    cargo: "regente",
     perfil: "coordenador",
     email: "marcelo.aguiar@rede.edu.br",
+  },
+  // Sem nenhuma alocação (ver alocacoesSeed) — demonstra o alerta de
+  // "coordenador sem liderados" (D37).
+  {
+    id: "coord-3",
+    nome: "Patrícia Lemos Vidal",
+    matricula: "C-1003",
+    unidade: "Unidade Sul",
+    segmentoId: "seg-em",
+    perfil: "coordenador",
+    email: "patricia.vidal@rede.edu.br",
   },
 ];
 
@@ -412,7 +502,6 @@ const outrasPessoas: Pessoa[] = [
     matricula: "O-2001",
     unidade: "Sede",
     segmentoId: "seg-fi",
-    cargo: "regente",
     perfil: "operadora",
     email: "renata.vasques@rede.edu.br",
   },
@@ -422,7 +511,6 @@ const outrasPessoas: Pessoa[] = [
     matricula: "D-3001",
     unidade: "Unidade Centro",
     segmentoId: "seg-em",
-    cargo: "regente",
     perfil: "diretor",
     email: "sergio.pontes@rede.edu.br",
   },
@@ -434,18 +522,54 @@ const docentesSeed: Pessoa[] = nomesDocentes.map((nome, i) => ({
   matricula: `M-${4000 + i}`,
   unidade: unidades[i % unidades.length]!,
   segmentoId: segmentosSeed[i % segmentosSeed.length]!.id,
-  cargo: i % 4 === 3 ? "corregente" : "regente",
   perfil: "docente",
-  // Blocos de 4: cada coordenador recebe docentes em todos os estágios.
-  coordenadorId: Math.floor(i / 4) % 2 === 0 ? "coord-1" : "coord-2",
   email: `${nome.split(" ")[0]!.toLowerCase()}.${i + 1}@rede.edu.br`,
 }));
+
+// Perfil moderador (D33): acesso restrito a turmas específicas, só para
+// lançar presença e validar entregas ali — sem acesso à configuração.
+const moderadoresSeed: Pessoa[] = [
+  {
+    id: "mod-1",
+    nome: "Jonas Prado Siqueira",
+    matricula: "MD-5001",
+    unidade: "Unidade Centro",
+    segmentoId: "seg-fi",
+    perfil: "moderador",
+    turmaIds: ["turma-1-1-1", "turma-1-1-2"],
+    email: "jonas.siqueira@rede.edu.br",
+  },
+];
 
 export const pessoasSeed: Pessoa[] = [
   ...docentesSeed,
   ...coordenadoresSeed,
   ...outrasPessoas,
+  ...moderadoresSeed,
 ];
+
+/**
+ * Alocação líder-liderado (D35) — substitui o antigo `Pessoa.coordenadorId`
+ * fixo. Mesmo round-robin de antes (blocos de 4 docentes por coordenador),
+ * com dois ajustes de propósito para a demonstração do D37: doc-24 (o
+ * último) fica sem nenhum líder, e doc-1 ganha um segundo líder (coord-2),
+ * para mostrar a aba "Líder(es)" com mais de um.
+ */
+const alocacoesSeed: Alocacao[] = docentesSeed
+  .map((doc, i) => ({ doc, i }))
+  .filter(({ i }) => i !== docentesSeed.length - 1)
+  .map(({ doc, i }) => ({
+    id: `aloc-${doc.id}`,
+    coordenadorId: Math.floor(i / 4) % 2 === 0 ? "coord-1" : "coord-2",
+    docenteId: doc.id,
+    criadaEmISO: dias(5),
+  }));
+alocacoesSeed.push({
+  id: "aloc-doc-1-extra",
+  coordenadorId: "coord-2",
+  docenteId: "doc-1",
+  criadaEmISO: dias(6),
+});
 
 // Duas turmas por modalidade em cada macrotema: permite trocar de turma
 // mantendo a mesma modalidade.
@@ -601,6 +725,8 @@ function construirProgresso() {
         pessoaId: doc.id,
         turmaId: turma.id,
         macrotemaId: turma.macrotemaId,
+        // Mesmo bloco-de-4 que antes distinguia cargo na pessoa (D34).
+        tipoParticipacao: i % 4 === 3 ? "corregente" : "regente",
         criadaEmISO: dias(12 + (i % 5)),
       });
     }
@@ -655,7 +781,7 @@ function construirProgresso() {
               ).toISOString()
             : dias(80 + (i % 12)),
         enviadaEmISO: dias(70 + (i % 6)),
-        destino: doc.cargo === "corregente" ? "equipe_central" : "coordenador",
+        destino: i % 4 === 3 ? "equipe_central" : "coordenador",
         status:
           etapasConcluidas >= 6 && !entregaAguardando
             ? "devolutiva_disponivel"
@@ -663,11 +789,14 @@ function construirProgresso() {
       });
 
       if (etapasConcluidas >= 6 && !entregaAguardando) {
+        const coordenadorId =
+          alocacoesSeed.find((a) => a.docenteId === doc.id)?.coordenadorId ??
+          "coord-1";
         devolutivas.push({
           id: `dev-${doc.id}`,
           entregaId,
           pessoaId: doc.id,
-          autorId: doc.coordenadorId ?? "coord-1",
+          autorId: coordenadorId,
           texto:
             "Planejamento coerente com o macrotema. Sugiro ampliar as estratégias de mediação na etapa de fechamento.",
           parecer: "Atende",
@@ -678,7 +807,7 @@ function construirProgresso() {
         observacoes.push({
           id: `obs-${doc.id}`,
           pessoaId: doc.id,
-          coordenadorId: doc.coordenadorId ?? "coord-1",
+          coordenadorId,
           etapaId: "et-6",
           dataAulaISO: dias(80 + (i % 12)),
           realizadaEmISO: dias(81 + (i % 12)),
@@ -1177,6 +1306,7 @@ export function criarEstadoInicial(): EstadoApp {
     pessoas: pessoasSeed,
     turmas: derivado.turmas,
     inscricoes: derivado.inscricoes,
+    alocacoes: alocacoesSeed,
     progressoEtapas: derivado.progressoEtapas,
     progressoAulas: conteudo.progressoAulas,
     progressoLeituras: conteudo.progressoLeituras,

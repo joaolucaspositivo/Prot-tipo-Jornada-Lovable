@@ -19,7 +19,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useStore } from "@/data/store";
 import type { AnexoPortfolio, EstadoApp } from "@/data/types";
-import { formatarData, novoId, prazoDaEtapa } from "@/lib/ciclo";
+import {
+  coordenadorPrincipalDoDocente,
+  formatarData,
+  novoId,
+  prazoDaEtapa,
+  tipoParticipacaoDaPessoa,
+} from "@/lib/ciclo";
 import { formatarDataHora } from "@/lib/conteudo";
 import { formatarTamanho } from "@/lib/entrega";
 import {
@@ -146,9 +152,10 @@ function PortfolioPage() {
           ];
 
       const destinoId =
-        pessoaAtiva.cargo === "corregente"
+        tipoParticipacaoDaPessoa(estado, pessoaAtiva.id) === "corregente"
           ? "equipe-central"
-          : (pessoaAtiva.coordenadorId ?? "equipe-central");
+          : (coordenadorPrincipalDoDocente(estado, pessoaAtiva.id)?.id ??
+            "equipe-central");
 
       return {
         ...anterior,
@@ -170,7 +177,7 @@ function PortfolioPage() {
             arquivoTamanho: anexos[0]?.tamanhoBytes,
             enviadaEmISO: agora,
             destino:
-              pessoaAtiva.cargo === "corregente"
+              tipoParticipacaoDaPessoa(estado, pessoaAtiva.id) === "corregente"
                 ? ("equipe_central" as const)
                 : ("coordenador" as const),
             status: "enviada" as const,

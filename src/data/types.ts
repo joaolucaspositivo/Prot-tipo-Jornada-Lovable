@@ -5,14 +5,16 @@
 export type TipoEtapa =
   "autoavaliacao" | "conteudo" | "entrega" | "encontro" | "avaliacao";
 
-export type Cargo = "regente" | "corregente";
+/** Tipo de participação do docente num ciclo — hoje escolhido na inscrição (D34), não mais fixo na pessoa. */
+export type TipoParticipacao = "regente" | "corregente";
 
 export type PerfilId =
   | "docente-regente"
   | "docente-corregente"
   | "coordenador"
   | "operadora"
-  | "diretor";
+  | "diretor"
+  | "moderador";
 
 export type StatusEtapa =
   | "concluida"
@@ -69,6 +71,20 @@ export type TelaEtapa =
   | "enquete"
   | "painel";
 
+/**
+ * Formulário/tela pré-cadastrado que uma etapa pode reutilizar (D30) — ex.:
+ * "Autoavaliação inicial" e "Autoavaliação do coordenador" são dois subtipos
+ * distintos que abrem a mesma tela (`tela: "autoavaliacao"`). A etapa não
+ * cria mais o formulário inline: escolhe um subtipo já cadastrado, que
+ * preenche `tipo`/`tela` no momento da escolha (ver `Etapa.subtipoId`).
+ */
+export interface Subtipo {
+  id: string;
+  nome: string;
+  tipoGenerico: TipoEtapa;
+  tela: TelaEtapa;
+}
+
 export interface Etapa {
   id: string;
   nome: string;
@@ -76,7 +92,7 @@ export interface Etapa {
   tipo: TipoEtapa;
   ordem: number;
   obrigatoria: boolean;
-  /** prazo em dias a partir da abertura do ciclo */
+  /** prazo em dias, contado a partir do vencimento da etapa anterior (D38) */
   prazoDias: number;
   /** quando vazio, vale para todos os segmentos */
   segmentos: string[];
@@ -85,6 +101,14 @@ export interface Etapa {
   tela: TelaEtapa;
   /** carga horária declarada da etapa (D10) */
   cargaHoraria?: number | undefined;
+  /**
+   * Subtipo escolhido para preencher `tipo`/`tela` (D30). Guardado para a
+   * tela de configuração conseguir reabrir mostrando o que foi selecionado
+   * — `tipo`/`tela` continuam sendo a fonte real lida pelo resto do app.
+   */
+  subtipoId?: string | undefined;
+  /** quais tipos de participação passam por esta etapa (D34); vazio = todos */
+  perfisParticipantes: TipoParticipacao[];
 }
 
 export interface Conquista {
@@ -131,13 +155,18 @@ export interface ConfigEnquete {
 export interface CicloConfig {
   id: string;
   nome: string;
+  /** descrição livre da jornada, ex. "Jornada 2027 a 2030" (D27) */
+  descricao: string;
   periodo: string;
-  aberturaISO: string;
+  /** data de início do ciclo — base do encadeamento de prazos (D38) */
+  dataInicioCiclo: string;
   cenarioSegmentacao: CenarioSegmentacao;
   segmentos: Segmento[];
   macrotemas: Macrotema[];
   modalidades: Modalidade[];
   etapas: Etapa[];
+  /** formulários/telas reutilizáveis que uma etapa pode escolher (D30) */
+  subtipos: Subtipo[];
   conquistas: Conquista[];
   reflexoesPortfolio: PerguntaReflexao[];
   enquete: ConfigEnquete;
@@ -149,9 +178,9 @@ export interface Pessoa {
   matricula: string;
   unidade: string;
   segmentoId: string;
-  cargo: Cargo;
-  perfil: "docente" | "coordenador" | "operadora" | "diretor";
-  coordenadorId?: string | undefined;
+  perfil: "docente" | "coordenador" | "operadora" | "diretor" | "moderador";
+  /** turmas às quais um perfil moderador tem acesso (D33); ignorado nos demais perfis */
+  turmaIds?: string[] | undefined;
   email: string;
 }
 
@@ -179,6 +208,21 @@ export interface Inscricao {
   pessoaId: string;
   turmaId: string;
   macrotemaId: string;
+  /** regente ou corregente — passa a ser parte da inscrição, não da pessoa (D34) */
+  tipoParticipacao: TipoParticipacao;
+  criadaEmISO: string;
+}
+
+/**
+ * Alocação líder-liderado, criada pelo próprio coordenador (D35) — substitui
+ * o antigo `Pessoa.coordenadorId` fixo. Um docente pode ter mais de uma
+ * alocação (mais de um líder); a mais recente é tratada como líder
+ * principal onde só um destino é possível (ex.: roteamento de entrega).
+ */
+export interface Alocacao {
+  id: string;
+  coordenadorId: string;
+  docenteId: string;
   criadaEmISO: string;
 }
 
@@ -320,7 +364,16 @@ export interface Midia {
   enviadaPorId: string;
 }
 
-export type TipoItemConteudo = "video" | "texto" | "webconferencia" | "tarefa";
+export type TipoItemConteudo =
+  "video" | "texto" | "webconferencia" | "tarefa" | "questionario";
+
+/** Pergunta de múltipla escolha de um item do tipo `questionario` (D31). */
+export interface PerguntaOpcaoMultipla {
+  id: string;
+  enunciado: string;
+  opcoes: string[];
+  ordem: number;
+}
 
 /**
  * Oferta: o que existe para um macrotema, em uma modalidade, dentro de uma
@@ -342,10 +395,14 @@ export interface ItemConteudo {
   titulo: string;
   descricao: string;
   ordem: number;
-  /** aponta para a biblioteca de mídia; ausente em itens do tipo `tarefa` */
+  /** aponta para a biblioteca de mídia; ausente em itens do tipo `tarefa`/`questionario` */
   midiaId?: string | undefined;
   /** enunciado, só para itens do tipo `tarefa` */
   enunciado?: string | undefined;
+  /** link externo ou material de apoio opcional (D31) — tarefa e texto-base */
+  linkApoio?: string | undefined;
+  /** perguntas de múltipla escolha, só para itens do tipo `questionario` (D31) */
+  perguntas?: PerguntaOpcaoMultipla[] | undefined;
 }
 
 export type TipoCriterioAvanco =
@@ -353,7 +410,8 @@ export type TipoCriterioAvanco =
   | "leitura_concluida"
   | "presenca"
   | "tarefa_entregue"
-  | "tarefa_validada";
+  | "tarefa_validada"
+  | "nota_minima";
 
 /** Critério que libera o avanço de fase (D15). */
 export interface CriterioAvanco {
@@ -361,7 +419,7 @@ export interface CriterioAvanco {
   ativo: boolean;
   /** `presenca`: percentual mínimo de encontros (0 a 100) */
   percentualMinimo?: number | undefined;
-  /** `tarefa_validada`: nota de corte de 0 a 10 */
+  /** `tarefa_validada`/`nota_minima`: nota de corte de 0 a 10 (D32) */
   notaCorte?: number | undefined;
 }
 
@@ -424,6 +482,7 @@ export interface EstadoApp {
   pessoas: Pessoa[];
   turmas: Turma[];
   inscricoes: Inscricao[];
+  alocacoes: Alocacao[];
   progressoEtapas: ProgressoEtapa[];
   progressoAulas: ProgressoAula[];
   progressoLeituras: ProgressoLeitura[];

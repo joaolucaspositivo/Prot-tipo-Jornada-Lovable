@@ -7,6 +7,7 @@ import type {
   EstadoApp,
   Etapa,
   Pessoa,
+  TipoParticipacao,
 } from "@/data/types";
 import { prazoDaEtapa } from "@/lib/ciclo";
 import {
@@ -41,18 +42,23 @@ export interface LinhaEquipe {
   alertaCoordenador: boolean;
   macrotemaNome: string | undefined;
   turmaNome: string | undefined;
+  /** regente ou corregente, resolvido pela inscrição (D34) */
+  tipoParticipacao: TipoParticipacao;
   entrega: Entrega | undefined;
   devolutiva: Devolutiva | undefined;
 }
 
-/** Docentes sob a liderança de um coordenador. */
+/** Docentes alocados a um coordenador (D35) — via `estado.alocacoes`, não mais um campo fixo na pessoa. */
 export function docentesDoCoordenador(
   estado: EstadoApp,
   coordenadorId: string,
 ): Pessoa[] {
-  return estado.pessoas.filter(
-    (p) => p.perfil === "docente" && p.coordenadorId === coordenadorId,
+  const ids = new Set(
+    estado.alocacoes
+      .filter((a) => a.coordenadorId === coordenadorId)
+      .map((a) => a.docenteId),
   );
+  return estado.pessoas.filter((p) => p.perfil === "docente" && ids.has(p.id));
 }
 
 export function linhaDoDocente(
@@ -108,6 +114,8 @@ export function linhaDoDocente(
   const macrotemaNome = estado.cicloConfig.macrotemas.find(
     (m) => m.id === (turma?.macrotemaId ?? inscricao?.macrotemaId),
   )?.nome;
+  const tipoParticipacao: TipoParticipacao =
+    inscricao?.tipoParticipacao ?? "regente";
 
   const entrega = estado.entregas
     .filter((e) => e.pessoaId === pessoa.id)
@@ -134,6 +142,7 @@ export function linhaDoDocente(
     alertaCoordenador,
     macrotemaNome,
     turmaNome: turma?.nome,
+    tipoParticipacao,
     entrega,
     devolutiva,
   };
@@ -166,7 +175,7 @@ export function contadores(linhas: LinhaEquipe[]) {
 export type ColunaEquipe =
   | "nome"
   | "unidade"
-  | "cargo"
+  | "participacao"
   | "etapa"
   | "progresso"
   | "pendencias"
@@ -184,8 +193,8 @@ export function ordenar(
         return l.pessoa.nome;
       case "unidade":
         return l.pessoa.unidade;
-      case "cargo":
-        return l.pessoa.cargo;
+      case "participacao":
+        return l.tipoParticipacao;
       case "etapa":
         return l.etapaAtual?.ordem ?? 999;
       case "progresso":

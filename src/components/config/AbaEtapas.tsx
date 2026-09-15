@@ -71,6 +71,7 @@ export function AbaEtapas() {
         obrigatoria: true,
         prazoDias: 30 * (etapas.length + 1),
         segmentos: [],
+        perfisParticipantes: [],
         alerta: {
           diasAntes: 3,
           noVencimento: true,

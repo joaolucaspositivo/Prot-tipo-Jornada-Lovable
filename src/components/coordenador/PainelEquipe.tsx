@@ -61,7 +61,7 @@ export function PainelEquipe({
   const [fUnidade, setFUnidade] = useState(TODOS);
   const [fSegmento, setFSegmento] = useState(TODOS);
   const [fMacrotema, setFMacrotema] = useState(TODOS);
-  const [fCargo, setFCargo] = useState(TODOS);
+  const [fParticipacao, setFParticipacao] = useState(TODOS);
   const [coluna, setColuna] = useState<ColunaEquipe>("nome");
   const [ascendente, setAscendente] = useState(true);
   const [selecionado, setSelecionado] = useState<string | null>(null);
@@ -75,7 +75,7 @@ export function PainelEquipe({
       (fUnidade === TODOS || l.pessoa.unidade === fUnidade) &&
       (fSegmento === TODOS || l.pessoa.segmentoId === fSegmento) &&
       (fMacrotema === TODOS || l.macrotemaNome === fMacrotema) &&
-      (fCargo === TODOS || l.pessoa.cargo === fCargo),
+      (fParticipacao === TODOS || l.tipoParticipacao === fParticipacao),
   );
 
   const visiveis = ordenar(filtradas, coluna, ascendente);
@@ -195,9 +195,9 @@ export function PainelEquipe({
           }))}
         />
         <Filtro
-          rotulo="Cargo"
-          valor={fCargo}
-          aoMudar={setFCargo}
+          rotulo="Participação"
+          valor={fParticipacao}
+          aoMudar={setFParticipacao}
           opcoes={[
             { valor: "regente", rotulo: "Regente" },
             { valor: "corregente", rotulo: "Corregente" },
@@ -286,7 +286,9 @@ export function PainelEquipe({
                   <span className="font-medium">{l.pessoa.nome}</span>
                   <span className="block text-xs text-muted-foreground">
                     {l.pessoa.unidade} ·{" "}
-                    {l.pessoa.cargo === "corregente" ? "corregente" : "regente"}
+                    {l.tipoParticipacao === "corregente"
+                      ? "corregente"
+                      : "regente"}
                   </span>
                   <span className="block text-xs text-muted-foreground">
                     {l.macrotemaNome ?? "Sem escolha"} · {l.turmaNome ?? "—"}

@@ -32,6 +32,7 @@ export const PESSOA_PADRAO_POR_PERFIL: Record<PerfilId, string> = {
   coordenador: "coord-1",
   operadora: "oper-1",
   diretor: "dir-1",
+  moderador: "mod-1",
 };
 
 export const ROTULO_PERFIL: Record<PerfilId, string> = {
@@ -40,6 +41,8 @@ export const ROTULO_PERFIL: Record<PerfilId, string> = {
   coordenador: "Coordenador / líder",
   operadora: "Equipe operadora",
   diretor: "Diretor de unidade",
+  // Rótulo provisório (D33) — trocar para "Mediador" fica fácil: só este mapa.
+  moderador: "Moderador de turma",
 };
 
 function carregar(): EstadoApp | null {

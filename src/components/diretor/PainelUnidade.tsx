@@ -7,7 +7,7 @@ import { PainelEquipe } from "@/components/coordenador/PainelEquipe";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStore } from "@/data/store";
-import { novoId } from "@/lib/ciclo";
+import { coordenadoresDoDocente, novoId } from "@/lib/ciclo";
 import { contadores, linhasDaEquipe, type LinhaEquipe } from "@/lib/equipe";
 
 interface GrupoCoordenador {
@@ -33,11 +33,13 @@ export function PainelUnidade() {
   const grupos = useMemo(() => {
     const mapa = new Map<string, LinhaEquipe[]>();
     linhas.forEach((l) => {
-      const coordenadorId = l.pessoa.coordenadorId;
-      if (!coordenadorId) return;
-      const atual = mapa.get(coordenadorId) ?? [];
-      atual.push(l);
-      mapa.set(coordenadorId, atual);
+      // Um docente pode ter mais de um líder (D35): aparece no cartão de
+      // cada coordenador que o alocou, não só do primeiro.
+      coordenadoresDoDocente(estado, l.pessoa.id).forEach((coord) => {
+        const atual = mapa.get(coord.id) ?? [];
+        atual.push(l);
+        mapa.set(coord.id, atual);
+      });
     });
     return [...mapa.entries()]
       .map(([coordenadorId, linhasDoGrupo]): GrupoCoordenador => ({
@@ -50,7 +52,7 @@ export function PainelUnidade() {
       .sort((a, b) =>
         a.coordenadorNome.localeCompare(b.coordenadorNome, "pt-BR"),
       );
-  }, [linhas, estado.pessoas]);
+  }, [estado, linhas]);
 
   function cobrarCoordenador(grupo: GrupoCoordenador) {
     const c = contadores(grupo.linhas);
