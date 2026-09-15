@@ -77,7 +77,7 @@ function JornadaPage() {
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-        {estado.cicloConfig.nome} · {estado.cicloConfig.periodo}
+        {estado.cicloConfig.descricao} · {estado.cicloConfig.periodo}
       </p>
       {inscricao && (
         <p className="text-sm text-muted-foreground">

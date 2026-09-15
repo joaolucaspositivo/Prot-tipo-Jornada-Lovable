@@ -154,7 +154,8 @@ src/
                      (só a automática — a lançada à mão está em estado.presencas)
     entrega.ts      destino da entrega — regente vai ao coordenador, corregente à equipe central
     equipe.ts       linhasDaEquipe — base compartilhada do painel do coordenador, do diretor
-                     (filtro por unidade) e da operadora
+                     (filtro por unidade), da operadora e do moderador (filtro por turmaIds,
+                     correção pós-D33)
     gestao.ts       conferências, alertas disparados (lê estado.notificacoes, não recalcula prazo
                      — ver seção 7), ocupação de turmas, docentesDaTurma, pendenciasDeAlocacao (D37)
     observacao.ts   agenda e parecer de observação de aula
@@ -163,21 +164,25 @@ src/
     ui/             shadcn. NÃO EDITE estes arquivos.
     config/         abas da Configuração do Ciclo (operadora): AbaGeral (nome/descrição/data de
                      início, D27/D38), AbaMacrotemas, AbaModalidades, AbaTurmas (lista única em
-                     tabela + modal, D23/D24), AbaEtapas (cascata tipo→subtipo, D30), AbaConteudo
-                     (tarefa/questionário distintos, D31), AbaAlertas, AbaEncerramento, ModoGuiado
-                     (cabeçalho de passos + Conferência — "geral" é o 1º passo, não "segmentos")
+                     tabela + modal, D23/D24; card "Moderadores por turma" atribui turmaIds a quem
+                     já é moderador, correção pós-D33), AbaEtapas (cascata tipo→subtipo, D30),
+                     AbaConteudo (tarefa/questionário distintos, D31), AbaAlertas, AbaEncerramento,
+                     ModoGuiado (cabeçalho de passos + Conferência — "geral" é o 1º passo, não
+                     "segmentos")
     jornada/        trilha, conquistas, painel de etapa (docente)
     conteudo/       player de aulas, leitura do texto-base, presenças automáticas,
                      AvisoConteudoIndisponivel (D11)
     acompanhamento/ FunilEtapas — funil de etapas com detalhamento clicável e "avisar todos"
                      (RF32), compartilhado por operadora, coordenador e diretor
-    coordenador/    painel da equipe (PainelEquipe, escopo coordenador/operadora/diretor),
-                     detalhe do docente, agenda de observações
+    coordenador/    painel da equipe (PainelEquipe, escopo coordenador/operadora/diretor/
+                     moderador), detalhe do docente (valida entrega e registra devolutiva —
+                     reaproveitado pelo moderador), agenda de observações
     operadora/      gestão do ciclo (com indicadores de pendência de alocação, D37), conferências,
                      ocupação/lançamento de presença (PainelLancamentoPresenca, exportado — o
                      moderador reaproveita), alertas
     diretor/        PainelUnidade — acompanhamento da unidade por coordenador (D18)
-    moderador/      PainelModeracao — turmas do moderador (D33), só lançamento de presença
+    moderador/      PainelModeracao — turmas do moderador (D33): lançamento de presença +
+                     "Entregas para validar" (PainelEquipe escopo="moderador", correção pós-D33)
     perfil/         PainelPerfil — dados da base, tipo de participação, Líder(es) (docente),
                      Alocações (coordenador, busca por Command/cmdk) (D35)
     layout/         AppShell, navegação por perfil (todo perfil tem "/perfil" no menu), central
@@ -256,10 +261,16 @@ A troca de perfil é do seletor de demonstração. **Não implemente permissões
 - **Agrupamento do painel do diretor por `coordenadorId` do docente** (não pela `unidade` do coordenador) — decisão já registrada na rodada P3, reafirmada aqui porque a fonte mudou de `Pessoa.coordenadorId` para `Alocacao`.
 - **6º critério de avanço `nota_minima`** usa a mesma mecânica de `tarefa_validada` (nota da devolutiva mais recente ≥ corte) — não é um critério pedagógico novo, é o mesmo mecanismo com um nome diferente, para permitir ativar "nota mínima" sem exigir "tarefa entregue" como critério separado. Confirmar com o cliente se faz sentido como está.
 - **Subtipo (D30) só tem cadastro de criação** — a etapa cria um subtipo novo direto da cascata tipo→subtipo, mas não há tela para editar ou excluir um subtipo já existente. "Pode ser simples", como a especificação pediu; editar/excluir fica para uma próxima rodada se for necessário.
-- **Moderador só lança presença (D33)** — "validar entregas/notas", mencionado na especificação como parte do perfil, **não foi implementado**. O critério de aceite testa só o lançamento de presença; validação de entrega para o moderador fica em aberto.
 - **Tipo de participação (regente/corregente) é editável em dois lugares**: na Escolha do percurso (`/percurso`, no momento da inscrição) e na área Perfil (`/perfil`, a qualquer momento depois). Os dois escrevem no mesmo campo (`Inscricao.tipoParticipacao`) — não há conflito, é a mesma fonte de dado com dois pontos de entrada, como a especificação pedia os dois.
 - **Fluxo de "solicitar inclusão de professor não encontrado na base"** — não implementado, como a especificação já previa deixar em aberto.
 - **Hierarquia de macrociclo/mesociclo** e **tela de Encerramento (pesquisa de satisfação)** — não tocadas nesta rodada, como pedido; seguem para uma próxima reunião de lapidação.
+
+**Correções pós-validação de código (ver `correcoes-validacao-D22-D38.md`):**
+
+- **"Ciclo" ainda aparecia nas telas do docente (D27) — resolvido.** `/jornada`, `/percurso`, `/aulas` e `/entrega` liam `cicloConfig.nome` (seed: "Ciclo 2") em vez de `cicloConfig.descricao` (seed: "Jornada 2027 a 2030"). `nome` continua sendo o identificador interno; a exibição ao docente agora usa `descricao`. Telas da operadora (`/acesso`, `/gestao`, `/configuracao`) continuam usando "ciclo" normalmente — não fazem parte de D27.
+- **Moderador só lançava presença (D33) — resolvido.** `PainelModeracao` agora também reaproveita `PainelEquipe`/`DetalheDocente` (escopo `"moderador"`, filtrando por `linhasDaEquipe(estado, { turmaIds })`) para validar entrega e registrar devolutiva dos docentes das suas turmas — o mesmo padrão do coordenador, sem nenhuma configuração de turma/ciclo exposta ao moderador.
+- **Sem UI para atribuir turmas a um moderador (D33) — resolvido.** A aba Turmas da Configuração do Ciclo ganhou o card "Moderadores por turma": a operadora escolhe, por pessoa com perfil `moderador`, quais turmas ela cobre (grava direto em `Pessoa.turmaIds`). A base de pessoas continua só leitura quanto a cadastro (D36) — isso não muda; só a atribuição de turmas a quem já é moderador.
+- **`linkApoio` nunca chegava ao docente (D31) — resolvido.** O campo era salvo pela aba Conteúdo (tarefa e texto-base), mas nenhuma tela do docente o lia. `/aulas` agora mostra um link "Material de apoio" clicável, próximo à instrução da tarefa e ao final do texto-base, quando `linkApoio` está preenchido.
 
 ---
 

@@ -271,7 +271,7 @@ function EntregaPage() {
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-        {estado.cicloConfig.nome} · {estado.cicloConfig.periodo}
+        {estado.cicloConfig.descricao} · {estado.cicloConfig.periodo}
       </p>
       <h1 className="mt-1 text-2xl sm:text-3xl">{etapa.nome}</h1>
       <p className="mt-1 text-muted-foreground">{etapa.descricao}</p>

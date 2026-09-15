@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CalendarCheck, Users } from "lucide-react";
 
+import { PainelEquipe } from "@/components/coordenador/PainelEquipe";
 import { PainelLancamentoPresenca } from "@/components/operadora/OcupacaoTurmas";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,8 +13,8 @@ import { ocupacaoDasTurmas } from "@/lib/gestao";
 
 /**
  * Área do moderador de turma (D33): acesso restrito às turmas em
- * `pessoaAtiva.turmaIds`, só para lançar presença — sem configuração de
- * turma, do ciclo ou de qualquer outra área.
+ * `pessoaAtiva.turmaIds` — lança presença e valida entrega/devolutiva dos
+ * docentes dessas turmas, sem acesso à configuração de turma ou do ciclo.
  */
 export function PainelModeracao() {
   const { estado, pessoaAtiva } = useStore();
@@ -100,6 +101,14 @@ export function PainelModeracao() {
           )}
         </SheetContent>
       </Sheet>
+
+      <header className="space-y-1 pt-2">
+        <h2 className="text-xl font-semibold">Entregas para validar</h2>
+        <p className="text-muted-foreground">
+          Docentes das suas turmas — valide a entrega e registre a devolutiva.
+        </p>
+      </header>
+      <PainelEquipe escopo="moderador" />
     </div>
   );
 }

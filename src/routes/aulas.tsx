@@ -377,6 +377,20 @@ function AulasPage() {
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">{instrucoes}</p>
 
+            {itemTarefa?.linkApoio && (
+              <p className="text-sm">
+                <a
+                  href={itemTarefa.linkApoio}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-accent-foreground underline underline-offset-2"
+                >
+                  Material de apoio
+                  <ExternalLink className="size-3.5" aria-hidden />
+                </a>
+              </p>
+            )}
+
             {entrega ? (
               <div className="rounded-xl border border-border bg-muted/40 p-3 text-sm">
                 <p className="font-medium">
@@ -415,7 +429,7 @@ function AulasPage() {
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-        {estado.cicloConfig.nome} · {estado.cicloConfig.periodo}
+        {estado.cicloConfig.descricao} · {estado.cicloConfig.periodo}
       </p>
       <h1 className="mt-1 text-2xl sm:text-3xl">{etapa.nome}</h1>
       <p className="mt-1 text-muted-foreground">{etapa.descricao}</p>
@@ -530,11 +544,26 @@ function AulasPage() {
           {itemTexto && (
             <TabsContent value="texto" className="mt-4">
               {textoResolvido ? (
-                <LeituraTextoBase
-                  texto={textoResolvido}
-                  percentual={percentualLeitura}
-                  aoAvancar={avancarLeitura}
-                />
+                <div className="space-y-3">
+                  <LeituraTextoBase
+                    texto={textoResolvido}
+                    percentual={percentualLeitura}
+                    aoAvancar={avancarLeitura}
+                  />
+                  {itemTexto.linkApoio && (
+                    <p className="text-sm">
+                      <a
+                        href={itemTexto.linkApoio}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 text-accent-foreground underline underline-offset-2"
+                      >
+                        Material de apoio
+                        <ExternalLink className="size-3.5" aria-hidden />
+                      </a>
+                    </p>
+                  )}
+                </div>
               ) : (
                 <AvisoConteudoIndisponivel titulo="Este texto-base ainda não pode ser lido aqui">
                   Foi anexado como arquivo, e este protótipo não abre arquivos

@@ -382,7 +382,7 @@ function Cabecalho({
     <header className="space-y-3">
       <div className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {estado.cicloConfig.nome} · {estado.cicloConfig.periodo}
+          {estado.cicloConfig.descricao} · {estado.cicloConfig.periodo}
         </p>
         <h1 className="text-3xl">Escolha do seu percurso</h1>
         <p className="text-muted-foreground">

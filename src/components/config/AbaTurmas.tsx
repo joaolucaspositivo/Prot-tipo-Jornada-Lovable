@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useAvisoImpacto, useCicloConfig } from "./comum";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -36,7 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Macrotema, Modalidade, Turma } from "@/data/types";
+import type { Macrotema, Modalidade, Pessoa, Turma } from "@/data/types";
 import { ROTULO_DIA_SEMANA, novoId, usoDaTurma } from "@/lib/ciclo";
 
 const TODOS = "todos";
@@ -51,6 +52,9 @@ export function AbaTurmas() {
 
   const [dialogoAberto, setDialogoAberto] = useState(false);
   const [turmaEmEdicaoId, setTurmaEmEdicaoId] = useState<string | null>(null);
+  const [moderadorEmEdicaoId, setModeradorEmEdicaoId] = useState<string | null>(
+    null,
+  );
 
   const [fMacrotema, setFMacrotema] = useState(TODOS);
   const [fModalidade, setFModalidade] = useState(TODOS);
@@ -103,6 +107,23 @@ export function AbaTurmas() {
   }
 
   const turmaEmEdicao = turmas.find((t) => t.id === turmaEmEdicaoId);
+  const moderadores = estado.pessoas.filter((p) => p.perfil === "moderador");
+  const moderadorEmEdicao = moderadores.find(
+    (m) => m.id === moderadorEmEdicaoId,
+  );
+
+  // D33/D37: turmas de um moderador ficam na própria Pessoa, mas quem edita é
+  // a operadora aqui — a base de pessoas continua só leitura quanto ao
+  // cadastro (D36), isto é só a atribuição de turmas a quem já é moderador.
+  function salvarTurmasDoModerador(moderadorId: string, turmaIds: string[]) {
+    atualizar((anterior) => ({
+      ...anterior,
+      pessoas: anterior.pessoas.map((p) =>
+        p.id === moderadorId ? { ...p, turmaIds } : p,
+      ),
+    }));
+    setModeradorEmEdicaoId(null);
+  }
 
   function salvar(dados: DadosTurma) {
     if (turmaEmEdicao) {
@@ -270,6 +291,55 @@ export function AbaTurmas() {
         </Table>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Moderadores por turma</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Escolha, para cada moderador, quais turmas ele acompanha —
+            lançamento de presença e validação de entrega (D33).
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {moderadores.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhuma pessoa com perfil moderador na base.
+            </p>
+          ) : (
+            moderadores.map((m) => (
+              <div
+                key={m.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{m.nome}</p>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {(m.turmaIds ?? []).length === 0 ? (
+                      <span className="text-xs text-muted-foreground">
+                        Nenhuma turma atribuída
+                      </span>
+                    ) : (
+                      (m.turmaIds ?? []).map((tid) => (
+                        <Badge key={tid} variant="secondary">
+                          {turmas.find((t) => t.id === tid)?.nome ??
+                            "Turma removida"}
+                        </Badge>
+                      ))
+                    )}
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setModeradorEmEdicaoId(m.id)}
+                >
+                  Editar turmas
+                </Button>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
       <DialogoTurma
         aberto={dialogoAberto}
         turma={turmaEmEdicao}
@@ -277,6 +347,13 @@ export function AbaTurmas() {
         modalidades={config.modalidades}
         aoFechar={() => setDialogoAberto(false)}
         aoSalvar={salvar}
+      />
+      <DialogoModeradorTurmas
+        aberto={Boolean(moderadorEmEdicao)}
+        moderador={moderadorEmEdicao}
+        turmas={turmas}
+        aoFechar={() => setModeradorEmEdicaoId(null)}
+        aoSalvar={salvarTurmasDoModerador}
       />
       {dialogo}
     </div>
@@ -544,6 +621,77 @@ function DialogoTurma({
             Cancelar
           </Button>
           <Button onClick={salvar} disabled={!nome.trim()}>
+            Salvar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DialogoModeradorTurmas({
+  aberto,
+  moderador,
+  turmas,
+  aoFechar,
+  aoSalvar,
+}: {
+  aberto: boolean;
+  moderador: Pessoa | undefined;
+  turmas: Turma[];
+  aoFechar: () => void;
+  aoSalvar: (moderadorId: string, turmaIds: string[]) => void;
+}) {
+  const [selecionadas, setSelecionadas] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!aberto) return;
+    setSelecionadas(moderador?.turmaIds ?? []);
+  }, [aberto, moderador]);
+
+  function alternar(turmaId: string) {
+    setSelecionadas((atual) =>
+      atual.includes(turmaId)
+        ? atual.filter((t) => t !== turmaId)
+        : [...atual, turmaId],
+    );
+  }
+
+  return (
+    <Dialog open={aberto} onOpenChange={(v) => !v && aoFechar()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Turmas de {moderador?.nome}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2">
+          {turmas.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhuma turma cadastrada ainda.
+            </p>
+          ) : (
+            turmas.map((t) => (
+              <label
+                key={t.id}
+                htmlFor={`mod-turma-${t.id}`}
+                className="flex items-center gap-2 text-sm"
+              >
+                <Checkbox
+                  id={`mod-turma-${t.id}`}
+                  checked={selecionadas.includes(t.id)}
+                  onCheckedChange={() => alternar(t.id)}
+                />
+                {t.nome}
+              </label>
+            ))
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={aoFechar}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => moderador && aoSalvar(moderador.id, selecionadas)}
+          >
             Salvar
           </Button>
         </DialogFooter>

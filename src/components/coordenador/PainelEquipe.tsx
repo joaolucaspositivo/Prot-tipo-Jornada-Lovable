@@ -39,7 +39,7 @@ const TODOS = "todos";
 export function PainelEquipe({
   escopo,
 }: {
-  escopo: "coordenador" | "operadora" | "diretor";
+  escopo: "coordenador" | "operadora" | "diretor" | "moderador";
 }) {
   const { estado, pessoaAtiva, atualizar } = useStore();
 
@@ -51,9 +51,11 @@ export function PainelEquipe({
           ? { coordenadorId: pessoaAtiva.id }
           : escopo === "diretor"
             ? { unidade: pessoaAtiva.unidade }
-            : {},
+            : escopo === "moderador"
+              ? { turmaIds: pessoaAtiva.turmaIds ?? [] }
+              : {},
       ),
-    [estado, escopo, pessoaAtiva.id, pessoaAtiva.unidade],
+    [estado, escopo, pessoaAtiva.id, pessoaAtiva.unidade, pessoaAtiva.turmaIds],
   );
 
   const [fEtapa, setFEtapa] = useState(TODOS);
