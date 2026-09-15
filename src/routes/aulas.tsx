@@ -17,13 +17,15 @@ import { EstadoBadge } from "@/components/EstadoBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { AulaConteudo, TextoBase } from "@/data/conteudos";
 import { materialDaEtapa } from "@/data/conteudos";
 import { useStore } from "@/data/store";
-import type { EstadoApp } from "@/data/types";
+import type { EstadoApp, ItemConteudo } from "@/data/types";
 import {
   criteriosDoDocente,
   encontrosRegistrados,
@@ -176,6 +178,7 @@ function AulasPage() {
     : undefined;
 
   const itemTarefa = itensOferta.find((i) => i.tipo === "tarefa");
+  const itemQuestionario = itensOferta.find((i) => i.tipo === "questionario");
 
   const abasDisponiveis = [
     itensOferta.some((i) => i.tipo === "video")
@@ -186,6 +189,7 @@ function AulasPage() {
       ? { valor: "webconferencia", rotulo: "Encontro ao vivo" }
       : null,
     itemTarefa ? { valor: "tarefa", rotulo: "Tarefa da etapa" } : null,
+    itemQuestionario ? { valor: "questionario", rotulo: "Questionário" } : null,
   ].filter((a): a is { valor: string; rotulo: string } => a !== null);
 
   const abaConteudoAtiva = abasDisponiveis.some(
@@ -623,6 +627,12 @@ function AulasPage() {
               </>,
               "tarefa",
             )}
+
+          {itemQuestionario && (
+            <TabsContent value="questionario" className="mt-4">
+              <QuestionarioInterativo item={itemQuestionario} />
+            </TabsContent>
+          )}
         </Tabs>
       ) : (
         <Tabs defaultValue="aulas" className="mt-6">
@@ -661,6 +671,59 @@ function AulasPage() {
         </Tabs>
       )}
     </div>
+  );
+}
+
+/**
+ * Questionário de múltipla escolha (D31), sem resposta aberta. Autoexploração
+ * do docente — sem gabarito no modelo, então não há certo/errado a apontar.
+ */
+function QuestionarioInterativo({ item }: { item: ItemConteudo }) {
+  const perguntas = [...(item.perguntas ?? [])].sort(
+    (a, b) => a.ordem - b.ordem,
+  );
+  const [respostas, setRespostas] = useState<Record<string, string>>({});
+
+  if (perguntas.length === 0) {
+    return (
+      <AvisoConteudoIndisponivel titulo="Este questionário ainda não tem perguntas">
+        Peça à equipe operadora para cadastrar as perguntas na aba Conteúdo.
+      </AvisoConteudoIndisponivel>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{item.titulo}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        {perguntas.map((pergunta, i) => (
+          <div key={pergunta.id} className="space-y-2">
+            <p className="text-sm font-medium">
+              {i + 1}. {pergunta.enunciado}
+            </p>
+            <RadioGroup
+              value={respostas[pergunta.id] ?? ""}
+              onValueChange={(v) =>
+                setRespostas((atual) => ({ ...atual, [pergunta.id]: v }))
+              }
+            >
+              {pergunta.opcoes.map((opcao, oi) => (
+                <div key={oi} className="flex items-center gap-2">
+                  <RadioGroupItem id={`${pergunta.id}-${oi}`} value={opcao} />
+                  <Label htmlFor={`${pergunta.id}-${oi}`}>{opcao}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+        ))}
+        <p className="text-sm text-muted-foreground">
+          {Object.keys(respostas).length} de {perguntas.length} pergunta(s)
+          respondida(s).
+        </p>
+      </CardContent>
+    </Card>
   );
 }
 

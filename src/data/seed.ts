@@ -1110,6 +1110,36 @@ function construirConteudoDemonstravel() {
       ordem: 1,
       midiaId: "midia-mt2-sync-texto",
     },
+    // Demonstra questionário como item distinto de tarefa (D31) — múltipla
+    // escolha, sem campo de resposta aberta.
+    {
+      id: "item-mt2-sync-questionario",
+      ofertaId: "oferta-mt2-sync",
+      tipo: "questionario",
+      titulo: "Verificação de leitura — Mediação e engajamento",
+      descricao: "Duas perguntas rápidas sobre o texto-base.",
+      ordem: 2,
+      perguntas: [
+        {
+          id: "pgq-mt2-1",
+          enunciado:
+            "Mediar a turma significa, sobretudo, intervir quando algo dá errado.",
+          opcoes: ["Verdadeiro", "Falso"],
+          ordem: 1,
+        },
+        {
+          id: "pgq-mt2-2",
+          enunciado:
+            "O que mais sustenta o engajamento da turma ao longo do percurso?",
+          opcoes: [
+            "Regras rígidas definidas no primeiro dia",
+            "A mediação contínua do professor",
+            "A ausência de intervenção do professor",
+          ],
+          ordem: 2,
+        },
+      ],
+    },
   ];
 
   // doc-1 (turma-1-1-1): 2 de 4 encontros lançados — nem zerado, nem

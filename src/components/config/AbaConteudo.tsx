@@ -4,7 +4,10 @@ import {
   Film,
   Link2,
   ListChecks,
+  ListTodo,
+  Plus,
   Trash2,
+  X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -39,6 +42,7 @@ import type {
   Midia,
   Modalidade,
   OfertaConteudo,
+  PerguntaOpcaoMultipla,
   TipoCriterioAvanco,
 } from "@/data/types";
 import { macrotemasAtivos, moverItem, novoId, reindexar } from "@/lib/ciclo";
@@ -128,7 +132,7 @@ export function AbaConteudo() {
   const [macrotemaIdBruto, setMacrotemaIdBruto] = useState("");
   const [modalidadeIdBruto, setModalidadeIdBruto] = useState("");
   const [dialogo, setDialogo] = useState<
-    "video" | "texto" | "webconferencia" | "tarefa" | null
+    "video" | "texto" | "webconferencia" | "tarefa" | "questionario" | null
   >(null);
 
   const etapaId = etapasConteudo.some((e) => e.id === etapaIdBruto)
@@ -403,6 +407,9 @@ export function AbaConteudo() {
           <Button variant="outline" onClick={() => setDialogo("tarefa")}>
             <ListChecks className="size-4" /> Tarefa
           </Button>
+          <Button variant="outline" onClick={() => setDialogo("questionario")}>
+            <ListTodo className="size-4" /> Questionário
+          </Button>
         </div>
       </div>
 
@@ -507,6 +514,11 @@ export function AbaConteudo() {
         aoFechar={() => setDialogo(null)}
         aoAdicionar={adicionarItem}
       />
+      <DialogoQuestionario
+        aberto={dialogo === "questionario"}
+        aoFechar={() => setDialogo(null)}
+        aoAdicionar={adicionarItem}
+      />
     </div>
   );
 }
@@ -516,7 +528,6 @@ const ROTULO_TIPO_ITEM: Record<ItemConteudo["tipo"], string> = {
   texto: "Texto-base",
   webconferencia: "Webconferência",
   tarefa: "Tarefa",
-  // O item de adicionar questionário (separado de tarefa) entra no Bloco 4.
   questionario: "Questionário",
 };
 
@@ -528,7 +539,9 @@ function IconeItem({ tipo }: { tipo: ItemConteudo["tipo"] }) {
         ? FileText
         : tipo === "webconferencia"
           ? Link2
-          : ListChecks;
+          : tipo === "questionario"
+            ? ListTodo
+            : ListChecks;
   return (
     <Icone className="size-4 shrink-0 text-muted-foreground" aria-hidden />
   );
@@ -775,12 +788,16 @@ function DialogoTexto({
   const [usarExistente, setUsarExistente] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [corpo, setCorpo] = useState("");
+  // Campo aditivo (D31), fora do texto literal da especificação — sujeito a
+  // revisão com o cliente: confirmar se texto-base também deve ter link.
+  const [linkApoio, setLinkApoio] = useState("");
 
   function reiniciar() {
     setOrigem("escrever");
     setUsarExistente(false);
     setTitulo("");
     setCorpo("");
+    setLinkApoio("");
   }
 
   function salvarEscrito() {
@@ -799,6 +816,7 @@ function DialogoTexto({
       titulo: titulo || "Texto-base",
       descricao: "",
       midiaId,
+      linkApoio: linkApoio.trim() || undefined,
     });
     reiniciar();
     aoFechar();
@@ -821,6 +839,7 @@ function DialogoTexto({
       titulo: titulo || file.name,
       descricao: "",
       midiaId,
+      linkApoio: linkApoio.trim() || undefined,
     });
     reiniciar();
     aoFechar();
@@ -832,6 +851,7 @@ function DialogoTexto({
       titulo: titulo || midia.nome,
       descricao: "",
       midiaId: midia.id,
+      linkApoio: linkApoio.trim() || undefined,
     });
     reiniciar();
     aoFechar();
@@ -862,6 +882,17 @@ function DialogoTexto({
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
               placeholder="Ex.: Texto-base do macrotema"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="texto-link">
+              Link externo ou material de apoio (opcional)
+            </Label>
+            <Input
+              id="texto-link"
+              value={linkApoio}
+              onChange={(e) => setLinkApoio(e.target.value)}
+              placeholder="https://..."
             />
           </div>
 
@@ -1052,10 +1083,12 @@ function DialogoTarefa({
 }) {
   const [titulo, setTitulo] = useState("");
   const [enunciado, setEnunciado] = useState("");
+  const [linkApoio, setLinkApoio] = useState("");
 
   function reiniciar() {
     setTitulo("");
     setEnunciado("");
+    setLinkApoio("");
   }
 
   function salvar() {
@@ -1065,6 +1098,7 @@ function DialogoTarefa({
       titulo,
       descricao: "",
       enunciado,
+      linkApoio: linkApoio.trim() || undefined,
     });
     reiniciar();
     aoFechar();
@@ -1104,6 +1138,17 @@ function DialogoTarefa({
               placeholder="O que o docente precisa fazer e entregar"
             />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="tarefa-link">
+              Link externo ou material de apoio (opcional)
+            </Label>
+            <Input
+              id="tarefa-link"
+              value={linkApoio}
+              onChange={(e) => setLinkApoio(e.target.value)}
+              placeholder="https://..."
+            />
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => (reiniciar(), aoFechar())}>
@@ -1113,6 +1158,213 @@ function DialogoTarefa({
             onClick={salvar}
             disabled={!titulo.trim() || enunciado.trim().length < 10}
           >
+            Salvar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Questionário: perguntas de múltipla escolha, sem campo de resposta aberta
+ * (D31) — distinto de tarefa, que continua sendo enunciado + entrega livre.
+ */
+function DialogoQuestionario({
+  aberto,
+  aoFechar,
+  aoAdicionar,
+}: {
+  aberto: boolean;
+  aoFechar: () => void;
+  aoAdicionar: (
+    midia: Midia | null,
+    item: Omit<ItemConteudo, "id" | "ofertaId" | "ordem">,
+  ) => void;
+}) {
+  const [titulo, setTitulo] = useState("");
+  const [perguntas, setPerguntas] = useState<PerguntaOpcaoMultipla[]>([]);
+
+  function reiniciar() {
+    setTitulo("");
+    setPerguntas([]);
+  }
+
+  function adicionarPergunta() {
+    setPerguntas((atual) => [
+      ...atual,
+      {
+        id: novoId("pgq"),
+        enunciado: "",
+        opcoes: ["", ""],
+        ordem: atual.length,
+      },
+    ]);
+  }
+
+  function editarPergunta(id: string, mudanca: Partial<PerguntaOpcaoMultipla>) {
+    setPerguntas((atual) =>
+      atual.map((p) => (p.id === id ? { ...p, ...mudanca } : p)),
+    );
+  }
+
+  function removerPergunta(id: string) {
+    setPerguntas((atual) => atual.filter((p) => p.id !== id));
+  }
+
+  function editarOpcao(perguntaId: string, indice: number, valor: string) {
+    setPerguntas((atual) =>
+      atual.map((p) =>
+        p.id === perguntaId
+          ? { ...p, opcoes: p.opcoes.map((o, i) => (i === indice ? valor : o)) }
+          : p,
+      ),
+    );
+  }
+
+  function adicionarOpcao(perguntaId: string) {
+    setPerguntas((atual) =>
+      atual.map((p) =>
+        p.id === perguntaId ? { ...p, opcoes: [...p.opcoes, ""] } : p,
+      ),
+    );
+  }
+
+  function removerOpcao(perguntaId: string, indice: number) {
+    setPerguntas((atual) =>
+      atual.map((p) =>
+        p.id === perguntaId
+          ? { ...p, opcoes: p.opcoes.filter((_, i) => i !== indice) }
+          : p,
+      ),
+    );
+  }
+
+  const valido =
+    titulo.trim().length > 0 &&
+    perguntas.length > 0 &&
+    perguntas.every(
+      (p) =>
+        p.enunciado.trim().length > 0 &&
+        p.opcoes.filter((o) => o.trim()).length >= 2,
+    );
+
+  function salvar() {
+    if (!valido) return;
+    aoAdicionar(null, {
+      tipo: "questionario",
+      titulo,
+      descricao: "",
+      perguntas: perguntas.map((p, i) => ({
+        ...p,
+        ordem: i,
+        opcoes: p.opcoes.filter((o) => o.trim()),
+      })),
+    });
+    reiniciar();
+    aoFechar();
+  }
+
+  return (
+    <Dialog
+      open={aberto}
+      onOpenChange={(v) => {
+        if (!v) {
+          reiniciar();
+          aoFechar();
+        }
+      }}
+    >
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Questionário</DialogTitle>
+          <DialogDescription>
+            Perguntas de múltipla escolha — sem campo de resposta aberta.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="questionario-titulo">Título</Label>
+            <Input
+              id="questionario-titulo"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              placeholder="Ex.: Verificação de leitura"
+            />
+          </div>
+
+          <div className="space-y-3">
+            {perguntas.map((pergunta, i) => (
+              <div
+                key={pergunta.id}
+                className="space-y-2 rounded-lg border border-border p-3"
+              >
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={pergunta.enunciado}
+                    aria-label={`Enunciado da pergunta ${i + 1}`}
+                    placeholder={`Pergunta ${i + 1}`}
+                    onChange={(e) =>
+                      editarPergunta(pergunta.id, { enunciado: e.target.value })
+                    }
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-atraso hover:bg-atraso-suave"
+                    onClick={() => removerPergunta(pergunta.id)}
+                    aria-label="Remover pergunta"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+                <div className="space-y-1.5 pl-2">
+                  {pergunta.opcoes.map((opcao, oi) => (
+                    <div key={oi} className="flex items-center gap-2">
+                      <Input
+                        value={opcao}
+                        aria-label={`Opção ${oi + 1} da pergunta ${i + 1}`}
+                        placeholder={`Opção ${oi + 1}`}
+                        onChange={(e) =>
+                          editarOpcao(pergunta.id, oi, e.target.value)
+                        }
+                        className="h-9 flex-1"
+                      />
+                      {pergunta.opcoes.length > 2 ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8"
+                          onClick={() => removerOpcao(pergunta.id, oi)}
+                          aria-label="Remover opção"
+                        >
+                          <X className="size-3.5" />
+                        </Button>
+                      ) : null}
+                    </div>
+                  ))}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => adicionarOpcao(pergunta.id)}
+                  >
+                    <Plus className="size-3.5" /> Opção
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Button variant="outline" onClick={adicionarPergunta}>
+            <Plus className="size-4" /> Adicionar pergunta
+          </Button>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => (reiniciar(), aoFechar())}>
+            Cancelar
+          </Button>
+          <Button onClick={salvar} disabled={!valido}>
             Salvar
           </Button>
         </DialogFooter>
