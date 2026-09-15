@@ -122,7 +122,8 @@ export function OcupacaoTurmas() {
   );
 }
 
-function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
+/** Exportado: o moderador (D33) reaproveita o mesmo lançamento de presença. */
+export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
   const { estado, pessoaAtiva, atualizar } = useStore();
   const ofertasDaTurma = estado.ofertas.filter(
     (o) =>

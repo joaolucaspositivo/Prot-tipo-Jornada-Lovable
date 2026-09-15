@@ -6,13 +6,10 @@ import type { PerfilId } from "@/data/types";
 
 function rotaInicial(
   perfil: PerfilId,
-): "/jornada" | "/equipe" | "/gestao" | "/unidade" {
+): "/jornada" | "/equipe" | "/gestao" | "/unidade" | "/moderacao" {
   switch (perfil) {
-    // Área própria do moderador chega no Bloco 6 (D33); por ora, mesma
-    // porta de entrada do docente.
     case "docente-regente":
     case "docente-corregente":
-    case "moderador":
       return "/jornada";
     case "coordenador":
       return "/equipe";
@@ -20,6 +17,8 @@ function rotaInicial(
       return "/gestao";
     case "diretor":
       return "/unidade";
+    case "moderador":
+      return "/moderacao";
   }
 }
 

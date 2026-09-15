@@ -239,7 +239,10 @@ const etapasSeed: Etapa[] = [
     ordem: 6,
     obrigatoria: true,
     prazoDias: 100,
-    perfisParticipantes: [],
+    // Só regente (D34): a entrega e a devolutiva do corregente já são
+    // conduzidas pela equipe central (RF22) — não há coordenador de
+    // unidade observando a aula dele.
+    perfisParticipantes: ["regente"],
     alerta: {
       diasAntes: 5,
       noVencimento: false,

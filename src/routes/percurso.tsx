@@ -14,9 +14,16 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { dimensaoMaisFragil } from "@/data/autoavaliacao";
 import { useStore } from "@/data/store";
-import type { EstadoApp, Macrotema, Turma } from "@/data/types";
+import type {
+  EstadoApp,
+  Macrotema,
+  TipoParticipacao,
+  Turma,
+} from "@/data/types";
 import { macrotemasAtivos, novoId } from "@/lib/ciclo";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +56,11 @@ function PercursoPage() {
     null,
   );
   const [trocando, setTrocando] = useState(false);
+  // Campo estruturado de participação (D34) — antes um atributo fixo da
+  // pessoa, agora parte da própria inscrição.
+  const [tipoParticipacao, setTipoParticipacao] = useState<TipoParticipacao>(
+    inscricao?.tipoParticipacao ?? "regente",
+  );
 
   const ativos = macrotemasAtivos(config);
   const historico = estado.historicoMacrotemas.filter(
@@ -96,11 +108,6 @@ function PercursoPage() {
         return t;
       });
 
-      // Preserva o tipo de participação já escolhido (D34): trocar de turma
-      // não deveria resetar se o docente é regente ou corregente.
-      const tipoParticipacao =
-        anterior.inscricoes.find((i) => i.pessoaId === pessoaAtiva.id)
-          ?.tipoParticipacao ?? "regente";
       const semAntiga = anterior.inscricoes.filter(
         (i) => i.pessoaId !== pessoaAtiva.id,
       );
@@ -177,7 +184,10 @@ function PercursoPage() {
 
     return (
       <div className="mx-auto max-w-3xl space-y-6">
-        <Cabecalho />
+        <Cabecalho
+          tipoParticipacao={tipoParticipacao}
+          aoMudarParticipacao={setTipoParticipacao}
+        />
         <Card className="border-sucesso/40 bg-sucesso-suave">
           <CardHeader className="flex-row items-start gap-3 space-y-0">
             <CheckCircle2
@@ -235,7 +245,10 @@ function PercursoPage() {
 
     return (
       <div className="mx-auto max-w-3xl space-y-6">
-        <Cabecalho />
+        <Cabecalho
+          tipoParticipacao={tipoParticipacao}
+          aoMudarParticipacao={setTipoParticipacao}
+        />
         <Button variant="ghost" onClick={() => setTrocando(false)}>
           <ArrowLeft className="size-4" aria-hidden />
           Manter minha turma atual
@@ -285,7 +298,10 @@ function PercursoPage() {
 
     return (
       <div className="mx-auto max-w-3xl space-y-6">
-        <Cabecalho />
+        <Cabecalho
+          tipoParticipacao={tipoParticipacao}
+          aoMudarParticipacao={setTipoParticipacao}
+        />
         <Button variant="ghost" onClick={() => setMacrotemaEscolhido(null)}>
           <ArrowLeft className="size-4" aria-hidden />
           Trocar de macrotema
@@ -325,7 +341,10 @@ function PercursoPage() {
   // ---- passo 1: macrotemas ----
   return (
     <div className="space-y-6">
-      <Cabecalho />
+      <Cabecalho
+        tipoParticipacao={tipoParticipacao}
+        aoMudarParticipacao={setTipoParticipacao}
+      />
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Passo 1 de 2 · Escolha do macrotema
       </p>
@@ -351,18 +370,44 @@ function PercursoPage() {
   );
 }
 
-function Cabecalho() {
+function Cabecalho({
+  tipoParticipacao,
+  aoMudarParticipacao,
+}: {
+  tipoParticipacao: TipoParticipacao;
+  aoMudarParticipacao: (v: TipoParticipacao) => void;
+}) {
   const { estado } = useStore();
   return (
-    <header className="space-y-1">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {estado.cicloConfig.nome} · {estado.cicloConfig.periodo}
-      </p>
-      <h1 className="text-3xl">Escolha do seu percurso</h1>
-      <p className="text-muted-foreground">
-        Você escolhe o tema e a turma e já fica inscrito. Não há fila de
-        aprovação.
-      </p>
+    <header className="space-y-3">
+      <div className="space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {estado.cicloConfig.nome} · {estado.cicloConfig.periodo}
+        </p>
+        <h1 className="text-3xl">Escolha do seu percurso</h1>
+        <p className="text-muted-foreground">
+          Você escolhe o tema e a turma e já fica inscrito. Não há fila de
+          aprovação.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-border p-3">
+        <span className="text-sm font-medium">Tipo de participação</span>
+        <RadioGroup
+          value={tipoParticipacao}
+          onValueChange={(v) => aoMudarParticipacao(v as TipoParticipacao)}
+          className="flex gap-4"
+        >
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="regente" id="participacao-regente" />
+            <Label htmlFor="participacao-regente">Regente</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="corregente" id="participacao-corregente" />
+            <Label htmlFor="participacao-corregente">Corregente</Label>
+          </div>
+        </RadioGroup>
+      </div>
     </header>
   );
 }

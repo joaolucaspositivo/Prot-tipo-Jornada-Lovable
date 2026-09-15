@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  CalendarCheck,
   CalendarDays,
   ClipboardList,
   Compass,
@@ -69,7 +70,8 @@ export const NAVEGACAO_POR_PERFIL: Record<PerfilId, ItemNav[]> = {
     },
   ],
   diretor: [{ para: "/unidade", rotulo: "Minha unidade", Icone: BookOpen }],
-  // Área restrita às turmas do moderador chega no Bloco 6 (D33); por ora,
-  // só o suficiente para o perfil existir sem quebrar a navegação.
-  moderador: [],
+  // Acesso restrito às turmas vinculadas (D33) — só lança presença.
+  moderador: [
+    { para: "/moderacao", rotulo: "Minhas turmas", Icone: CalendarCheck },
+  ],
 };

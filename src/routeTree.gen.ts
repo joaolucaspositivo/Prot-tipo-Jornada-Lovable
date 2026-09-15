@@ -22,6 +22,7 @@ import { Route as EquipeRouteImport } from './routes/equipe'
 import { Route as GestaoRouteImport } from './routes/gestao'
 import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as JornadaRouteImport } from './routes/jornada'
+import { Route as ModeracaoRouteImport } from './routes/moderacao'
 import { Route as PercursoRouteImport } from './routes/percurso'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as UnidadeRouteImport } from './routes/unidade'
@@ -91,6 +92,11 @@ const JornadaRoute = JornadaRouteImport.update({
   path: '/jornada',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ModeracaoRoute = ModeracaoRouteImport.update({
+  id: '/moderacao',
+  path: '/moderacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PercursoRoute = PercursoRouteImport.update({
   id: '/percurso',
   path: '/percurso',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/gestao': typeof GestaoRoute
   '/historico': typeof HistoricoRoute
   '/jornada': typeof JornadaRoute
+  '/moderacao': typeof ModeracaoRoute
   '/percurso': typeof PercursoRoute
   '/portfolio': typeof PortfolioRoute
   '/unidade': typeof UnidadeRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/gestao': typeof GestaoRoute
   '/historico': typeof HistoricoRoute
   '/jornada': typeof JornadaRoute
+  '/moderacao': typeof ModeracaoRoute
   '/percurso': typeof PercursoRoute
   '/portfolio': typeof PortfolioRoute
   '/unidade': typeof UnidadeRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/gestao': typeof GestaoRoute
   '/historico': typeof HistoricoRoute
   '/jornada': typeof JornadaRoute
+  '/moderacao': typeof ModeracaoRoute
   '/percurso': typeof PercursoRoute
   '/portfolio': typeof PortfolioRoute
   '/unidade': typeof UnidadeRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/gestao'
     | '/historico'
     | '/jornada'
+    | '/moderacao'
     | '/percurso'
     | '/portfolio'
     | '/unidade'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/gestao'
     | '/historico'
     | '/jornada'
+    | '/moderacao'
     | '/percurso'
     | '/portfolio'
     | '/unidade'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/gestao'
     | '/historico'
     | '/jornada'
+    | '/moderacao'
     | '/percurso'
     | '/portfolio'
     | '/unidade'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   GestaoRoute: typeof GestaoRoute
   HistoricoRoute: typeof HistoricoRoute
   JornadaRoute: typeof JornadaRoute
+  ModeracaoRoute: typeof ModeracaoRoute
   PercursoRoute: typeof PercursoRoute
   PortfolioRoute: typeof PortfolioRoute
   UnidadeRoute: typeof UnidadeRoute
@@ -331,6 +344,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JornadaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/moderacao': {
+      id: '/moderacao'
+      path: '/moderacao'
+      fullPath: '/moderacao'
+      preLoaderRoute: typeof ModeracaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/percurso': {
       id: '/percurso'
       path: '/percurso'
@@ -369,6 +389,7 @@ const rootRouteChildren: RootRouteChildren = {
   GestaoRoute: GestaoRoute,
   HistoricoRoute: HistoricoRoute,
   JornadaRoute: JornadaRoute,
+  ModeracaoRoute: ModeracaoRoute,
   PercursoRoute: PercursoRoute,
   PortfolioRoute: PortfolioRoute,
   UnidadeRoute: UnidadeRoute,

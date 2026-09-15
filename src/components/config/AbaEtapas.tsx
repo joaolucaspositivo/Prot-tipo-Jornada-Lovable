@@ -4,6 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { ItemArrastavel, useAvisoImpacto, useCicloConfig } from "./comum";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +23,13 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import type { Etapa, Subtipo, TelaEtapa, TipoEtapa } from "@/data/types";
+import type {
+  Etapa,
+  Subtipo,
+  TelaEtapa,
+  TipoEtapa,
+  TipoParticipacao,
+} from "@/data/types";
 import {
   ROTULO_TELA_ETAPA,
   ROTULO_TIPO_ETAPA,
@@ -37,6 +44,12 @@ import {
 } from "@/lib/ciclo";
 
 const NOVO_SUBTIPO = "__novo__";
+
+const ROTULO_PARTICIPACAO: Record<TipoParticipacao, string> = {
+  regente: "Regente",
+  corregente: "Corregente",
+};
+const TIPOS_PARTICIPACAO: TipoParticipacao[] = ["regente", "corregente"];
 
 export function AbaEtapas() {
   const { estado, config, salvarConfig } = useCicloConfig();
@@ -95,6 +108,19 @@ export function AbaEtapas() {
       etapa,
       { subtipoId: subtipo.id, tela: subtipo.tela },
       "o subtipo",
+    );
+  }
+
+  function alternarParticipacao(etapa: Etapa, tipo: TipoParticipacao) {
+    const marcado = etapa.perfisParticipantes.includes(tipo);
+    editarComAviso(
+      etapa,
+      {
+        perfisParticipantes: marcado
+          ? etapa.perfisParticipantes.filter((p) => p !== tipo)
+          : [...etapa.perfisParticipantes, tipo],
+      },
+      "quem participa desta etapa",
     );
   }
 
@@ -297,6 +323,31 @@ export function AbaEtapas() {
                   }
                   rows={2}
                 />
+
+                <div className="rounded-lg border border-dashed border-border p-3">
+                  <p className="mb-2 text-sm font-medium">
+                    Quem participa desta etapa
+                  </p>
+                  <div className="flex flex-wrap gap-x-5 gap-y-2">
+                    {TIPOS_PARTICIPACAO.map((tipo) => (
+                      <div key={tipo} className="flex items-center gap-2">
+                        <Checkbox
+                          id={`part-${etapa.id}-${tipo}`}
+                          checked={etapa.perfisParticipantes.includes(tipo)}
+                          onCheckedChange={() =>
+                            alternarParticipacao(etapa, tipo)
+                          }
+                        />
+                        <Label htmlFor={`part-${etapa.id}-${tipo}`}>
+                          {ROTULO_PARTICIPACAO[tipo]}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Nenhum marcado = etapa vale para regente e corregente.
+                  </p>
+                </div>
 
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                   <div className="flex items-center gap-2">
