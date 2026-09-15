@@ -41,6 +41,7 @@ const PERFIS: PerfilId[] = [
   "coordenador",
   "operadora",
   "diretor",
+  "moderador",
 ];
 
 function SeletorPerfil() {
