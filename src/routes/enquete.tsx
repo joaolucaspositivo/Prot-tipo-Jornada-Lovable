@@ -152,7 +152,7 @@ function EnquetePage() {
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <header className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Encerramento do ciclo
+          Encerramento da jornada
         </p>
         <h1 className="text-2xl sm:text-3xl">{config.titulo}</h1>
         <p className="text-muted-foreground">{config.instrucao}</p>

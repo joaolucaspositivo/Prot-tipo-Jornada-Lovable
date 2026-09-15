@@ -32,7 +32,7 @@ export function ResultadoAutoavaliacao({
       <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle className="text-base">
-            Seu retrato de prática neste ciclo
+            Seu retrato de prática nesta jornada
           </CardTitle>
           {concluidaEmISO && (
             <p className="text-sm text-muted-foreground">
@@ -85,7 +85,8 @@ export function ResultadoAutoavaliacao({
             />
             <div>
               <CardTitle className="text-base">
-                Aqui está sua maior oportunidade de desenvolvimento neste ciclo
+                Aqui está sua maior oportunidade de desenvolvimento nesta
+                jornada
               </CardTitle>
               <p className="mt-1 text-sm">
                 <strong>{fragil.nome}</strong> — {fragil.resumo}

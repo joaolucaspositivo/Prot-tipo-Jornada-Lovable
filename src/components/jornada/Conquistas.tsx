@@ -3,7 +3,7 @@ import { Award, Lock } from "lucide-react";
 import type { ConquistaTrilha } from "@/lib/jornada";
 import { cn } from "@/lib/utils";
 
-/** Insígnias do ciclo: acendem quando a etapa configurada é concluída. */
+/** Insígnias da jornada: acendem quando a etapa configurada é concluída. */
 export function Conquistas({ itens }: { itens: ConquistaTrilha[] }) {
   if (itens.length === 0) return null;
   const acesas = itens.filter((i) => i.conquistada).length;
@@ -15,7 +15,7 @@ export function Conquistas({ itens }: { itens: ConquistaTrilha[] }) {
     >
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="titulo-conquistas" className="text-base">
-          Conquistas do ciclo
+          Conquistas da jornada
         </h2>
         <span className="text-sm text-muted-foreground">
           {acesas} de {itens.length} conquistadas

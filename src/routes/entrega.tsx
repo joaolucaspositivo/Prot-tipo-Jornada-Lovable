@@ -405,7 +405,7 @@ function EntregaPage() {
               <EditorTextoRico
                 valor={texto}
                 aoMudar={setTexto}
-                placeholder="Descreva a tarefa desenvolvida a partir do macrotema do ciclo."
+                placeholder="Descreva a tarefa desenvolvida a partir do macrotema da jornada."
               />
             </div>
 

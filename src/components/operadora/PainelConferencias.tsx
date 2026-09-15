@@ -31,7 +31,7 @@ export function PainelConferencias() {
         ...conf.itens.map((i) => ({
           id: novoId("not"),
           pessoaId: i.pessoa.id,
-          titulo: `Pendência do ciclo: ${conf.titulo.toLowerCase()}`,
+          titulo: `Pendência da jornada: ${conf.titulo.toLowerCase()}`,
           descricao: `${pessoaAtiva.nome}, da equipe operadora, sinalizou: ${i.detalhe}.`,
           criadaEmISO: agora,
           lida: false,

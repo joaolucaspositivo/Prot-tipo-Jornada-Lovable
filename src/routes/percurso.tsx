@@ -28,7 +28,7 @@ export const Route = createFileRoute("/percurso")({
         name: "description",
         content: "Escolha de macrotema, modalidade e turma com autoinscrição.",
       },
-      { property: "og:title", content: "Escolha do percurso do ciclo" },
+      { property: "og:title", content: "Escolha do percurso da jornada" },
       {
         property: "og:description",
         content: "Escolha de macrotema, modalidade e turma com autoinscrição.",
@@ -343,7 +343,7 @@ function PercursoPage() {
       {ativos.length === 0 && (
         <Card>
           <CardContent className="py-6 text-muted-foreground">
-            Nenhum macrotema ativo na configuração deste ciclo.
+            Nenhum macrotema ativo na configuração desta jornada.
           </CardContent>
         </Card>
       )}
@@ -396,7 +396,7 @@ function CardMacrotema({
         {bloqueio && (
           <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-bloqueado/30 bg-bloqueado-suave px-2.5 py-1 text-xs font-semibold text-bloqueado">
             <Lock className="size-3.5" aria-hidden />
-            Cumprido no ciclo anterior ({bloqueio.ano})
+            Cumprido na jornada anterior ({bloqueio.ano})
           </span>
         )}
         <CardTitle className="text-base leading-snug">

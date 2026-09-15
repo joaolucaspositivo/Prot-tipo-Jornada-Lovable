@@ -5,6 +5,7 @@ import { ArrowRight, PartyPopper } from "lucide-react";
 import { Conquistas } from "@/components/jornada/Conquistas";
 import { PainelEtapa } from "@/components/jornada/PainelEtapa";
 import { Trilha } from "@/components/jornada/Trilha";
+import { EstadoBadge } from "@/components/EstadoBadge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useStore } from "@/data/store";
@@ -23,13 +24,13 @@ export const Route = createFileRoute("/jornada")({
       {
         name: "description",
         content:
-          "Trilha do docente no Ciclo 2: etapas, prazos, conquistas e próxima ação.",
+          "Trilha do docente na jornada: etapas, prazos, conquistas e próxima ação.",
       },
       { property: "og:title", content: "Minha Jornada" },
       {
         property: "og:description",
         content:
-          "Trilha do docente no Ciclo 2: etapas, prazos, conquistas e próxima ação.",
+          "Trilha do docente na jornada: etapas, prazos, conquistas e próxima ação.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -46,6 +47,15 @@ function JornadaPage() {
   const { concluidas, total, percentual } = progressoDaTrilha(trilha);
   const proxima = proximaEtapa(trilha);
   const conquistas = conquistasDoDocente(estado, pessoaAtiva);
+
+  // Resumo que antes vivia no Painel (D28): situação geral, num relance.
+  const progressoDoDocente = estado.progressoEtapas.filter(
+    (p) => p.pessoaId === pessoaAtiva.id,
+  );
+  const statusGeral =
+    progressoDoDocente.find(
+      (p) => p.status === "em_andamento" || p.status === "atrasada",
+    )?.status ?? "concluida";
 
   const inscricao = estado.inscricoes.find(
     (i) => i.pessoaId === pessoaAtiva.id,
@@ -76,6 +86,9 @@ function JornadaPage() {
         </p>
       )}
       <h1 className="mt-1 text-2xl sm:text-3xl">Minha Jornada</h1>
+      <div className="mt-2">
+        <EstadoBadge status={statusGeral} />
+      </div>
 
       {tipoParticipacaoDaPessoa(estado, pessoaAtiva.id) === "corregente" && (
         <p className="mt-3 rounded-xl border border-accent bg-accent/40 p-3 text-sm">
@@ -125,7 +138,7 @@ function JornadaPage() {
         ) : (
           <p className="flex items-center gap-2 text-lg">
             <PartyPopper className="size-5 text-conquista" aria-hidden />
-            Você concluiu todas as etapas do ciclo. Nada pendente por aqui.
+            Você concluiu todas as etapas da jornada. Nada pendente por aqui.
           </p>
         )}
 
@@ -136,7 +149,7 @@ function JornadaPage() {
             </span>
             <span>{percentual}%</span>
           </div>
-          <Progress value={percentual} aria-label="Progresso do ciclo" />
+          <Progress value={percentual} aria-label="Progresso da jornada" />
         </div>
       </section>
 

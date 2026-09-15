@@ -16,13 +16,13 @@ import { tipoParticipacaoDaPessoa } from "@/lib/ciclo";
 export const Route = createFileRoute("/acesso")({
   head: () => ({
     meta: [
-      { title: "Acesso ao ciclo — Jornada Pedagógica de Desenvolvimento" },
+      { title: "Acesso à jornada — Jornada Pedagógica de Desenvolvimento" },
       {
         name: "description",
         content:
           "Acesso identificado pela base institucional, sem digitar matrícula.",
       },
-      { property: "og:title", content: "Acesso ao ciclo do docente" },
+      { property: "og:title", content: "Acesso à jornada do docente" },
       {
         property: "og:description",
         content:
@@ -64,7 +64,7 @@ function AcessoPage() {
         </p>
         <h1 className="text-3xl">Bem-vindo à sua Jornada</h1>
         <p className="text-muted-foreground">
-          Você já está identificado. Confirme que é você para abrir o ciclo.
+          Você já está identificado. Confirme que é você para abrir a jornada.
         </p>
       </header>
 
@@ -109,7 +109,7 @@ function AcessoPage() {
               navigate({ to: jaConcluiu ? "/jornada" : "/autoavaliacao" })
             }
           >
-            Sou eu — abrir meu ciclo
+            Sou eu — abrir minha jornada
           </Button>
         </CardContent>
       </Card>

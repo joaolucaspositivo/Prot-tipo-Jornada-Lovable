@@ -17,12 +17,12 @@ export const Route = createFileRoute("/autoavaliacao")({
       { title: "Autoavaliação — Jornada Pedagógica de Desenvolvimento" },
       {
         name: "description",
-        content: "Autoavaliação da prática pedagógica na abertura do ciclo.",
+        content: "Autoavaliação da prática pedagógica na abertura da jornada.",
       },
       { property: "og:title", content: "Autoavaliação da prática pedagógica" },
       {
         property: "og:description",
-        content: "Autoavaliação da prática pedagógica na abertura do ciclo.",
+        content: "Autoavaliação da prática pedagógica na abertura da jornada.",
       },
     ],
   }),
@@ -151,7 +151,7 @@ function AutoavaliacaoPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            Nenhuma autoavaliação configurada neste ciclo
+            Nenhuma autoavaliação configurada nesta jornada
           </CardTitle>
         </CardHeader>
         <CardContent className="text-muted-foreground">
@@ -168,7 +168,7 @@ function AutoavaliacaoPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <header className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Abertura do ciclo · {pessoaAtiva.nome}
+          Abertura da jornada · {pessoaAtiva.nome}
         </p>
         <h1 className="text-3xl">{etapa.nome}</h1>
         <p className="text-muted-foreground">{etapa.descricao}</p>

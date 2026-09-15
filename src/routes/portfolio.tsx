@@ -45,13 +45,13 @@ export const Route = createFileRoute("/portfolio")({
       {
         name: "description",
         content:
-          "Reúna as entregas do ciclo, registre reflexões, anexe materiais e envie o portfólio para devolutiva.",
+          "Reúna as entregas da jornada, registre reflexões, anexe materiais e envie o portfólio para devolutiva.",
       },
       { property: "og:title", content: "Portfólio de Inovação Docente" },
       {
         property: "og:description",
         content:
-          "Reúna as entregas do ciclo, registre reflexões, anexe materiais e envie o portfólio para devolutiva.",
+          "Reúna as entregas da jornada, registre reflexões, anexe materiais e envie o portfólio para devolutiva.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -218,7 +218,7 @@ function PortfolioPage() {
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <header className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Encerramento do ciclo
+          Encerramento da jornada
         </p>
         <h1 className="text-2xl sm:text-3xl">{etapa.nome}</h1>
         <p className="text-muted-foreground">
@@ -238,7 +238,7 @@ function PortfolioPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Sparkles className="size-4 text-primary" aria-hidden />
-                Reflexões do ciclo
+                Reflexões da jornada
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -301,7 +301,7 @@ function PortfolioPage() {
               {!enviado && (
                 <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-primary/50 px-4 py-2 text-sm font-medium text-primary">
                   <Paperclip className="size-4" aria-hidden />
-                  Anexar material do ciclo
+                  Anexar material da jornada
                   <input type="file" className="sr-only" onChange={anexar} />
                 </label>
               )}
@@ -362,7 +362,9 @@ function PortfolioPage() {
                         {i.etapaNome} · {formatarDataHora(i.quando)}
                       </li>
                     ))}
-                    {itens.length === 0 && <li>Nenhuma entrega neste ciclo</li>}
+                    {itens.length === 0 && (
+                      <li>Nenhuma entrega nesta jornada</li>
+                    )}
                   </ul>
                 </div>
                 <div>
@@ -379,7 +381,9 @@ function PortfolioPage() {
         <aside className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Entregas deste ciclo</CardTitle>
+              <CardTitle className="text-base">
+                Entregas desta jornada
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {itens.length === 0 && (
@@ -415,7 +419,7 @@ function PortfolioPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Award className="size-4 text-conquista" aria-hidden />
-                Conquistas do ciclo
+                Conquistas da jornada
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">

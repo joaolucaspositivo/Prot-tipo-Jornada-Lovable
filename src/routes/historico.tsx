@@ -8,17 +8,17 @@ import { useStore } from "@/data/store";
 export const Route = createFileRoute("/historico")({
   head: () => ({
     meta: [
-      { title: "Histórico de ciclos — Jornada Pedagógica de Desenvolvimento" },
+      { title: "Jornadas anteriores — Jornada Pedagógica de Desenvolvimento" },
       {
         name: "description",
         content:
-          "Linha do tempo com macrotemas cumpridos, turmas, entregas, devolutivas e conquistas de ciclos anteriores.",
+          "Linha do tempo com macrotemas cumpridos, turmas, entregas, devolutivas e conquistas de jornadas anteriores.",
       },
-      { property: "og:title", content: "Histórico de ciclos anteriores" },
+      { property: "og:title", content: "Jornadas anteriores" },
       {
         property: "og:description",
         content:
-          "Macrotemas cumpridos, turmas, entregas, devolutivas e conquistas dos ciclos anteriores.",
+          "Macrotemas cumpridos, turmas, entregas, devolutivas e conquistas das jornadas anteriores.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -39,17 +39,17 @@ function HistoricoPage() {
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Seu percurso na rede
         </p>
-        <h1 className="text-2xl sm:text-3xl">Histórico de ciclos anteriores</h1>
+        <h1 className="text-2xl sm:text-3xl">Jornadas anteriores</h1>
         <p className="text-muted-foreground">
           Estes macrotemas já foram cumpridos e, por isso, aparecem bloqueados
-          na escolha do percurso deste ciclo.
+          na escolha do percurso desta jornada.
         </p>
       </header>
 
       {registros.length === 0 && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            Você ainda não tem ciclos anteriores registrados.
+            Você ainda não tem jornadas anteriores registradas.
           </CardContent>
         </Card>
       )}
