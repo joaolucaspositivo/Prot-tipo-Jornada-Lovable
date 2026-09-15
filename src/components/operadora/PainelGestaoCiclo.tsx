@@ -28,6 +28,7 @@ import {
   aplicarFiltro,
   baixarCSV,
   csvDosDocentes,
+  pendenciasDeAlocacao,
   porMacrotema,
   porUnidade,
   type GrupoAgregado,
@@ -53,6 +54,9 @@ export function PainelGestaoCiclo() {
 
   const c = contadores(filtradas);
   const unidadesAgregadas = porUnidade(filtradas);
+  // Pendência de alocação (D35/D37): sinal de qualidade da base, não do
+  // recorte atual — sempre sobre todo mundo, mesmo com filtros aplicados.
+  const pendenciasAlocacao = pendenciasDeAlocacao(estado);
 
   function exportar() {
     baixarCSV(
@@ -161,6 +165,55 @@ export function PainelGestaoCiclo() {
           </Table>
         </CardContent>
       </Card>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Coordenadores sem liderados
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pendenciasAlocacao.coordenadoresSemLiderados.length === 0 ? (
+              <p className="text-sm text-sucesso">
+                Todos os coordenadores já alocaram pelo menos um docente.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {pendenciasAlocacao.coordenadoresSemLiderados.map((coord) => (
+                  <li key={coord.id} className="text-sm">
+                    <span className="font-medium">{coord.nome}</span>{" "}
+                    <span className="text-muted-foreground">
+                      · {coord.unidade}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Docentes sem líder</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pendenciasAlocacao.docentesSemLider.length === 0 ? (
+              <p className="text-sm text-sucesso">
+                Todos os docentes já têm ao menos um líder.
+              </p>
+            ) : (
+              <ul className="max-h-48 space-y-2 overflow-y-auto">
+                {pendenciasAlocacao.docentesSemLider.map((d) => (
+                  <li key={d.id} className="text-sm">
+                    <span className="font-medium">{d.nome}</span>{" "}
+                    <span className="text-muted-foreground">· {d.unidade}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

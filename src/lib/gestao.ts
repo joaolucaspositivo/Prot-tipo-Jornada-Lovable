@@ -345,6 +345,33 @@ export function csvDosDocentes(linhas: LinhaEquipe[]): string {
     .join("\n");
 }
 
+// ---------------------------------------------------------------- alocação
+
+export interface PendenciasAlocacao {
+  /** coordenadores que ainda não alocaram nenhum docente (D37) */
+  coordenadoresSemLiderados: Pessoa[];
+  /** docentes da base que nenhum coordenador marcou como liderado (D37) */
+  docentesSemLider: Pessoa[];
+}
+
+/** Pendências de alocação líder-liderado (D35/D37), para "Gestão do ciclo". */
+export function pendenciasDeAlocacao(estado: EstadoApp): PendenciasAlocacao {
+  const coordenadores = estado.pessoas.filter(
+    (p) => p.perfil === "coordenador",
+  );
+  const docentes = estado.pessoas.filter((p) => p.perfil === "docente");
+  const coordenadoresComAlocacao = new Set(
+    estado.alocacoes.map((a) => a.coordenadorId),
+  );
+  const docentesComAlocacao = new Set(estado.alocacoes.map((a) => a.docenteId));
+  return {
+    coordenadoresSemLiderados: coordenadores.filter(
+      (c) => !coordenadoresComAlocacao.has(c.id),
+    ),
+    docentesSemLider: docentes.filter((d) => !docentesComAlocacao.has(d.id)),
+  };
+}
+
 export function baixarCSV(nome: string, conteudo: string) {
   const blob = new Blob(["\uFEFF" + conteudo], {
     type: "text/csv;charset=utf-8;",
