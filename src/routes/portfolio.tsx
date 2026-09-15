@@ -62,7 +62,7 @@ export const Route = createFileRoute("/portfolio")({
 
 function PortfolioPage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  const etapa = etapaDePortfolio(estado, pessoaAtiva);
+  const etapa = etapaDePortfolio(estado);
   const campos = reflexoesConfiguradas(estado);
   const salvo = portfolioDoDocente(estado, pessoaAtiva.id);
   const itens = itensDoCiclo(estado, pessoaAtiva.id);

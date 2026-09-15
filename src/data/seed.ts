@@ -41,13 +41,6 @@ const alertaPadrao = {
   alertarDocente: true,
 };
 
-const segmentosSeed = [
-  { id: "seg-ei", nome: "Educação Infantil" },
-  { id: "seg-fi", nome: "Fundamental I" },
-  { id: "seg-fii", nome: "Fundamental II" },
-  { id: "seg-em", nome: "Ensino Médio" },
-];
-
 const macrotemasSeed = [
   {
     id: "mt-1",
@@ -174,7 +167,6 @@ const etapasSeed: Etapa[] = [
     ordem: 1,
     obrigatoria: true,
     prazoDias: 14,
-    segmentos: [],
     perfisParticipantes: [],
     alerta: alertaPadrao,
     tela: "autoavaliacao",
@@ -188,7 +180,6 @@ const etapasSeed: Etapa[] = [
     ordem: 2,
     obrigatoria: true,
     prazoDias: 21,
-    segmentos: [],
     perfisParticipantes: [],
     alerta: alertaPadrao,
     tela: "percurso",
@@ -202,7 +193,6 @@ const etapasSeed: Etapa[] = [
     ordem: 3,
     obrigatoria: true,
     prazoDias: 45,
-    segmentos: [],
     perfisParticipantes: [],
     alerta: alertaPadrao,
     tela: "conteudo",
@@ -217,7 +207,6 @@ const etapasSeed: Etapa[] = [
     ordem: 4,
     obrigatoria: true,
     prazoDias: 60,
-    segmentos: [],
     perfisParticipantes: [],
     alerta: {
       diasAntes: 2,
@@ -237,7 +226,6 @@ const etapasSeed: Etapa[] = [
     ordem: 5,
     obrigatoria: true,
     prazoDias: 75,
-    segmentos: [],
     perfisParticipantes: [],
     alerta: alertaPadrao,
     tela: "entrega",
@@ -251,7 +239,6 @@ const etapasSeed: Etapa[] = [
     ordem: 6,
     obrigatoria: true,
     prazoDias: 100,
-    segmentos: [],
     perfisParticipantes: [],
     alerta: {
       diasAntes: 5,
@@ -270,7 +257,6 @@ const etapasSeed: Etapa[] = [
     ordem: 7,
     obrigatoria: true,
     prazoDias: 130,
-    segmentos: [],
     perfisParticipantes: [],
     alerta: alertaPadrao,
     tela: "portfolio",
@@ -284,7 +270,6 @@ const etapasSeed: Etapa[] = [
     ordem: 8,
     obrigatoria: false,
     prazoDias: 150,
-    segmentos: [],
     perfisParticipantes: [],
     alerta: {
       diasAntes: 7,
@@ -303,8 +288,6 @@ export const cicloConfigSeed: CicloConfig = {
   descricao: "Jornada 2027 a 2030",
   periodo: "2027–2030",
   dataInicioCiclo: ABERTURA,
-  cenarioSegmentacao: "trilha_unica",
-  segmentos: segmentosSeed,
   macrotemas: macrotemasSeed,
   modalidades: modalidadesSeed,
   etapas: etapasSeed,
@@ -469,7 +452,6 @@ const coordenadoresSeed: Pessoa[] = [
     nome: "Beatriz Nunes Coelho",
     matricula: "C-1001",
     unidade: "Unidade Centro",
-    segmentoId: "seg-fi",
     perfil: "coordenador",
     email: "beatriz.coelho@rede.edu.br",
   },
@@ -478,7 +460,6 @@ const coordenadoresSeed: Pessoa[] = [
     nome: "Marcelo Pires Aguiar",
     matricula: "C-1002",
     unidade: "Unidade Norte",
-    segmentoId: "seg-fii",
     perfil: "coordenador",
     email: "marcelo.aguiar@rede.edu.br",
   },
@@ -489,7 +470,6 @@ const coordenadoresSeed: Pessoa[] = [
     nome: "Patrícia Lemos Vidal",
     matricula: "C-1003",
     unidade: "Unidade Sul",
-    segmentoId: "seg-em",
     perfil: "coordenador",
     email: "patricia.vidal@rede.edu.br",
   },
@@ -501,7 +481,6 @@ const outrasPessoas: Pessoa[] = [
     nome: "Equipe Operadora — Renata Vasques",
     matricula: "O-2001",
     unidade: "Sede",
-    segmentoId: "seg-fi",
     perfil: "operadora",
     email: "renata.vasques@rede.edu.br",
   },
@@ -510,7 +489,6 @@ const outrasPessoas: Pessoa[] = [
     nome: "Sérgio Lacerda Pontes",
     matricula: "D-3001",
     unidade: "Unidade Centro",
-    segmentoId: "seg-em",
     perfil: "diretor",
     email: "sergio.pontes@rede.edu.br",
   },
@@ -521,7 +499,6 @@ const docentesSeed: Pessoa[] = nomesDocentes.map((nome, i) => ({
   nome,
   matricula: `M-${4000 + i}`,
   unidade: unidades[i % unidades.length]!,
-  segmentoId: segmentosSeed[i % segmentosSeed.length]!.id,
   perfil: "docente",
   email: `${nome.split(" ")[0]!.toLowerCase()}.${i + 1}@rede.edu.br`,
 }));
@@ -534,7 +511,6 @@ const moderadoresSeed: Pessoa[] = [
     nome: "Jonas Prado Siqueira",
     matricula: "MD-5001",
     unidade: "Unidade Centro",
-    segmentoId: "seg-fi",
     perfil: "moderador",
     turmaIds: ["turma-1-1-1", "turma-1-1-2"],
     email: "jonas.siqueira@rede.edu.br",

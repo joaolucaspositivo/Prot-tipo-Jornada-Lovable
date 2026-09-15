@@ -6,9 +6,9 @@ import { AbaAlertas } from "@/components/config/AbaAlertas";
 import { AbaConteudo } from "@/components/config/AbaConteudo";
 import { AbaEncerramento } from "@/components/config/AbaEncerramento";
 import { AbaEtapas } from "@/components/config/AbaEtapas";
+import { AbaGeral } from "@/components/config/AbaGeral";
 import { AbaMacrotemas } from "@/components/config/AbaMacrotemas";
 import { AbaModalidades } from "@/components/config/AbaModalidades";
-import { AbaSegmentos } from "@/components/config/AbaSegmentos";
 import { AbaTurmas } from "@/components/config/AbaTurmas";
 import {
   CabecalhoModoGuiado,
@@ -30,13 +30,13 @@ export const Route = createFileRoute("/configuracao")({
       {
         name: "description",
         content:
-          "Edição de macrotemas, modalidades, turmas, segmentos, etapas, conteúdo e alertas do ciclo.",
+          "Edição de macrotemas, modalidades, turmas, etapas, conteúdo e alertas do ciclo.",
       },
       { property: "og:title", content: "Configuração do Ciclo" },
       {
         property: "og:description",
         content:
-          "Edição de macrotemas, modalidades, turmas, segmentos, etapas, conteúdo e alertas do ciclo.",
+          "Edição de macrotemas, modalidades, turmas, etapas, conteúdo e alertas do ciclo.",
       },
     ],
   }),
@@ -46,33 +46,20 @@ export const Route = createFileRoute("/configuracao")({
 function ConfiguracaoPage() {
   const { estado } = useStore();
   const config = estado.cicloConfig;
-  const [segmentoPrevia, setSegmentoPrevia] = useState(
-    config.segmentos[0]?.id ?? "",
-  );
-
-  const segmentoValido = config.segmentos.some((s) => s.id === segmentoPrevia)
-    ? segmentoPrevia
-    : (config.segmentos[0]?.id ?? "");
 
   const [guiado, setGuiado] = useState(false);
-  const [aba, setAba] = useState<PassoGuiado>("macrotemas");
+  const [aba, setAba] = useState<PassoGuiado>("geral");
   const [passosConcluidos, setPassosConcluidos] = useState<Set<PassoGuiado>>(
     new Set(),
   );
 
-  const segmentacaoDecidida = passosConcluidos.has("segmentos");
-
   function passoTravado(p: PassoGuiado): boolean {
-    return (
-      guiado &&
-      p !== "conferencia" &&
-      passoGuiadoTravado(estado, p, segmentacaoDecidida)
-    );
+    return guiado && p !== "conferencia" && passoGuiadoTravado(estado, p);
   }
 
   const travadoAgora = passoTravado(aba);
   useEffect(() => {
-    if (travadoAgora) setAba("macrotemas");
+    if (travadoAgora) setAba("geral");
     // Se o pré-requisito do passo atual deixar de ser cumprido (ex.: a
     // operadora desativa o único macrotema ativo enquanto está em
     // Modalidades), volta para um passo sempre livre em vez de deixar a
@@ -138,6 +125,9 @@ function ConfiguracaoPage() {
           ) : (
             <Tabs value={aba} onValueChange={(v) => setAba(v as PassoGuiado)}>
               <TabsList className="flex h-auto flex-wrap justify-start gap-1">
+                <TabsTrigger value="geral" disabled={passoTravado("geral")}>
+                  Geral
+                </TabsTrigger>
                 <TabsTrigger
                   value="macrotemas"
                   disabled={passoTravado("macrotemas")}
@@ -152,12 +142,6 @@ function ConfiguracaoPage() {
                 </TabsTrigger>
                 <TabsTrigger value="turmas" disabled={passoTravado("turmas")}>
                   Turmas
-                </TabsTrigger>
-                <TabsTrigger
-                  value="segmentos"
-                  disabled={passoTravado("segmentos")}
-                >
-                  Segmentos
                 </TabsTrigger>
                 <TabsTrigger value="etapas" disabled={passoTravado("etapas")}>
                   Etapas da trilha
@@ -179,6 +163,9 @@ function ConfiguracaoPage() {
                 </TabsTrigger>
               </TabsList>
 
+              <TabsContent value="geral" className="mt-4">
+                <AbaGeral />
+              </TabsContent>
               <TabsContent value="macrotemas" className="mt-4">
                 <AbaMacrotemas />
               </TabsContent>
@@ -187,9 +174,6 @@ function ConfiguracaoPage() {
               </TabsContent>
               <TabsContent value="turmas" className="mt-4">
                 <AbaTurmas />
-              </TabsContent>
-              <TabsContent value="segmentos" className="mt-4">
-                <AbaSegmentos />
               </TabsContent>
               <TabsContent value="etapas" className="mt-4">
                 <AbaEtapas />
@@ -208,10 +192,7 @@ function ConfiguracaoPage() {
         </div>
 
         <aside className="lg:sticky lg:top-28 lg:self-start">
-          <PreviaTrilha
-            segmentoId={segmentoValido}
-            aoTrocarSegmento={setSegmentoPrevia}
-          />
+          <PreviaTrilha />
         </aside>
       </div>
     </div>

@@ -4,23 +4,14 @@
 import type {
   EstadoApp,
   Etapa,
-  Pessoa,
   PerguntaReflexao,
   Portfolio,
 } from "@/data/types";
-import { etapasDoSegmento } from "@/lib/ciclo";
+import { etapasEmOrdem } from "@/lib/ciclo";
 
 /** Etapa de portfólio, resolvida em runtime (nunca fixa no código). */
-export function etapaDePortfolio(
-  estado: EstadoApp,
-  pessoa: Pessoa,
-): Etapa | undefined {
-  const etapas = etapasDoSegmento(
-    estado.cicloConfig,
-    estado.cicloConfig.cenarioSegmentacao === "trilha_unica"
-      ? null
-      : pessoa.segmentoId,
-  );
+export function etapaDePortfolio(estado: EstadoApp): Etapa | undefined {
+  const etapas = etapasEmOrdem(estado.cicloConfig);
   return etapas.find((e) => e.tela === "portfolio");
 }
 

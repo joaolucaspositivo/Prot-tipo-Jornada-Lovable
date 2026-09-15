@@ -59,18 +59,9 @@ export const TELAS_ETAPA: TelaEtapa[] = [
   "painel",
 ];
 
-/** Etapas visíveis para um segmento, já na ordem configurada. */
-export function etapasDoSegmento(
-  config: CicloConfig,
-  segmentoId: string | null,
-): Etapa[] {
-  const ordenadas = [...config.etapas].sort((a, b) => a.ordem - b.ordem);
-  if (config.cenarioSegmentacao === "trilha_unica" || !segmentoId) {
-    return ordenadas;
-  }
-  return ordenadas.filter(
-    (e) => e.segmentos.length === 0 || e.segmentos.includes(segmentoId),
-  );
+/** Etapas do ciclo, na ordem configurada (D26: segmentação removida). */
+export function etapasEmOrdem(config: CicloConfig): Etapa[] {
+  return [...config.etapas].sort((a, b) => a.ordem - b.ordem);
 }
 
 export function macrotemasAtivos(config: CicloConfig): Macrotema[] {
@@ -85,7 +76,7 @@ export function macrotemasAtivos(config: CicloConfig): Macrotema[] {
  * `dataInicioCiclo` — não mais um deslocamento fixo desde a abertura.
  */
 export function prazoDaEtapa(config: CicloConfig, etapa: Etapa): Date {
-  const ordenadas = [...config.etapas].sort((a, b) => a.ordem - b.ordem);
+  const ordenadas = etapasEmOrdem(config);
   let data = new Date(config.dataInicioCiclo);
   for (const e of ordenadas) {
     data = new Date(data);
@@ -194,11 +185,7 @@ export function docentesDaTurma(estado: EstadoApp, turmaId: string) {
 }
 
 /** Se um passo do modo guiado da Configuração do Ciclo está travado. */
-export function passoGuiadoTravado(
-  estado: EstadoApp,
-  passo: string,
-  segmentacaoDecidida: boolean,
-): boolean {
+export function passoGuiadoTravado(estado: EstadoApp, passo: string): boolean {
   const config = estado.cicloConfig;
   if (passo === "modalidades") return macrotemasAtivos(config).length === 0;
   if (passo === "turmas") {
@@ -207,7 +194,6 @@ export function passoGuiadoTravado(
       config.modalidades.filter((m) => m.ativa).length === 0
     );
   }
-  if (passo === "etapas") return !segmentacaoDecidida;
   if (passo === "conteudo") {
     return !config.etapas.some((e) => e.tipo === "conteudo");
   }

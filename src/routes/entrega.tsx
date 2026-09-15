@@ -67,7 +67,7 @@ interface ArquivoSimulado {
 
 function EntregaPage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  const etapas = etapasDeEntrega(estado, pessoaAtiva);
+  const etapas = etapasDeEntrega(estado);
   const [etapaId, setEtapaId] = useState<string>(etapas[0]?.id ?? "");
   const etapa = etapas.find((e) => e.id === etapaId) ?? etapas[0];
 

@@ -11,22 +11,16 @@ import type {
 import {
   coordenadoresDoDocente,
   coordenadorPrincipalDoDocente,
-  etapasDoSegmento,
+  etapasEmOrdem,
   prazoDaEtapa,
   tipoParticipacaoDaPessoa,
 } from "@/lib/ciclo";
 
 export const DESTINO_EQUIPE_CENTRAL = "equipe-central";
 
-/** Etapas de entrega visíveis para o docente, na ordem configurada. */
-export function etapasDeEntrega(estado: EstadoApp, pessoa: Pessoa): Etapa[] {
-  const config = estado.cicloConfig;
-  return etapasDoSegmento(
-    config,
-    config.cenarioSegmentacao === "trilha_por_segmento"
-      ? pessoa.segmentoId
-      : null,
-  ).filter((e) => e.tipo === "entrega");
+/** Etapas de entrega, na ordem configurada. */
+export function etapasDeEntrega(estado: EstadoApp): Etapa[] {
+  return etapasEmOrdem(estado.cicloConfig).filter((e) => e.tipo === "entrega");
 }
 
 export interface DestinoEntrega {
@@ -66,7 +60,7 @@ export function destinoDaEntrega(
 /** Janela válida para a data da aula a ser observada. */
 export function janelaDaAula(estado: EstadoApp, etapa: Etapa) {
   const config = estado.cicloConfig;
-  const seguintes = etapasDoSegmento(config, null).filter(
+  const seguintes = etapasEmOrdem(config).filter(
     (e) => e.ordem > etapa.ordem && e.tipo === "encontro",
   );
   const fim = seguintes[0]

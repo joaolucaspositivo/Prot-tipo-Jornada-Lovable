@@ -5,23 +5,13 @@ import type {
   EstadoApp,
   Etapa,
   PerguntaEnquete,
-  Pessoa,
   RespostaEnquete,
   TipoRespondente,
 } from "@/data/types";
-import { etapasDoSegmento } from "@/lib/ciclo";
+import { etapasEmOrdem } from "@/lib/ciclo";
 
-export function etapaDeEnquete(
-  estado: EstadoApp,
-  pessoa: Pessoa,
-): Etapa | undefined {
-  const etapas = etapasDoSegmento(
-    estado.cicloConfig,
-    estado.cicloConfig.cenarioSegmentacao === "trilha_unica"
-      ? null
-      : pessoa.segmentoId,
-  );
-  return etapas.find((e) => e.tela === "enquete");
+export function etapaDeEnquete(estado: EstadoApp): Etapa | undefined {
+  return etapasEmOrdem(estado.cicloConfig).find((e) => e.tela === "enquete");
 }
 
 export function publicosDaEnquete(estado: EstadoApp): TipoRespondente[] {

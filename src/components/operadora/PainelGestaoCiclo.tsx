@@ -29,7 +29,6 @@ import {
   baixarCSV,
   csvDosDocentes,
   porMacrotema,
-  porSegmento,
   porUnidade,
   type GrupoAgregado,
 } from "@/lib/gestao";
@@ -41,7 +40,6 @@ export function PainelGestaoCiclo() {
   const linhas = useMemo(() => linhasDaEquipe(estado), [estado]);
 
   const [unidade, setUnidade] = useState(TODOS);
-  const [segmento, setSegmento] = useState(TODOS);
   const [macrotema, setMacrotema] = useState(TODOS);
   const [etapa, setEtapa] = useState(TODOS);
 
@@ -49,7 +47,6 @@ export function PainelGestaoCiclo() {
 
   const filtradas = aplicarFiltro(linhas, {
     unidade: unidade === TODOS ? undefined : unidade,
-    segmentoId: segmento === TODOS ? undefined : segmento,
     macrotemaNome: macrotema === TODOS ? undefined : macrotema,
     etapaId: etapa === TODOS ? undefined : etapa,
   });
@@ -77,15 +74,6 @@ export function PainelGestaoCiclo() {
             valor={unidade}
             aoMudar={setUnidade}
             opcoes={unidades.map((u) => ({ valor: u, rotulo: u }))}
-          />
-          <Campo
-            rotulo="Segmento"
-            valor={segmento}
-            aoMudar={setSegmento}
-            opcoes={estado.cicloConfig.segmentos.map((s) => ({
-              valor: s.id,
-              rotulo: s.nome,
-            }))}
           />
           <Campo
             rotulo="Macrotema"
@@ -121,16 +109,10 @@ export function PainelGestaoCiclo() {
 
       <FunilEtapas estado={estado} linhas={filtradas} />
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Agregado
-          titulo="Progresso por segmento"
-          grupos={porSegmento(estado, filtradas)}
-        />
-        <Agregado
-          titulo="Progresso por macrotema"
-          grupos={porMacrotema(filtradas)}
-        />
-      </div>
+      <Agregado
+        titulo="Progresso por macrotema"
+        grupos={porMacrotema(filtradas)}
+      />
 
       <Card>
         <CardHeader>

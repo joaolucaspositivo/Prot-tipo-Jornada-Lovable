@@ -59,7 +59,6 @@ export function PainelEquipe({
   const [fEtapa, setFEtapa] = useState(TODOS);
   const [fSituacao, setFSituacao] = useState(TODOS);
   const [fUnidade, setFUnidade] = useState(TODOS);
-  const [fSegmento, setFSegmento] = useState(TODOS);
   const [fMacrotema, setFMacrotema] = useState(TODOS);
   const [fParticipacao, setFParticipacao] = useState(TODOS);
   const [coluna, setColuna] = useState<ColunaEquipe>("nome");
@@ -73,7 +72,6 @@ export function PainelEquipe({
       (fEtapa === TODOS || l.etapaAtual?.id === fEtapa) &&
       (fSituacao === TODOS || l.situacao === fSituacao) &&
       (fUnidade === TODOS || l.pessoa.unidade === fUnidade) &&
-      (fSegmento === TODOS || l.pessoa.segmentoId === fSegmento) &&
       (fMacrotema === TODOS || l.macrotemaNome === fMacrotema) &&
       (fParticipacao === TODOS || l.tipoParticipacao === fParticipacao),
   );
@@ -153,7 +151,7 @@ export function PainelEquipe({
         <Contador rotulo="Concluídos" valor={c.concluidos} />
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
         <Filtro
           rotulo="Etapa"
           valor={fEtapa}
@@ -175,15 +173,6 @@ export function PainelEquipe({
           valor={fUnidade}
           aoMudar={setFUnidade}
           opcoes={unidades.map((u) => ({ valor: u, rotulo: u }))}
-        />
-        <Filtro
-          rotulo="Segmento"
-          valor={fSegmento}
-          aoMudar={setFSegmento}
-          opcoes={estado.cicloConfig.segmentos.map((s) => ({
-            valor: s.id,
-            rotulo: s.nome,
-          }))}
         />
         <Filtro
           rotulo="Macrotema"

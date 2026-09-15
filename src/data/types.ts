@@ -43,13 +43,6 @@ export interface Modalidade {
   presencaAutomatica: boolean;
 }
 
-export interface Segmento {
-  id: string;
-  nome: string;
-}
-
-export type CenarioSegmentacao = "trilha_unica" | "trilha_por_segmento";
-
 export interface AlertaPendencia {
   /** dias ANTES do prazo para avisar o docente. 0 = não avisa antes */
   diasAntes: number;
@@ -94,8 +87,6 @@ export interface Etapa {
   obrigatoria: boolean;
   /** prazo em dias, contado a partir do vencimento da etapa anterior (D38) */
   prazoDias: number;
-  /** quando vazio, vale para todos os segmentos */
-  segmentos: string[];
   alerta: AlertaPendencia;
   /** tela que esta etapa abre para o docente */
   tela: TelaEtapa;
@@ -160,8 +151,6 @@ export interface CicloConfig {
   periodo: string;
   /** data de início do ciclo — base do encadeamento de prazos (D38) */
   dataInicioCiclo: string;
-  cenarioSegmentacao: CenarioSegmentacao;
-  segmentos: Segmento[];
   macrotemas: Macrotema[];
   modalidades: Modalidade[];
   etapas: Etapa[];
@@ -177,7 +166,6 @@ export interface Pessoa {
   nome: string;
   matricula: string;
   unidade: string;
-  segmentoId: string;
   perfil: "docente" | "coordenador" | "operadora" | "diretor" | "moderador";
   /** turmas às quais um perfil moderador tem acesso (D33); ignorado nos demais perfis */
   turmaIds?: string[] | undefined;

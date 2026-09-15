@@ -3,12 +3,11 @@
 // tudo é derivado da configuração em runtime e do estado persistido.
 
 import type { EstadoApp, Etapa, Modalidade, Pessoa, Turma } from "@/data/types";
-import { etapasDoSegmento } from "@/lib/ciclo";
+import { etapasEmOrdem } from "@/lib/ciclo";
 import type { LinhaEquipe } from "@/lib/equipe";
 
 export interface FiltroGestao {
   unidade?: string | undefined;
-  segmentoId?: string | undefined;
   macrotemaNome?: string | undefined;
   etapaId?: string | undefined;
 }
@@ -20,7 +19,6 @@ export function aplicarFiltro(
   return linhas.filter(
     (l) =>
       (!f.unidade || l.pessoa.unidade === f.unidade) &&
-      (!f.segmentoId || l.pessoa.segmentoId === f.segmentoId) &&
       (!f.macrotemaNome || l.macrotemaNome === f.macrotemaNome) &&
       (!f.etapaId || l.etapaAtual?.id === f.etapaId),
   );
@@ -40,7 +38,7 @@ export function funilDeEtapas(
   estado: EstadoApp,
   linhas: LinhaEquipe[],
 ): PassoFunil[] {
-  const etapas = etapasDoSegmento(estado.cicloConfig, null);
+  const etapas = etapasEmOrdem(estado.cicloConfig);
   return etapas.map((etapa) => {
     let concluidas = 0;
     let emAndamento = 0;
@@ -101,18 +99,6 @@ export function porUnidade(linhas: LinhaEquipe[]): GrupoAgregado[] {
   return agrupar(linhas, (l) => ({
     chave: l.pessoa.unidade,
     rotulo: l.pessoa.unidade,
-  }));
-}
-
-export function porSegmento(
-  estado: EstadoApp,
-  linhas: LinhaEquipe[],
-): GrupoAgregado[] {
-  return agrupar(linhas, (l) => ({
-    chave: l.pessoa.segmentoId,
-    rotulo:
-      estado.cicloConfig.segmentos.find((s) => s.id === l.pessoa.segmentoId)
-        ?.nome ?? l.pessoa.segmentoId,
   }));
 }
 

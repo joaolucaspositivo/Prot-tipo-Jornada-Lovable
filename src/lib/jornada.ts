@@ -24,7 +24,7 @@ import {
   etapaConcluidaPorCriterios,
   ofertaDoDocente,
 } from "@/lib/avanco";
-import { etapasDoSegmento, prazoDaEtapa } from "@/lib/ciclo";
+import { etapasEmOrdem, prazoDaEtapa } from "@/lib/ciclo";
 
 export const ICONE_TIPO_ETAPA: Record<TipoEtapa, typeof BookOpen> = {
   autoavaliacao: ClipboardList,
@@ -108,12 +108,7 @@ export function trilhaDoDocente(
   agora: Date = new Date(),
 ): ItemTrilha[] {
   const config = estado.cicloConfig;
-  const etapas = etapasDoSegmento(
-    config,
-    config.cenarioSegmentacao === "trilha_por_segmento"
-      ? pessoa.segmentoId
-      : null,
-  );
+  const etapas = etapasEmOrdem(config);
 
   const itens: ItemTrilha[] = [];
   let anteriorPendente: Etapa | null = null;

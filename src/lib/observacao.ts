@@ -10,7 +10,7 @@ import type {
   Pessoa,
   Turma,
 } from "@/data/types";
-import { coordenadoresDoDocente, etapasDoSegmento } from "@/lib/ciclo";
+import { coordenadoresDoDocente, etapasEmOrdem } from "@/lib/ciclo";
 import { DESTINO_EQUIPE_CENTRAL } from "@/lib/entrega";
 
 /** Critérios observáveis do parecer, com escala curta e explícita. */
@@ -54,16 +54,11 @@ export interface Compromisso {
 /** Etapa de observação configurada (tipo `encontro` seguinte à entrega). */
 export function etapaDeObservacao(
   estado: EstadoApp,
-  pessoa: Pessoa | undefined,
   etapaEntrega: Etapa | undefined,
 ): Etapa | undefined {
-  const config = estado.cicloConfig;
-  const etapas = etapasDoSegmento(
-    config,
-    config.cenarioSegmentacao === "trilha_por_segmento" && pessoa
-      ? pessoa.segmentoId
-      : null,
-  ).filter((e) => e.tipo === "encontro");
+  const etapas = etapasEmOrdem(estado.cicloConfig).filter(
+    (e) => e.tipo === "encontro",
+  );
   if (!etapaEntrega) return etapas[0];
   return (
     etapas.find((e) => e.ordem > etapaEntrega.ordem) ??
@@ -92,7 +87,7 @@ export function compromissosDeObservacao(
       const etapaEntrega = estado.cicloConfig.etapas.find(
         (e) => e.id === entrega.etapaId,
       );
-      const etapaObservacao = etapaDeObservacao(estado, docente, etapaEntrega);
+      const etapaObservacao = etapaDeObservacao(estado, etapaEntrega);
       const inscricao = estado.inscricoes.find(
         (i) => i.pessoaId === entrega.pessoaId,
       );

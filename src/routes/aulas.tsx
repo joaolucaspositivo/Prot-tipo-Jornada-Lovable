@@ -73,7 +73,7 @@ export const Route = createFileRoute("/aulas")({
 
 function AulasPage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  const etapas = etapasDeConteudo(estado, pessoaAtiva);
+  const etapas = etapasDeConteudo(estado);
   const [etapaId, setEtapaId] = useState<string>(etapas[0]?.id ?? "");
   const etapa = etapas.find((e) => e.id === etapaId) ?? etapas[0];
 

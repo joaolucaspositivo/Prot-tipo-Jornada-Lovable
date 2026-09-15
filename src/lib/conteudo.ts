@@ -2,17 +2,11 @@
 // presença vêm sempre da configuração do ciclo e da inscrição do docente.
 
 import type { EstadoApp, Etapa, Modalidade, Pessoa, Turma } from "@/data/types";
-import { coordenadoresDoDocente, etapasDoSegmento } from "@/lib/ciclo";
+import { coordenadoresDoDocente, etapasEmOrdem } from "@/lib/ciclo";
 
-/** Etapas de conteúdo visíveis para o docente, na ordem configurada. */
-export function etapasDeConteudo(estado: EstadoApp, pessoa: Pessoa): Etapa[] {
-  const config = estado.cicloConfig;
-  return etapasDoSegmento(
-    config,
-    config.cenarioSegmentacao === "trilha_por_segmento"
-      ? pessoa.segmentoId
-      : null,
-  ).filter((e) => e.tipo === "conteudo");
+/** Etapas de conteúdo, na ordem configurada. */
+export function etapasDeConteudo(estado: EstadoApp): Etapa[] {
+  return etapasEmOrdem(estado.cicloConfig).filter((e) => e.tipo === "conteudo");
 }
 
 export interface PercursoDoDocente {

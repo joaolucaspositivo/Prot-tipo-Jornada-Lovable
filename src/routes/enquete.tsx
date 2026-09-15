@@ -58,7 +58,7 @@ function EnquetePage() {
     [estado.pessoas],
   );
 
-  const etapa = etapaDeEnquete(estado, pessoaAtiva);
+  const etapa = etapaDeEnquete(estado);
   const ehDocente = pessoaAtiva.perfil.startsWith("docente");
 
   const [docenteId, setDocenteId] = useState(

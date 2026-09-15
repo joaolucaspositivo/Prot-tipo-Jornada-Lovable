@@ -3,7 +3,6 @@ import { Plus, Trash2 } from "lucide-react";
 import { ItemArrastavel, useAvisoImpacto, useCicloConfig } from "./comum";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -34,7 +33,6 @@ export function AbaEtapas() {
   const { confirmar, dialogo } = useAvisoImpacto();
 
   const etapas = [...config.etapas].sort((a, b) => a.ordem - b.ordem);
-  const porSegmento = config.cenarioSegmentacao === "trilha_por_segmento";
 
   const gravar = (lista: Etapa[]) =>
     salvarConfig((c) => ({ ...c, etapas: reindexar(lista) }));
@@ -70,7 +68,6 @@ export function AbaEtapas() {
         ordem: etapas.length + 1,
         obrigatoria: true,
         prazoDias: 30 * (etapas.length + 1),
-        segmentos: [],
         perfisParticipantes: [],
         alerta: {
           diasAntes: 3,
@@ -91,15 +88,6 @@ export function AbaEtapas() {
       impacto: `${afetados} docente(s) já registraram progresso nesta etapa. O histórico deles fica órfão.`,
       rotuloAcao: "Remover",
       aoConfirmar: () => gravar(etapas.filter((e) => e.id !== etapa.id)),
-    });
-  };
-
-  const alternarSegmento = (etapa: Etapa, segmentoId: string) => {
-    const marcado = etapa.segmentos.includes(segmentoId);
-    editar(etapa.id, {
-      segmentos: marcado
-        ? etapa.segmentos.filter((s) => s !== segmentoId)
-        : [...etapa.segmentos, segmentoId],
     });
   };
 
@@ -198,7 +186,7 @@ export function AbaEtapas() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor={`prazo-${etapa.id}`}>
-                      Prazo (dias após a abertura do ciclo)
+                      Prazo (dias após o vencimento da etapa anterior)
                     </Label>
                     <Input
                       id={`prazo-${etapa.id}`}
@@ -249,33 +237,6 @@ export function AbaEtapas() {
                   }
                   rows={2}
                 />
-
-                {porSegmento ? (
-                  <div className="rounded-lg border border-dashed border-border p-3">
-                    <p className="mb-2 text-sm font-medium">
-                      Segmentos que veem esta etapa
-                    </p>
-                    <div className="flex flex-wrap gap-x-5 gap-y-2">
-                      {config.segmentos.map((s) => (
-                        <div key={s.id} className="flex items-center gap-2">
-                          <Checkbox
-                            id={`seg-${etapa.id}-${s.id}`}
-                            checked={etapa.segmentos.includes(s.id)}
-                            onCheckedChange={() =>
-                              alternarSegmento(etapa, s.id)
-                            }
-                          />
-                          <Label htmlFor={`seg-${etapa.id}-${s.id}`}>
-                            {s.nome}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Nenhum marcado = etapa vale para todos os segmentos.
-                    </p>
-                  </div>
-                ) : null}
 
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                   <div className="flex items-center gap-2">

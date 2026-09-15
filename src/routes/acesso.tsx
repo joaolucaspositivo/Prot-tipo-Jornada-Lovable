@@ -1,10 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-  BadgeCheck,
-  Building2,
-  GraduationCap,
-  ShieldCheck,
-} from "lucide-react";
+import { BadgeCheck, Building2, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,9 +39,6 @@ function AcessoPage() {
   const config = estado.cicloConfig;
 
   const docentes = estado.pessoas.filter((p) => p.perfil === "docente");
-  const segmento =
-    config.segmentos.find((s) => s.id === pessoaAtiva.segmentoId)?.nome ??
-    "Segmento não informado";
 
   const jaConcluiu = estado.autoavaliacoes.some(
     (a) => a.pessoaId === pessoaAtiva.id && a.concluidaEmISO,
@@ -87,13 +79,12 @@ function AcessoPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <dl className="grid gap-4 sm:grid-cols-3">
+          <dl className="grid gap-4 sm:grid-cols-2">
             <Dado
               Icone={Building2}
               rotulo="Unidade"
               valor={pessoaAtiva.unidade}
             />
-            <Dado Icone={GraduationCap} rotulo="Segmento" valor={segmento} />
             <Dado
               Icone={BadgeCheck}
               rotulo="Cargo"

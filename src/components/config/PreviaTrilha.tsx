@@ -9,17 +9,10 @@ import {
 
 import { useCicloConfig } from "./comum";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type { TipoEtapa } from "@/data/types";
 import {
   ROTULO_TIPO_ETAPA,
-  etapasDoSegmento,
+  etapasEmOrdem,
   formatarData,
   macrotemasAtivos,
   prazoDaEtapa,
@@ -33,17 +26,10 @@ const ICONE_TIPO: Record<TipoEtapa, typeof BookOpen> = {
   avaliacao: ClipboardCheck,
 };
 
-interface Props {
-  segmentoId: string;
-  aoTrocarSegmento: (id: string) => void;
-}
-
 /** Pré-visualização da trilha exatamente como o docente a verá. */
-export function PreviaTrilha({ segmentoId, aoTrocarSegmento }: Props) {
+export function PreviaTrilha() {
   const { config } = useCicloConfig();
-  const porSegmento = config.cenarioSegmentacao === "trilha_por_segmento";
-  const segmento = config.segmentos.find((s) => s.id === segmentoId);
-  const etapas = etapasDoSegmento(config, porSegmento ? segmentoId : null);
+  const etapas = etapasEmOrdem(config);
   const macrotemas = macrotemasAtivos(config);
 
   return (
@@ -52,25 +38,6 @@ export function PreviaTrilha({ segmentoId, aoTrocarSegmento }: Props) {
         <Eye className="size-4 text-primary" aria-hidden />
         <h2 className="text-base">Como o docente verá</h2>
       </div>
-
-      {porSegmento ? (
-        <Select value={segmentoId} onValueChange={aoTrocarSegmento}>
-          <SelectTrigger className="mb-3 h-10" aria-label="Segmento da prévia">
-            <SelectValue>{segmento?.nome ?? "Escolher segmento"}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {config.segmentos.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ) : (
-        <p className="mb-3 text-xs text-muted-foreground">
-          Trilha única: todos os segmentos veem esta sequência.
-        </p>
-      )}
 
       <div className="mb-4 rounded-lg bg-secondary p-3">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -121,9 +88,7 @@ export function PreviaTrilha({ segmentoId, aoTrocarSegmento }: Props) {
           );
         })}
         {etapas.length === 0 ? (
-          <li className="text-sm text-atraso">
-            Nenhuma etapa configurada para este segmento.
-          </li>
+          <li className="text-sm text-atraso">Nenhuma etapa configurada.</li>
         ) : null}
       </ol>
     </div>
