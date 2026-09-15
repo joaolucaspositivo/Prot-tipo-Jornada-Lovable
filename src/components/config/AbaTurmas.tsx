@@ -1,14 +1,47 @@
-import { Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { useCicloConfig, useAvisoImpacto } from "./comum";
+import { useAvisoImpacto, useCicloConfig } from "./comum";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Modalidade, Turma } from "@/data/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { Macrotema, Modalidade, Turma } from "@/data/types";
 import { ROTULO_DIA_SEMANA, novoId, usoDaTurma } from "@/lib/ciclo";
+
+const TODOS = "todos";
+
+type DadosTurma = Omit<Turma, "id" | "vagasOcupadas">;
 
 export function AbaTurmas() {
   const { estado, atualizar } = useCicloConfig();
@@ -16,32 +49,45 @@ export function AbaTurmas() {
   const config = estado.cicloConfig;
   const turmas = estado.turmas;
 
+  const [dialogoAberto, setDialogoAberto] = useState(false);
+  const [turmaEmEdicaoId, setTurmaEmEdicaoId] = useState<string | null>(null);
+
+  const [fMacrotema, setFMacrotema] = useState(TODOS);
+  const [fModalidade, setFModalidade] = useState(TODOS);
+  const [fDia, setFDia] = useState(TODOS);
+  const [fProfessor, setFProfessor] = useState(TODOS);
+  const [fHorario, setFHorario] = useState(TODOS);
+
   const gravar = (lista: Turma[]) =>
     atualizar((anterior) => ({ ...anterior, turmas: lista }));
 
   const editar = (id: string, mudanca: Partial<Turma>) =>
     gravar(turmas.map((t) => (t.id === id ? { ...t, ...mudanca } : t)));
 
-  function adicionar(macrotemaId: string, modalidadeId: string) {
-    const daCombinacao = turmas.filter(
-      (t) => t.macrotemaId === macrotemaId && t.modalidadeId === modalidadeId,
-    );
-    gravar([
-      ...turmas,
-      {
-        id: novoId("turma"),
-        nome: `Turma ${String.fromCharCode(65 + daCombinacao.length)}`,
-        macrotemaId,
-        modalidadeId,
-        periodo: "",
-        horario: "",
-        vagas: 20,
-        vagasOcupadas: 0,
-        professorNome: "",
-        diasSemana: [],
-        encontrosPrevistos: 4,
-      },
-    ]);
+  const professores = [...new Set(turmas.map((t) => t.professorNome))]
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const horarios = [...new Set(turmas.map((t) => t.horario))]
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+  const filtradas = turmas.filter(
+    (t) =>
+      (fMacrotema === TODOS || t.macrotemaId === fMacrotema) &&
+      (fModalidade === TODOS || t.modalidadeId === fModalidade) &&
+      (fDia === TODOS || t.diasSemana.includes(Number(fDia))) &&
+      (fProfessor === TODOS || t.professorNome === fProfessor) &&
+      (fHorario === TODOS || t.horario === fHorario),
+  );
+
+  function abrirNovo() {
+    setTurmaEmEdicaoId(null);
+    setDialogoAberto(true);
+  }
+
+  function abrirEdicao(turma: Turma) {
+    setTurmaEmEdicaoId(turma.id);
+    setDialogoAberto(true);
   }
 
   function remover(turma: Turma) {
@@ -56,243 +102,452 @@ export function AbaTurmas() {
     });
   }
 
-  function alterarVagas(turma: Turma, bruto: string) {
-    const pretendido = Math.max(0, Number(bruto) || 0);
-    const minimo = turma.vagasOcupadas;
-    if (pretendido < minimo) {
-      toast.error(
-        `Não é possível reduzir abaixo de ${minimo} vaga(s): já há docente(s) inscrito(s).`,
-      );
+  const turmaEmEdicao = turmas.find((t) => t.id === turmaEmEdicaoId);
+
+  function salvar(dados: DadosTurma) {
+    if (turmaEmEdicao) {
+      const minimo = turmaEmEdicao.vagasOcupadas;
+      if (dados.vagas < minimo) {
+        toast.error(
+          `Não é possível reduzir abaixo de ${minimo} vaga(s): já há docente(s) inscrito(s).`,
+        );
+        return;
+      }
+      editar(turmaEmEdicao.id, dados);
+    } else {
+      // Nova turma no topo da lista — ordem decrescente de criação.
+      gravar([{ id: novoId("turma"), vagasOcupadas: 0, ...dados }, ...turmas]);
     }
-    editar(turma.id, { vagas: Math.max(minimo, pretendido) });
+    setDialogoAberto(false);
   }
-
-  function alternarDia(turma: Turma, dia: number) {
-    const marcado = turma.diasSemana.includes(dia);
-    editar(turma.id, {
-      diasSemana: marcado
-        ? turma.diasSemana.filter((d) => d !== dia)
-        : [...turma.diasSemana, dia].sort((a, b) => a - b),
-    });
-  }
-
-  const combinacoes = config.macrotemas
-    .flatMap((macrotema) =>
-      config.modalidades.map((modalidade) => ({ macrotema, modalidade })),
-    )
-    .filter(({ macrotema, modalidade }) => {
-      const existentes = turmas.some(
-        (t) =>
-          t.macrotemaId === macrotema.id && t.modalidadeId === modalidade.id,
-      );
-      return (macrotema.ativo && modalidade.ativa) || existentes;
-    });
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        {turmas.length} turma(s), agrupadas por macrotema e modalidade. Turmas
-        nascem aqui — o docente só escolhe entre as que você criar.
-      </p>
-
-      <div className="space-y-6">
-        {combinacoes.map(({ macrotema, modalidade }) => {
-          const daCombinacao = turmas.filter(
-            (t) =>
-              t.macrotemaId === macrotema.id &&
-              t.modalidadeId === modalidade.id,
-          );
-          const podeAdicionar = macrotema.ativo && modalidade.ativa;
-          return (
-            <div
-              key={`${macrotema.id}-${modalidade.id}`}
-              className="rounded-xl border border-border bg-card p-4 shadow-sm"
-            >
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{macrotema.nome}</span>
-                  <Badge variant="secondary">{modalidade.nome}</Badge>
-                  {!podeAdicionar ? (
-                    <Badge variant="outline" className="text-muted-foreground">
-                      Macrotema ou modalidade desativado(a)
-                    </Badge>
-                  ) : null}
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={!podeAdicionar}
-                  onClick={() => adicionar(macrotema.id, modalidade.id)}
-                >
-                  <Plus className="size-4" /> Adicionar turma
-                </Button>
-              </div>
-
-              {daCombinacao.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Nenhuma turma cadastrada nesta combinação.
-                </p>
-              ) : (
-                <ul className="space-y-3">
-                  {daCombinacao.map((turma) => (
-                    <CartaoTurma
-                      key={turma.id}
-                      turma={turma}
-                      modalidade={modalidade}
-                      aoEditar={(mudanca) => editar(turma.id, mudanca)}
-                      aoAlterarVagas={(bruto) => alterarVagas(turma, bruto)}
-                      aoAlternarDia={(dia) => alternarDia(turma, dia)}
-                      aoRemover={() => remover(turma)}
-                    />
-                  ))}
-                </ul>
-              )}
-            </div>
-          );
-        })}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {turmas.length} turma(s). Turmas nascem aqui — o docente só escolhe
+          entre as que você criar.
+        </p>
+        <Button onClick={abrirNovo}>
+          <Plus className="size-4" /> Adicionar turma
+        </Button>
       </div>
+
+      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        <Filtro
+          rotulo="Macrotema"
+          valor={fMacrotema}
+          aoMudar={setFMacrotema}
+          opcoes={config.macrotemas.map((m) => ({
+            valor: m.id,
+            rotulo: m.nome,
+          }))}
+        />
+        <Filtro
+          rotulo="Modalidade"
+          valor={fModalidade}
+          aoMudar={setFModalidade}
+          opcoes={config.modalidades.map((m) => ({
+            valor: m.id,
+            rotulo: m.nome,
+          }))}
+        />
+        <Filtro
+          rotulo="Dia da semana"
+          valor={fDia}
+          aoMudar={setFDia}
+          opcoes={ROTULO_DIA_SEMANA.map((rotulo, dia) => ({
+            valor: String(dia),
+            rotulo,
+          }))}
+        />
+        <Filtro
+          rotulo="Professor"
+          valor={fProfessor}
+          aoMudar={setFProfessor}
+          opcoes={professores.map((p) => ({ valor: p, rotulo: p }))}
+        />
+        <Filtro
+          rotulo="Horário"
+          valor={fHorario}
+          aoMudar={setFHorario}
+          opcoes={horarios.map((h) => ({ valor: h, rotulo: h }))}
+        />
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Turma</TableHead>
+              <TableHead>Macrotema</TableHead>
+              <TableHead>Modalidade</TableHead>
+              <TableHead>Professor</TableHead>
+              <TableHead>Vagas</TableHead>
+              <TableHead>Horário</TableHead>
+              <TableHead>Dias</TableHead>
+              <TableHead className="w-10" aria-label="Ações" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtradas.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} className="text-muted-foreground">
+                  Nenhuma turma com esses filtros.
+                </TableCell>
+              </TableRow>
+            )}
+            {filtradas.map((turma) => {
+              const macrotema = config.macrotemas.find(
+                (m) => m.id === turma.macrotemaId,
+              );
+              const modalidade = config.modalidades.find(
+                (m) => m.id === turma.modalidadeId,
+              );
+              return (
+                <TableRow key={turma.id}>
+                  <TableCell className="font-medium">{turma.nome}</TableCell>
+                  <TableCell className="text-sm">
+                    {macrotema?.nome ?? "Macrotema removido"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">
+                      {modalidade?.nome ?? "Modalidade removida"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {turma.professorNome || "—"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        turma.vagasOcupadas >= turma.vagas
+                          ? "destructive"
+                          : "outline"
+                      }
+                    >
+                      {turma.vagasOcupadas}/{turma.vagas}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {turma.horario || "—"}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {turma.diasSemana.length > 0
+                      ? turma.diasSemana
+                          .map((d) => ROTULO_DIA_SEMANA[d])
+                          .join(", ")
+                      : "—"}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Ações de ${turma.nome}`}
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => abrirEdicao(turma)}>
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-atraso focus:text-atraso"
+                          onClick={() => remover(turma)}
+                        >
+                          <Trash2 className="size-4" /> Remover
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      <DialogoTurma
+        aberto={dialogoAberto}
+        turma={turmaEmEdicao}
+        macrotemas={config.macrotemas}
+        modalidades={config.modalidades}
+        aoFechar={() => setDialogoAberto(false)}
+        aoSalvar={salvar}
+      />
       {dialogo}
     </div>
   );
 }
 
-function CartaoTurma({
-  turma,
-  modalidade,
-  aoEditar,
-  aoAlterarVagas,
-  aoAlternarDia,
-  aoRemover,
+function Filtro({
+  rotulo,
+  valor,
+  aoMudar,
+  opcoes,
 }: {
-  turma: Turma;
-  modalidade: Modalidade;
-  aoEditar: (mudanca: Partial<Turma>) => void;
-  aoAlterarVagas: (bruto: string) => void;
-  aoAlternarDia: (dia: number) => void;
-  aoRemover: () => void;
+  rotulo: string;
+  valor: string;
+  aoMudar: (v: string) => void;
+  opcoes: { valor: string; rotulo: string }[];
 }) {
-  const sincrona = !modalidade.presencaAutomatica;
+  return (
+    <Select value={valor} onValueChange={aoMudar}>
+      <SelectTrigger aria-label={rotulo}>
+        <SelectValue placeholder={rotulo} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={TODOS}>{rotulo}: todos</SelectItem>
+        {opcoes.map((o) => (
+          <SelectItem key={o.valor} value={o.valor}>
+            {o.rotulo}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function DialogoTurma({
+  aberto,
+  turma,
+  macrotemas,
+  modalidades,
+  aoFechar,
+  aoSalvar,
+}: {
+  aberto: boolean;
+  /** presente = edição; ausente = criação */
+  turma: Turma | undefined;
+  macrotemas: Macrotema[];
+  modalidades: Modalidade[];
+  aoFechar: () => void;
+  aoSalvar: (dados: DadosTurma) => void;
+}) {
+  const [macrotemaId, setMacrotemaId] = useState("");
+  const [modalidadeId, setModalidadeId] = useState("");
+  const [nome, setNome] = useState("");
+  const [periodo, setPeriodo] = useState("");
+  const [professorNome, setProfessorNome] = useState("");
+  const [vagas, setVagas] = useState(20);
+  const [horario, setHorario] = useState("");
+  const [diasSemana, setDiasSemana] = useState<number[]>([]);
+  const [encontrosPrevistos, setEncontrosPrevistos] = useState(4);
+  const [linkAcesso, setLinkAcesso] = useState("");
+
+  // Recarrega os campos toda vez que o diálogo abre — criação ou edição.
+  useEffect(() => {
+    if (!aberto) return;
+    setMacrotemaId(turma?.macrotemaId ?? macrotemas[0]?.id ?? "");
+    setModalidadeId(turma?.modalidadeId ?? modalidades[0]?.id ?? "");
+    setNome(turma?.nome ?? "");
+    setPeriodo(turma?.periodo ?? "");
+    setProfessorNome(turma?.professorNome ?? "");
+    setVagas(turma?.vagas ?? 20);
+    setHorario(turma?.horario ?? "");
+    setDiasSemana(turma?.diasSemana ?? []);
+    setEncontrosPrevistos(turma?.encontrosPrevistos ?? 4);
+    setLinkAcesso(turma?.linkAcesso ?? "");
+  }, [aberto, turma, macrotemas, modalidades]);
+
+  const modalidade = modalidades.find((m) => m.id === modalidadeId);
+  const sincrona = modalidade ? !modalidade.presencaAutomatica : false;
+  const minimoVagas = turma?.vagasOcupadas ?? 0;
+
+  function alternarDia(dia: number) {
+    setDiasSemana((atual) =>
+      atual.includes(dia)
+        ? atual.filter((d) => d !== dia)
+        : [...atual, dia].sort((a, b) => a - b),
+    );
+  }
+
+  function salvar() {
+    if (!nome.trim() || !macrotemaId || !modalidadeId) return;
+    aoSalvar({
+      nome: nome.trim(),
+      macrotemaId,
+      modalidadeId,
+      periodo,
+      professorNome,
+      vagas: Math.max(minimoVagas, vagas),
+      horario: sincrona ? horario : "",
+      diasSemana: sincrona ? diasSemana : [],
+      encontrosPrevistos: sincrona ? encontrosPrevistos : 0,
+      linkAcesso: sincrona ? linkAcesso || undefined : undefined,
+    });
+  }
 
   return (
-    <li className="rounded-lg border border-border bg-background p-3">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Input
-          value={turma.nome}
-          aria-label="Nome da turma"
-          onChange={(e) => aoEditar({ nome: e.target.value })}
-          className="h-10 max-w-xs flex-1 font-medium"
-        />
-        <Badge
-          variant={
-            turma.vagasOcupadas >= turma.vagas ? "destructive" : "secondary"
-          }
-        >
-          {turma.vagasOcupadas} de {turma.vagas} vagas
-        </Badge>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="space-y-1.5">
-          <Label htmlFor={`prof-${turma.id}`}>Professor responsável</Label>
-          <Input
-            id={`prof-${turma.id}`}
-            value={turma.professorNome}
-            onChange={(e) => aoEditar({ professorNome: e.target.value })}
-            className="h-10"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor={`vagas-${turma.id}`}>Vagas</Label>
-          <Input
-            id={`vagas-${turma.id}`}
-            type="number"
-            min={turma.vagasOcupadas}
-            value={turma.vagas}
-            onChange={(e) => aoAlterarVagas(e.target.value)}
-            className="h-10"
-          />
-          {turma.vagasOcupadas > 0 ? (
-            <p className="text-xs text-muted-foreground">
-              Mínimo {turma.vagasOcupadas} — já ocupadas.
-            </p>
-          ) : null}
-        </div>
-        {sincrona ? (
-          <div className="space-y-1.5">
-            <Label htmlFor={`encontros-${turma.id}`}>Encontros previstos</Label>
-            <Input
-              id={`encontros-${turma.id}`}
-              type="number"
-              min={1}
-              value={turma.encontrosPrevistos}
-              onChange={(e) =>
-                aoEditar({
-                  encontrosPrevistos: Math.max(1, Number(e.target.value) || 1),
-                })
-              }
-              className="h-10"
-            />
-          </div>
-        ) : null}
-      </div>
-
-      {sincrona ? (
-        <div className="mt-3 space-y-3">
+    <Dialog open={aberto} onOpenChange={(v) => !v && aoFechar()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {turma ? "Editar turma" : "Adicionar turma"}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor={`link-${turma.id}`}>
-                Link de acesso ao encontro
-              </Label>
+              <Label htmlFor="turma-macrotema">Macrotema</Label>
+              <Select
+                value={macrotemaId}
+                onValueChange={setMacrotemaId}
+                disabled={turma !== undefined}
+              >
+                <SelectTrigger id="turma-macrotema">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {macrotemas.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="turma-modalidade">Modalidade</Label>
+              <Select
+                value={modalidadeId}
+                onValueChange={setModalidadeId}
+                disabled={turma !== undefined}
+              >
+                <SelectTrigger id="turma-modalidade">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {modalidades.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="turma-nome">Nome da turma</Label>
               <Input
-                id={`link-${turma.id}`}
-                value={turma.linkAcesso ?? ""}
-                placeholder="https://..."
-                onChange={(e) =>
-                  aoEditar({ linkAcesso: e.target.value || undefined })
-                }
-                className="h-10"
+                id="turma-nome"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Turma A"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor={`horario-${turma.id}`}>Horário</Label>
+              <Label htmlFor="turma-periodo">Período</Label>
               <Input
-                id={`horario-${turma.id}`}
-                value={turma.horario}
-                placeholder="ex.: Terças, 8h30 às 10h30"
-                onChange={(e) => aoEditar({ horario: e.target.value })}
-                className="h-10"
+                id="turma-periodo"
+                value={periodo}
+                onChange={(e) => setPeriodo(e.target.value)}
+                placeholder="Manhã, Tarde ou Livre"
               />
             </div>
           </div>
-          <div>
-            <p className="mb-1.5 text-sm font-medium">Dias da semana</p>
-            <div className="flex flex-wrap gap-x-4 gap-y-2">
-              {ROTULO_DIA_SEMANA.map((rotulo, dia) => (
-                <label
-                  key={dia}
-                  className="flex items-center gap-1.5 text-sm"
-                  htmlFor={`dia-${turma.id}-${dia}`}
-                >
-                  <Checkbox
-                    id={`dia-${turma.id}-${dia}`}
-                    checked={turma.diasSemana.includes(dia)}
-                    onCheckedChange={() => aoAlternarDia(dia)}
-                  />
-                  {rotulo}
-                </label>
-              ))}
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="turma-professor">Professor responsável</Label>
+              <Input
+                id="turma-professor"
+                value={professorNome}
+                onChange={(e) => setProfessorNome(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="turma-vagas">Vagas</Label>
+              <Input
+                id="turma-vagas"
+                type="number"
+                min={minimoVagas}
+                value={vagas}
+                onChange={(e) =>
+                  setVagas(Math.max(0, Number(e.target.value) || 0))
+                }
+              />
+              {minimoVagas > 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Mínimo {minimoVagas} — já ocupadas.
+                </p>
+              ) : null}
             </div>
           </div>
-        </div>
-      ) : null}
 
-      <Button
-        variant="ghost"
-        className="mt-3 text-atraso hover:bg-atraso-suave"
-        onClick={aoRemover}
-      >
-        <Trash2 className="size-4" /> Remover turma
-      </Button>
-    </li>
+          {sincrona ? (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="turma-link">Link de acesso ao encontro</Label>
+                  <Input
+                    id="turma-link"
+                    value={linkAcesso}
+                    onChange={(e) => setLinkAcesso(e.target.value)}
+                    placeholder="https://..."
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="turma-horario">Horário</Label>
+                  <Input
+                    id="turma-horario"
+                    value={horario}
+                    onChange={(e) => setHorario(e.target.value)}
+                    placeholder="ex.: Terças, 8h30 às 10h30"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="turma-encontros">Encontros previstos</Label>
+                <Input
+                  id="turma-encontros"
+                  type="number"
+                  min={1}
+                  value={encontrosPrevistos}
+                  onChange={(e) =>
+                    setEncontrosPrevistos(
+                      Math.max(1, Number(e.target.value) || 1),
+                    )
+                  }
+                  className="max-w-[8rem]"
+                />
+              </div>
+              <div>
+                <p className="mb-1.5 text-sm font-medium">Dias da semana</p>
+                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                  {ROTULO_DIA_SEMANA.map((rotulo, dia) => (
+                    <label
+                      key={dia}
+                      className="flex items-center gap-1.5 text-sm"
+                      htmlFor={`turma-dia-${dia}`}
+                    >
+                      <Checkbox
+                        id={`turma-dia-${dia}`}
+                        checked={diasSemana.includes(dia)}
+                        onCheckedChange={() => alternarDia(dia)}
+                      />
+                      {rotulo}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : null}
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={aoFechar}>
+            Cancelar
+          </Button>
+          <Button onClick={salvar} disabled={!nome.trim()}>
+            Salvar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
