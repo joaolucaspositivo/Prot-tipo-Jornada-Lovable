@@ -31,6 +31,7 @@ import type {
   TipoParticipacao,
 } from "@/data/types";
 import {
+  FASE_PADRAO_POR_TIPO,
   ROTULO_TELA_ETAPA,
   ROTULO_TIPO_ETAPA,
   TELAS_ETAPA,
@@ -81,7 +82,11 @@ export function AbaEtapas() {
     });
   };
 
-  /** Trocar o tipo genérico limpa o subtipo — os dois têm que ficar coerentes. */
+  /**
+   * Trocar o tipo genérico limpa o subtipo — os dois têm que ficar coerentes.
+   * A fase também recebe o padrão do novo tipo (D59) — só um ponto de
+   * partida; nada impede editá-la depois, quando existir tela para isso.
+   */
   function trocarTipo(etapa: Etapa, tipo: TipoEtapa) {
     const primeiroSubtipo = config.subtipos.find(
       (s) => s.tipoGenerico === tipo,
@@ -90,6 +95,7 @@ export function AbaEtapas() {
       etapa,
       {
         tipo,
+        faseCanonica: FASE_PADRAO_POR_TIPO[tipo],
         subtipoId: primeiroSubtipo?.id,
         tela: primeiroSubtipo?.tela ?? etapa.tela,
       },
@@ -140,6 +146,7 @@ export function AbaEtapas() {
         nome: `Etapa ${etapas.length + 1}`,
         descricao: "",
         tipo: "conteudo",
+        faseCanonica: FASE_PADRAO_POR_TIPO.conteudo,
         ordem: etapas.length + 1,
         obrigatoria: true,
         prazoDias: 30 * (etapas.length + 1),

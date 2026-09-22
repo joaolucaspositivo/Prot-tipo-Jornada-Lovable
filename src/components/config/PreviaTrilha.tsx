@@ -3,6 +3,9 @@ import {
   ClipboardCheck,
   ClipboardList,
   Eye,
+  Flag,
+  MessagesSquare,
+  Notebook,
   Upload,
   Users,
 } from "lucide-react";
@@ -19,11 +22,14 @@ import {
 } from "@/lib/ciclo";
 
 const ICONE_TIPO: Record<TipoEtapa, typeof BookOpen> = {
+  escolha: ClipboardCheck,
   autoavaliacao: ClipboardList,
   conteudo: BookOpen,
-  entrega: Upload,
   encontro: Users,
-  avaliacao: ClipboardCheck,
+  entrega: Upload,
+  enquete: MessagesSquare,
+  portfolio: Notebook,
+  encerramento: Flag,
 };
 
 /** Pré-visualização da trilha exatamente como o docente a verá. */

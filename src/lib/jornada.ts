@@ -5,6 +5,9 @@ import {
   BookOpen,
   ClipboardCheck,
   ClipboardList,
+  Flag,
+  MessagesSquare,
+  Notebook,
   Upload,
   Users,
 } from "lucide-react";
@@ -31,11 +34,14 @@ import {
 } from "@/lib/ciclo";
 
 export const ICONE_TIPO_ETAPA: Record<TipoEtapa, typeof BookOpen> = {
+  escolha: ClipboardCheck,
   autoavaliacao: ClipboardList,
   conteudo: BookOpen,
-  entrega: Upload,
   encontro: Users,
-  avaliacao: ClipboardCheck,
+  entrega: Upload,
+  enquete: MessagesSquare,
+  portfolio: Notebook,
+  encerramento: Flag,
 };
 
 /** Rotas de docente já existentes no protótipo. */
@@ -92,16 +98,22 @@ function rotuloDaAcao(tipo: TipoEtapa, status: StatusEtapa): string {
   if (status === "concluida") return "Rever esta etapa";
   if (status === "bloqueada") return "Ver por que está bloqueada";
   switch (tipo) {
+    case "escolha":
+      return "Escolher tema e turma";
     case "autoavaliacao":
       return "Responder autoavaliação";
     case "conteudo":
       return "Assistir ao conteúdo";
-    case "entrega":
-      return "Enviar tarefa";
     case "encontro":
       return "Ver detalhes do encontro";
-    case "avaliacao":
-      return "Começar esta etapa";
+    case "entrega":
+      return "Enviar tarefa";
+    case "enquete":
+      return "Responder enquete";
+    case "portfolio":
+      return "Montar portfólio";
+    case "encerramento":
+      return "Ver encerramento";
   }
 }
 

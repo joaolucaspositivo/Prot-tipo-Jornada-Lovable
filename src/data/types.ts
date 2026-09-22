@@ -2,8 +2,37 @@
 // Nada aqui é regra pedagógica: a trilha real vem sempre de `cicloConfig`,
 // que é editável em runtime pela equipe operadora.
 
+/**
+ * Vocabulário fechado (v3, D57 nível 2) — diz qual tela abre e qual motor de
+ * progresso roda para a etapa. "avaliacao" saiu: cobria duas coisas
+ * diferentes (escolha de tema/turma e Enquete 360°) sob o mesmo rótulo, e
+ * essa ambiguidade é exatamente o tipo de coisa que esta lista existe para
+ * evitar. `portfolio` também é novo — antes o Portfólio de Inovação
+ * Docente reaproveitava `entrega` por conveniência, sem nunca produzir um
+ * registro de `Entrega` de verdade.
+ */
 export type TipoEtapa =
-  "autoavaliacao" | "conteudo" | "entrega" | "encontro" | "avaliacao";
+  | "escolha"
+  | "autoavaliacao"
+  | "conteudo"
+  | "encontro"
+  | "entrega"
+  | "enquete"
+  | "portfolio"
+  | "encerramento";
+
+/**
+ * Onde a etapa cai no funil de acompanhamento agregado (D59) — eixo de
+ * relatório, não de tela. Separado de `TipoEtapa` de propósito: o painel
+ * agregado (Pacote 6) indexa por fase, nunca por etapa nomeada, e os dois
+ * enums colapsarem acoplaria "criar uma categoria de relatório nova" a
+ * "criar uma tela nova" — exatamente o que a fronteira de configurabilidade
+ * do §4 existe para evitar. Lista provisória, pendente de validação do
+ * cliente (D59) — ajustar os valores depois é barato justamente porque
+ * nenhuma tela lê este campo além do funil.
+ */
+export type FaseCanonica =
+  "inscricao" | "autoavaliacao" | "formacao" | "entrega" | "encerramento";
 
 /** Tipo de participação do docente num ciclo — hoje escolhido na inscrição (D34), não mais fixo na pessoa. */
 export type TipoParticipacao = "regente" | "corregente";
@@ -105,6 +134,13 @@ export interface Etapa {
   nome: string;
   descricao: string;
   tipo: TipoEtapa;
+  /**
+   * Fase do funil agregado (D59). Campo próprio, editável pela operadora —
+   * não derivado do `tipo` em tempo de leitura, para que ajustar o funil não
+   * exija mexer em código. `FASE_PADRAO_POR_TIPO` (lib/ciclo.ts) só sugere um
+   * valor inicial quando a etapa nasce.
+   */
+  faseCanonica: FaseCanonica;
   ordem: number;
   obrigatoria: boolean;
   /** prazo em dias, contado a partir do vencimento da etapa anterior (D38) */

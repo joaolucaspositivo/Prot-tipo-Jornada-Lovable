@@ -5,6 +5,7 @@ import type {
   CicloConfig,
   EstadoApp,
   Etapa,
+  FaseCanonica,
   FormularioVersao,
   Pessoa,
   TelaEtapa,
@@ -14,20 +15,42 @@ import type {
 } from "@/data/types";
 
 export const ROTULO_TIPO_ETAPA: Record<TipoEtapa, string> = {
+  escolha: "Escolha de tema e turma",
   autoavaliacao: "Autoavaliação",
   conteudo: "Conteúdo",
-  entrega: "Entrega de tarefa",
   encontro: "Encontro",
-  avaliacao: "Avaliação",
+  entrega: "Entrega de tarefa",
+  enquete: "Enquete 360°",
+  portfolio: "Portfólio",
+  encerramento: "Encerramento",
 };
 
 export const TIPOS_ETAPA: TipoEtapa[] = [
+  "escolha",
   "autoavaliacao",
   "conteudo",
-  "entrega",
   "encontro",
-  "avaliacao",
+  "entrega",
+  "enquete",
+  "portfolio",
+  "encerramento",
 ];
+
+/**
+ * Fase padrão de cada tipo (D59) — só sugestão para quando uma etapa nasce.
+ * `Etapa.faseCanonica` é campo próprio e editável; nada relê este mapa
+ * depois que a etapa existe.
+ */
+export const FASE_PADRAO_POR_TIPO: Record<TipoEtapa, FaseCanonica> = {
+  escolha: "inscricao",
+  autoavaliacao: "autoavaliacao",
+  conteudo: "formacao",
+  encontro: "formacao",
+  entrega: "formacao",
+  enquete: "encerramento",
+  portfolio: "encerramento",
+  encerramento: "encerramento",
+};
 
 export const ROTULO_TELA_ETAPA: Record<TelaEtapa, string> = {
   autoavaliacao: "Autoavaliação",

@@ -30,11 +30,19 @@ import { ROTULO_STATUS_ENTREGA, formatarTamanho } from "@/lib/entrega";
 import type { LinhaEquipe } from "@/lib/equipe";
 import { historicoDaEtapa } from "@/lib/jornada";
 
-/** Opções de parecer conforme o tipo da etapa configurada. */
+/**
+ * Opções de parecer conforme o tipo da etapa configurada.
+ * `portfolio` ao lado de `entrega` de propósito: antes do rename de D30/v3,
+ * o Portfólio de Inovação Docente usava `tipo: "entrega"` por engano, e o
+ * coordenador já usa esta escala pra dar devolutiva dele — corrigir a
+ * mistipagem sem manter este case tiraria uma função em uso, não uma
+ * mistipagem.
+ */
 function pareceresDaEtapa(etapa: Etapa | undefined): string[] {
   if (!etapa) return [];
   switch (etapa.tipo) {
     case "entrega":
+    case "portfolio":
       return ["Atende", "Atende parcialmente", "Não atende"];
     case "encontro":
       return ["Destaque", "Adequado", "A desenvolver"];
