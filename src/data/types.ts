@@ -122,6 +122,14 @@ export interface Etapa {
   subtipoId?: string | undefined;
   /** quais tipos de participação passam por esta etapa (D34); vazio = todos */
   perfisParticipantes: TipoParticipacao[];
+  /**
+   * Escopo de trilha específica por tema (D59, nível 2 — existe no modelo,
+   * sem interface no MVP). Ausente/undefined = etapa da trilha padrão, vale
+   * para todos os temas; preenchido = etapa só aparece na trilha de quem
+   * escolheu aquele tema. Nenhuma etapa do seed usa isto ainda — sem tela
+   * que crie uma trilha específica, é só o campo nascendo.
+   */
+  temaId?: string | undefined;
 }
 
 export interface Conquista {
