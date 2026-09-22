@@ -12,9 +12,9 @@ export function etapasDeConteudo(estado: EstadoApp): Etapa[] {
 export interface PercursoDoDocente {
   turma: Turma | undefined;
   modalidade: Modalidade | undefined;
-  macrotemaNome: string | undefined;
-  /** id do macrotema da inscrição — usado para casar a oferta, nunca o nome */
-  macrotemaId: string | undefined;
+  temaNome: string | undefined;
+  /** id do tema da inscrição — usado para casar a oferta, nunca o nome */
+  temaId: string | undefined;
   /** id da modalidade da turma — usado para casar a oferta, nunca o nome */
   modalidadeId: string | undefined;
 }
@@ -25,18 +25,16 @@ export function percursoDoDocente(
 ): PercursoDoDocente {
   const inscricao = estado.inscricoes.find((i) => i.pessoaId === pessoa.id);
   const turma = estado.turmas.find((t) => t.id === inscricao?.turmaId);
-  const macrotemaId = turma?.macrotemaId ?? inscricao?.macrotemaId;
+  const temaId = turma?.temaId ?? inscricao?.temaId;
   const modalidade = estado.cicloConfig.modalidades.find(
     (m) => m.id === turma?.modalidadeId,
   );
-  const macrotemaNome = estado.cicloConfig.macrotemas.find(
-    (m) => m.id === macrotemaId,
-  )?.nome;
+  const temaNome = estado.cicloConfig.temas.find((m) => m.id === temaId)?.nome;
   return {
     turma,
     modalidade,
-    macrotemaNome,
-    macrotemaId,
+    temaNome,
+    temaId,
     modalidadeId: turma?.modalidadeId,
   };
 }

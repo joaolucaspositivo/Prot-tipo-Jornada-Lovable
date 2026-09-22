@@ -14,8 +14,8 @@ import {
   ROTULO_TIPO_ETAPA,
   etapasEmOrdem,
   formatarData,
-  macrotemasAtivos,
   prazoDaEtapa,
+  temasAtivos,
 } from "@/lib/ciclo";
 
 const ICONE_TIPO: Record<TipoEtapa, typeof BookOpen> = {
@@ -30,7 +30,7 @@ const ICONE_TIPO: Record<TipoEtapa, typeof BookOpen> = {
 export function PreviaTrilha() {
   const { config } = useCicloConfig();
   const etapas = etapasEmOrdem(config);
-  const macrotemas = macrotemasAtivos(config);
+  const temas = temasAtivos(config);
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
@@ -43,14 +43,12 @@ export function PreviaTrilha() {
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Escolha do percurso
         </p>
-        <p className="text-sm">
-          {macrotemas.length} macrotema(s) disponível(is)
-        </p>
+        <p className="text-sm">{temas.length} macrotema(s) disponível(is)</p>
         <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
-          {macrotemas.map((m) => (
+          {temas.map((m) => (
             <li key={m.id}>· {m.nome}</li>
           ))}
-          {macrotemas.length === 0 ? (
+          {temas.length === 0 ? (
             <li className="text-atraso">
               Nenhum macrotema ativo: o docente não terá o que escolher.
             </li>

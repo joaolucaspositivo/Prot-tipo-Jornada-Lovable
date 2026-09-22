@@ -40,7 +40,7 @@ export interface LinhaEquipe {
   diasAtraso: number;
   /** o atraso já ultrapassou o limite configurado para alertar o coordenador */
   alertaCoordenador: boolean;
-  macrotemaNome: string | undefined;
+  temaNome: string | undefined;
   turmaNome: string | undefined;
   /** regente ou corregente, resolvido pela inscrição (D34) */
   tipoParticipacao: TipoParticipacao;
@@ -111,8 +111,8 @@ export function linhaDoDocente(
 
   const inscricao = estado.inscricoes.find((i) => i.pessoaId === pessoa.id);
   const turma = estado.turmas.find((t) => t.id === inscricao?.turmaId);
-  const macrotemaNome = estado.cicloConfig.macrotemas.find(
-    (m) => m.id === (turma?.macrotemaId ?? inscricao?.macrotemaId),
+  const temaNome = estado.cicloConfig.temas.find(
+    (m) => m.id === (turma?.temaId ?? inscricao?.temaId),
   )?.nome;
   const tipoParticipacao: TipoParticipacao =
     inscricao?.tipoParticipacao ?? "regente";
@@ -140,7 +140,7 @@ export function linhaDoDocente(
     situacao,
     diasAtraso,
     alertaCoordenador,
-    macrotemaNome,
+    temaNome,
     turmaNome: turma?.nome,
     tipoParticipacao,
     entrega,

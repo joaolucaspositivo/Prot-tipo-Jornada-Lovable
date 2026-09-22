@@ -63,9 +63,9 @@ function JornadaPage() {
   const turmaDoDocente = inscricao
     ? estado.turmas.find((t) => t.id === inscricao.turmaId)
     : undefined;
-  const macrotemaDoDocente = inscricao
-    ? estado.cicloConfig.macrotemas.find(
-        (m) => m.id === (turmaDoDocente?.macrotemaId ?? inscricao.macrotemaId),
+  const temaDoDocente = inscricao
+    ? estado.cicloConfig.temas.find(
+        (m) => m.id === (turmaDoDocente?.temaId ?? inscricao.temaId),
       )
     : undefined;
   const preenchidoAte = proxima
@@ -82,7 +82,7 @@ function JornadaPage() {
       {inscricao && (
         <p className="text-sm text-muted-foreground">
           {turmaDoDocente?.nome ?? "Turma removida"} ·{" "}
-          {macrotemaDoDocente?.nome ?? "Macrotema removido"}
+          {temaDoDocente?.nome ?? "Macrotema removido"}
         </p>
       )}
       <h1 className="mt-1 text-2xl sm:text-3xl">Minha Jornada</h1>

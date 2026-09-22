@@ -11,7 +11,7 @@ import type {
   Entrega,
   EstadoApp,
   Etapa,
-  HistoricoMacrotema,
+  HistoricoTema,
   Inscricao,
   ItemConteudo,
   Midia,
@@ -25,11 +25,16 @@ import type {
   ProgressoLeitura,
   RespostaEnquete,
   Subtipo,
+  Tema,
   TipoCriterioAvanco,
   Turma,
 } from "./types";
 
-export const VERSAO_ESTADO = 8;
+// v3 (D39/D40): "macrotema" saiu do vocabulário — é "tema". Os identificadores
+// deste arquivo já usam "tema"; o texto literal do seed (nome/descrição
+// exibidos ao docente) continua dizendo "macrotema" até o Pacote 1, que é
+// quem faz a varredura de rótulo de interface.
+export const VERSAO_ESTADO = 9;
 export const CHAVE_STORAGE = "jornada-prototipo-v1";
 
 const ABERTURA = "2027-02-08T00:00:00.000Z";
@@ -41,7 +46,7 @@ const alertaPadrao = {
   alertarDocente: true,
 };
 
-const macrotemasSeed = [
+const temasSeed: Tema[] = [
   {
     id: "mt-1",
     nome: "Macrotema 1 — Planejamento e intencionalidade",
@@ -78,7 +83,7 @@ const macrotemasSeed = [
     descricao: "Práticas que ampliam o acesso de todos à aprendizagem.",
     dimensaoRelacionada: "clima",
   },
-].map((m, i) => ({ ...m, ativo: true, ordem: i + 1 }));
+].map((m, i) => ({ ...m, linhagemId: m.id, ativo: true, ordem: i + 1 }));
 
 const modalidadesSeed = [
   {
@@ -291,7 +296,7 @@ export const cicloConfigSeed: CicloConfig = {
   descricao: "Jornada 2027 a 2030",
   periodo: "2027–2030",
   dataInicioCiclo: ABERTURA,
-  macrotemas: macrotemasSeed,
+  temas: temasSeed,
   modalidades: modalidadesSeed,
   etapas: etapasSeed,
   subtipos: subtiposSeed,
@@ -550,7 +555,7 @@ alocacoesSeed.push({
   criadaEmISO: dias(6),
 });
 
-// Duas turmas por modalidade em cada macrotema: permite trocar de turma
+// Duas turmas por modalidade em cada tema: permite trocar de turma
 // mantendo a mesma modalidade.
 interface HorarioTurma {
   sufixo: string;
@@ -597,7 +602,7 @@ const nomesProfessores = [
   "Profa. Juliana Prado Castilho",
 ];
 
-export const turmasSeed: Turma[] = macrotemasSeed.flatMap((mt, i) =>
+export const turmasSeed: Turma[] = temasSeed.flatMap((tema, i) =>
   modalidadesSeed.flatMap((mod, j) => {
     // A condição é sempre `!mod.presencaAutomatica`, nunca a posição `j` no
     // array — reordenar ou acrescentar modalidade não pode trocar quem
@@ -606,8 +611,8 @@ export const turmasSeed: Turma[] = macrotemasSeed.flatMap((mt, i) =>
     const horarios = sincrona ? horariosSincronos : horariosAssincronos;
     return horarios.map((h, k) => ({
       id: `turma-${i + 1}-${j + 1}-${k + 1}`,
-      nome: `${mt.nome.split("—")[0]!.trim()} · ${mod.nome} · ${h.sufixo}`,
-      macrotemaId: mt.id,
+      nome: `${tema.nome.split("—")[0]!.trim()} · ${mod.nome} · ${h.sufixo}`,
+      temaId: tema.id,
       modalidadeId: mod.id,
       periodo: h.periodo,
       horario: h.horario,
@@ -638,24 +643,24 @@ function construirProgresso() {
   const observacoes: Observacao[] = [];
   const notificacoes: Notificacao[] = [];
   const autoavaliacoes: Autoavaliacao[] = [];
-  // Ciclo 1 (2023–2026): macrotemas já cumpridos, usados para bloquear repetição.
-  const historicoMacrotemas: HistoricoMacrotema[] = [];
+  // Ciclo 1 (2023–2026): temas já cumpridos, usados para bloquear repetição.
+  const historicoTemas: HistoricoTema[] = [];
   const turmas = turmasSeed.map((t) => ({ ...t }));
 
   const dimensoesBase = ["planejamento", "mediacao", "avaliacao", "clima"];
 
   docentesSeed.forEach((doc, i) => {
-    // Cada docente cumpriu dois macrotemas no ciclo anterior.
+    // Cada docente cumpriu dois temas no ciclo anterior.
     [
-      { indice: (i + 2) % macrotemasSeed.length, ano: 2024 },
-      { indice: (i + 5) % macrotemasSeed.length, ano: 2026 },
+      { indice: (i + 2) % temasSeed.length, ano: 2024 },
+      { indice: (i + 5) % temasSeed.length, ano: 2026 },
     ].forEach(({ indice, ano }, k) => {
-      const mt = macrotemasSeed[indice]!;
-      historicoMacrotemas.push({
+      const tema = temasSeed[indice]!;
+      historicoTemas.push({
         id: `hist-${doc.id}-${k}`,
         pessoaId: doc.id,
-        macrotemaId: mt.id,
-        macrotemaNome: mt.nome,
+        temaId: tema.id,
+        temaNome: tema.nome,
         ciclo: "Ciclo 1",
         ano,
         turmaNome: `Turma ${k === 0 ? "A" : "B"} · ${ano}`,
@@ -703,7 +708,7 @@ function construirProgresso() {
         id: `insc-${doc.id}`,
         pessoaId: doc.id,
         turmaId: turma.id,
-        macrotemaId: turma.macrotemaId,
+        temaId: turma.temaId,
         // Mesmo bloco-de-4 que antes distinguia cargo na pessoa (D34).
         tipoParticipacao: i % 4 === 3 ? "corregente" : "regente",
         criadaEmISO: dias(12 + (i % 5)),
@@ -817,7 +822,7 @@ function construirProgresso() {
     observacoes,
     notificacoes,
     autoavaliacoes,
-    historicoMacrotemas,
+    historicoTemas,
   };
 }
 
@@ -876,10 +881,10 @@ function criterio(
 }
 
 /**
- * Duas ofertas contrastantes do MESMO macrotema (mt-1), na etapa de
+ * Duas ofertas contrastantes do MESMO tema (mt-1), na etapa de
  * conteúdo (et-3) — o centro da demonstração de P1: síncrono e assíncrono
  * recebem itens e critérios diferentes. Mais uma oferta mínima de um
- * segundo macrotema (mt-2), só para mostrar que trocar de macrotema na
+ * segundo tema (mt-2), só para mostrar que trocar de tema na
  * configuração troca o conteúdo.
  *
  * Docentes usados, todos já inscritos nas turmas certas por
@@ -982,7 +987,7 @@ function construirConteudoDemonstravel() {
     {
       id: "oferta-mt1-sync",
       etapaId: "et-3",
-      macrotemaId: "mt-1",
+      temaId: "mt-1",
       modalidadeId: "mod-sincrona",
       criterios: [
         criterio("aulas_assistidas", false),
@@ -995,7 +1000,7 @@ function construirConteudoDemonstravel() {
     {
       id: "oferta-mt1-async",
       etapaId: "et-3",
-      macrotemaId: "mt-1",
+      temaId: "mt-1",
       modalidadeId: "mod-assincrona",
       criterios: [
         criterio("aulas_assistidas", true),
@@ -1008,7 +1013,7 @@ function construirConteudoDemonstravel() {
     {
       id: "oferta-mt2-sync",
       etapaId: "et-3",
-      macrotemaId: "mt-2",
+      temaId: "mt-2",
       modalidadeId: "mod-sincrona",
       criterios: [
         criterio("aulas_assistidas", false),
@@ -1324,7 +1329,7 @@ export function criarEstadoInicial(): EstadoApp {
     observacoes: derivado.observacoes,
     notificacoes: [...derivado.notificacoes, ...conteudo.notificacoesAlertas],
     autoavaliacoes: derivado.autoavaliacoes,
-    historicoMacrotemas: derivado.historicoMacrotemas,
+    historicoTemas: derivado.historicoTemas,
     portfolios: [],
     midias: conteudo.midias,
     ofertas: conteudo.ofertas,

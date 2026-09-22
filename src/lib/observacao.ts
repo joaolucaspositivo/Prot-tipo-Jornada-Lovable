@@ -5,9 +5,9 @@ import type {
   Entrega,
   EstadoApp,
   Etapa,
-  Macrotema,
   Observacao,
   Pessoa,
+  Tema,
   Turma,
 } from "@/data/types";
 import { coordenadoresDoDocente, etapasEmOrdem } from "@/lib/ciclo";
@@ -44,7 +44,7 @@ export interface Compromisso {
   etapaEntrega: Etapa | undefined;
   etapaObservacao: Etapa | undefined;
   turma: Turma | undefined;
-  macrotema: Macrotema | undefined;
+  tema: Tema | undefined;
   dataAula: Date;
   observacao: Observacao | undefined;
   situacao: SituacaoCompromisso;
@@ -92,8 +92,8 @@ export function compromissosDeObservacao(
         (i) => i.pessoaId === entrega.pessoaId,
       );
       const turma = estado.turmas.find((t) => t.id === inscricao?.turmaId);
-      const macrotema = estado.cicloConfig.macrotemas.find(
-        (m) => m.id === (inscricao?.macrotemaId ?? turma?.macrotemaId),
+      const tema = estado.cicloConfig.temas.find(
+        (m) => m.id === (inscricao?.temaId ?? turma?.temaId),
       );
       const observacao = estado.observacoes.find(
         (o) =>
@@ -114,7 +114,7 @@ export function compromissosDeObservacao(
         etapaEntrega,
         etapaObservacao,
         turma,
-        macrotema,
+        tema,
         dataAula,
         observacao,
         situacao,

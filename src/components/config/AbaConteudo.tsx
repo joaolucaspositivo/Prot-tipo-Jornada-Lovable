@@ -45,7 +45,7 @@ import type {
   PerguntaOpcaoMultipla,
   TipoCriterioAvanco,
 } from "@/data/types";
-import { macrotemasAtivos, moverItem, novoId, reindexar } from "@/lib/ciclo";
+import { temasAtivos, moverItem, novoId, reindexar } from "@/lib/ciclo";
 
 const CRITERIOS_ORDEM: TipoCriterioAvanco[] = [
   "aulas_assistidas",
@@ -125,11 +125,11 @@ export function AbaConteudo() {
   const etapasConteudo = [...config.etapas]
     .filter((e) => e.tipo === "conteudo")
     .sort((a, b) => a.ordem - b.ordem);
-  const macrotemas = macrotemasAtivos(config);
+  const temas = temasAtivos(config);
   const modalidadesAtivas = config.modalidades.filter((m) => m.ativa);
 
   const [etapaIdBruto, setEtapaIdBruto] = useState("");
-  const [macrotemaIdBruto, setMacrotemaIdBruto] = useState("");
+  const [temaIdBruto, setTemaIdBruto] = useState("");
   const [modalidadeIdBruto, setModalidadeIdBruto] = useState("");
   const [dialogo, setDialogo] = useState<
     "video" | "texto" | "webconferencia" | "tarefa" | "questionario" | null
@@ -138,21 +138,21 @@ export function AbaConteudo() {
   const etapaId = etapasConteudo.some((e) => e.id === etapaIdBruto)
     ? etapaIdBruto
     : (etapasConteudo[0]?.id ?? "");
-  const macrotemaId = macrotemas.some((m) => m.id === macrotemaIdBruto)
-    ? macrotemaIdBruto
-    : (macrotemas[0]?.id ?? "");
+  const temaId = temas.some((m) => m.id === temaIdBruto)
+    ? temaIdBruto
+    : (temas[0]?.id ?? "");
   const modalidadeId = modalidadesAtivas.some((m) => m.id === modalidadeIdBruto)
     ? modalidadeIdBruto
     : (modalidadesAtivas[0]?.id ?? "");
 
   const etapa = etapasConteudo.find((e) => e.id === etapaId);
-  const macrotema = macrotemas.find((m) => m.id === macrotemaId);
+  const tema = temas.find((m) => m.id === temaId);
   const modalidade = modalidadesAtivas.find((m) => m.id === modalidadeId);
 
   const oferta = estado.ofertas.find(
     (o) =>
       o.etapaId === etapaId &&
-      o.macrotemaId === macrotemaId &&
+      o.temaId === temaId &&
       o.modalidadeId === modalidadeId,
   );
   const itens = oferta
@@ -163,15 +163,15 @@ export function AbaConteudo() {
 
   if (
     etapasConteudo.length === 0 ||
-    macrotemas.length === 0 ||
+    temas.length === 0 ||
     modalidadesAtivas.length === 0
   ) {
     return (
       <div className="space-y-2 rounded-xl border border-dashed border-border p-6 text-center">
         <p className="font-medium">Ainda faltam pré-requisitos</p>
         <p className="text-sm text-muted-foreground">
-          Para cadastrar conteúdo, é preciso ter ao menos um macrotema ativo,
-          uma modalidade ativa e uma etapa do tipo Conteúdo.
+          Para cadastrar conteúdo, é preciso ter ao menos um tema ativo, uma
+          modalidade ativa e uma etapa do tipo Conteúdo.
         </p>
       </div>
     );
@@ -185,14 +185,14 @@ export function AbaConteudo() {
     const existente = anterior.ofertas.find(
       (o) =>
         o.etapaId === etapaId &&
-        o.macrotemaId === macrotemaId &&
+        o.temaId === temaId &&
         o.modalidadeId === modalidadeId,
     );
     if (existente) return { estado: anterior, ofertaId: existente.id };
     const nova: OfertaConteudo = {
       id: novoId("oferta"),
       etapaId,
-      macrotemaId,
+      temaId,
       modalidadeId,
       criterios: CRITERIOS_ORDEM.map((tipo) => ({ tipo, ativo: false })),
     };
@@ -301,13 +301,13 @@ export function AbaConteudo() {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="conteudo-macrotema">Macrotema</Label>
-          <Select value={macrotemaId} onValueChange={setMacrotemaIdBruto}>
-            <SelectTrigger id="conteudo-macrotema" className="h-10">
-              <SelectValue>{macrotema?.nome}</SelectValue>
+          <Label htmlFor="conteudo-tema">Macrotema</Label>
+          <Select value={temaId} onValueChange={setTemaIdBruto}>
+            <SelectTrigger id="conteudo-tema" className="h-10">
+              <SelectValue>{tema?.nome}</SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {macrotemas.map((m) => (
+              {temas.map((m) => (
                 <SelectItem key={m.id} value={m.id}>
                   {m.nome}
                 </SelectItem>
@@ -881,7 +881,7 @@ function DialogoTexto({
               id="texto-titulo"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Ex.: Texto-base do macrotema"
+              placeholder="Ex.: Texto-base do tema"
             />
           </div>
           <div className="space-y-1.5">

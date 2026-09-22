@@ -5,9 +5,9 @@ import type {
   CicloConfig,
   EstadoApp,
   Etapa,
-  Macrotema,
   Pessoa,
   TelaEtapa,
+  Tema,
   TipoEtapa,
   TipoParticipacao,
 } from "@/data/types";
@@ -64,8 +64,8 @@ export function etapasEmOrdem(config: CicloConfig): Etapa[] {
   return [...config.etapas].sort((a, b) => a.ordem - b.ordem);
 }
 
-export function macrotemasAtivos(config: CicloConfig): Macrotema[] {
-  return [...config.macrotemas]
+export function temasAtivos(config: CicloConfig): Tema[] {
+  return [...config.temas]
     .filter((m) => m.ativo)
     .sort((a, b) => a.ordem - b.ordem);
 }
@@ -149,12 +149,12 @@ export function docentesComProgressoNaEtapa(
   return pessoas.size;
 }
 
-/** Turmas e inscrições que dependem de um macrotema. */
-export function usoDoMacrotema(estado: EstadoApp, macrotemaId: string) {
-  const turmas = estado.turmas.filter((t) => t.macrotemaId === macrotemaId);
+/** Turmas e inscrições que dependem de um tema. */
+export function usoDoTema(estado: EstadoApp, temaId: string) {
+  const turmas = estado.turmas.filter((t) => t.temaId === temaId);
   const idsTurmas = new Set(turmas.map((t) => t.id));
   const inscricoes = estado.inscricoes.filter(
-    (i) => i.macrotemaId === macrotemaId || idsTurmas.has(i.turmaId),
+    (i) => i.temaId === temaId || idsTurmas.has(i.turmaId),
   );
   return { turmas: turmas.length, inscricoes: inscricoes.length };
 }
@@ -187,10 +187,10 @@ export function docentesDaTurma(estado: EstadoApp, turmaId: string) {
 /** Se um passo do modo guiado da Configuração do Ciclo está travado. */
 export function passoGuiadoTravado(estado: EstadoApp, passo: string): boolean {
   const config = estado.cicloConfig;
-  if (passo === "modalidades") return macrotemasAtivos(config).length === 0;
+  if (passo === "modalidades") return temasAtivos(config).length === 0;
   if (passo === "turmas") {
     return (
-      macrotemasAtivos(config).length === 0 ||
+      temasAtivos(config).length === 0 ||
       config.modalidades.filter((m) => m.ativa).length === 0
     );
   }
@@ -201,7 +201,7 @@ export function passoGuiadoTravado(estado: EstadoApp, passo: string): boolean {
 }
 
 export interface ResumoConferenciaCiclo {
-  macrotemasAtivos: number;
+  temasAtivos: number;
   modalidadesAtivas: number;
   totalTurmas: number;
   totalVagas: number;
@@ -234,7 +234,7 @@ export function resumoConferenciaCiclo(
   }
 
   return {
-    macrotemasAtivos: macrotemasAtivos(config).length,
+    temasAtivos: temasAtivos(config).length,
     modalidadesAtivas: config.modalidades.filter((m) => m.ativa).length,
     totalTurmas: estado.turmas.length,
     totalVagas: estado.turmas.reduce((soma, t) => soma + t.vagas, 0),

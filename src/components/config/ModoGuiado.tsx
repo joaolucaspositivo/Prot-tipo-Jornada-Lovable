@@ -13,7 +13,7 @@ import { resumoConferenciaCiclo } from "@/lib/ciclo";
 /** As 8 abas, na ordem de dependência (3.3), mais o passo de síntese final. */
 export const PASSOS_GUIADOS = [
   "geral",
-  "macrotemas",
+  "temas",
   "modalidades",
   "turmas",
   "etapas",
@@ -27,7 +27,7 @@ export type PassoGuiado = (typeof PASSOS_GUIADOS)[number];
 
 export const TITULO_PASSO_GUIADO: Record<PassoGuiado, string> = {
   geral: "Geral",
-  macrotemas: "Macrotemas",
+  temas: "Macrotemas",
   modalidades: "Modalidades",
   turmas: "Turmas",
   etapas: "Etapas da trilha",
@@ -165,7 +165,7 @@ export function ResumoConferencia({ estado }: { estado: EstadoApp }) {
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             Macrotemas ativos
           </p>
-          <p className="text-2xl font-semibold">{resumo.macrotemasAtivos}</p>
+          <p className="text-2xl font-semibold">{resumo.temasAtivos}</p>
         </div>
         <div className="rounded-lg border border-border p-3">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">

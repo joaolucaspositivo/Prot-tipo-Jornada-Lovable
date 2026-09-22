@@ -29,7 +29,7 @@ export const Route = createFileRoute("/historico")({
 
 function HistoricoPage() {
   const { estado, pessoaAtiva } = useStore();
-  const registros = estado.historicoMacrotemas
+  const registros = estado.historicoTemas
     .filter((h) => h.pessoaId === pessoaAtiva.id)
     .sort((a, b) => b.ano - a.ano);
 
@@ -66,7 +66,7 @@ function HistoricoPage() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <BookMarked className="size-4 text-primary" aria-hidden />
-                    {h.macrotemaNome}
+                    {h.temaNome}
                   </CardTitle>
                   <Badge variant="secondary">
                     {h.ciclo} · {h.ano}

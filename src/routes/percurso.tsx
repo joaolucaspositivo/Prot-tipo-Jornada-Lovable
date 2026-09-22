@@ -18,13 +18,8 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { dimensaoMaisFragil } from "@/data/autoavaliacao";
 import { useStore } from "@/data/store";
-import type {
-  EstadoApp,
-  Macrotema,
-  TipoParticipacao,
-  Turma,
-} from "@/data/types";
-import { macrotemasAtivos, novoId } from "@/lib/ciclo";
+import type { EstadoApp, Tema, TipoParticipacao, Turma } from "@/data/types";
+import { novoId, temasAtivos } from "@/lib/ciclo";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/percurso")({
@@ -52,9 +47,7 @@ function PercursoPage() {
   const inscricao = estado.inscricoes.find(
     (i) => i.pessoaId === pessoaAtiva.id,
   );
-  const [macrotemaEscolhido, setMacrotemaEscolhido] = useState<string | null>(
-    null,
-  );
+  const [temaEscolhido, setTemaEscolhido] = useState<string | null>(null);
   const [trocando, setTrocando] = useState(false);
   // Campo estruturado de participação (D34) — antes um atributo fixo da
   // pessoa, agora parte da própria inscrição.
@@ -62,12 +55,12 @@ function PercursoPage() {
     inscricao?.tipoParticipacao ?? "regente",
   );
 
-  const ativos = macrotemasAtivos(config);
-  const historico = estado.historicoMacrotemas.filter(
+  const ativos = temasAtivos(config);
+  const historico = estado.historicoTemas.filter(
     (h) => h.pessoaId === pessoaAtiva.id,
   );
-  const cumprido = (macrotemaId: string) =>
-    historico.find((h) => h.macrotemaId === macrotemaId);
+  const cumprido = (temaId: string) =>
+    historico.find((h) => h.temaId === temaId);
 
   // Sugestão vinda da autoavaliação: nunca bloqueia nem obriga.
   const autoavaliacao = estado.autoavaliacoes.find(
@@ -117,7 +110,7 @@ function PercursoPage() {
           id: novoId("insc"),
           pessoaId: pessoaAtiva.id,
           turmaId: turma.id,
-          macrotemaId: turma.macrotemaId,
+          temaId: turma.temaId,
           tipoParticipacao,
           criadaEmISO: agora,
         },
@@ -165,7 +158,7 @@ function PercursoPage() {
     });
 
     setTrocando(false);
-    setMacrotemaEscolhido(null);
+    setTemaEscolhido(null);
     toast.success(
       turmaAnteriorId ? "Turma alterada" : "Inscrição confirmada na hora",
       { description: `${turma.nome}. A vaga já está reservada para você.` },
@@ -175,9 +168,7 @@ function PercursoPage() {
   // ---- já inscrito ----
   if (inscricao && !trocando) {
     const turma = estado.turmas.find((t) => t.id === inscricao.turmaId);
-    const macrotema = config.macrotemas.find(
-      (m) => m.id === inscricao.macrotemaId,
-    );
+    const tema = config.temas.find((m) => m.id === inscricao.temaId);
     const modalidade = config.modalidades.find(
       (m) => m.id === turma?.modalidadeId,
     );
@@ -203,7 +194,7 @@ function PercursoPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <dl className="grid gap-3 sm:grid-cols-2">
-              <Resumo rotulo="Macrotema" valor={macrotema?.nome ?? "—"} />
+              <Resumo rotulo="Macrotema" valor={tema?.nome ?? "—"} />
               <Resumo rotulo="Turma" valor={turma?.nome ?? "—"} />
               <Resumo rotulo="Modalidade" valor={modalidade?.nome ?? "—"} />
               <Resumo
@@ -238,7 +229,7 @@ function PercursoPage() {
     const turmaAtual = estado.turmas.find((t) => t.id === inscricao.turmaId);
     const opcoes = estado.turmas.filter(
       (t) =>
-        t.macrotemaId === inscricao.macrotemaId &&
+        t.temaId === inscricao.temaId &&
         t.modalidadeId === turmaAtual?.modalidadeId &&
         t.id !== turmaAtual?.id,
     );
@@ -289,12 +280,10 @@ function PercursoPage() {
     );
   }
 
-  // ---- passo 2: turmas do macrotema escolhido ----
-  if (macrotemaEscolhido) {
-    const macrotema = ativos.find((m) => m.id === macrotemaEscolhido);
-    const turmas = estado.turmas.filter(
-      (t) => t.macrotemaId === macrotemaEscolhido,
-    );
+  // ---- passo 2: turmas do tema escolhido ----
+  if (temaEscolhido) {
+    const tema = ativos.find((m) => m.id === temaEscolhido);
+    const turmas = estado.turmas.filter((t) => t.temaId === temaEscolhido);
 
     return (
       <div className="mx-auto max-w-3xl space-y-6">
@@ -302,7 +291,7 @@ function PercursoPage() {
           tipoParticipacao={tipoParticipacao}
           aoMudarParticipacao={setTipoParticipacao}
         />
-        <Button variant="ghost" onClick={() => setMacrotemaEscolhido(null)}>
+        <Button variant="ghost" onClick={() => setTemaEscolhido(null)}>
           <ArrowLeft className="size-4" aria-hidden />
           Trocar de macrotema
         </Button>
@@ -310,7 +299,7 @@ function PercursoPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Passo 2 de 2 · Modalidade e turma
           </p>
-          <h2 className="font-display text-2xl">{macrotema?.nome}</h2>
+          <h2 className="font-display text-2xl">{tema?.nome}</h2>
         </div>
         {turmas.length === 0 ? (
           <Card>
@@ -352,10 +341,10 @@ function PercursoPage() {
         {ativos.map((m) => (
           <CardMacrotema
             key={m.id}
-            macrotema={m}
+            tema={m}
             bloqueio={cumprido(m.id)}
             sugerido={m.id === sugerido}
-            aoEscolher={() => setMacrotemaEscolhido(m.id)}
+            aoEscolher={() => setTemaEscolhido(m.id)}
           />
         ))}
       </div>
@@ -413,12 +402,12 @@ function Cabecalho({
 }
 
 function CardMacrotema({
-  macrotema,
+  tema,
   bloqueio,
   sugerido,
   aoEscolher,
 }: {
-  macrotema: Macrotema;
+  tema: Tema;
   bloqueio: { ciclo: string; ano: number } | undefined;
   sugerido: boolean;
   aoEscolher: () => void;
@@ -444,10 +433,8 @@ function CardMacrotema({
             Cumprido na jornada anterior ({bloqueio.ano})
           </span>
         )}
-        <CardTitle className="text-base leading-snug">
-          {macrotema.nome}
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">{macrotema.descricao}</p>
+        <CardTitle className="text-base leading-snug">{tema.nome}</CardTitle>
+        <p className="text-sm text-muted-foreground">{tema.descricao}</p>
       </CardHeader>
       <CardContent>
         {bloqueio ? (

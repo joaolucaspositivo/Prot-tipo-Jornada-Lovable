@@ -61,7 +61,7 @@ function ConfiguracaoPage() {
   useEffect(() => {
     if (travadoAgora) setAba("geral");
     // Se o pré-requisito do passo atual deixar de ser cumprido (ex.: a
-    // operadora desativa o único macrotema ativo enquanto está em
+    // operadora desativa o único tema ativo enquanto está em
     // Modalidades), volta para um passo sempre livre em vez de deixar a
     // tela editável presa atrás de um cadeado.
   }, [travadoAgora]);
@@ -128,10 +128,7 @@ function ConfiguracaoPage() {
                 <TabsTrigger value="geral" disabled={passoTravado("geral")}>
                   Geral
                 </TabsTrigger>
-                <TabsTrigger
-                  value="macrotemas"
-                  disabled={passoTravado("macrotemas")}
-                >
+                <TabsTrigger value="temas" disabled={passoTravado("temas")}>
                   Macrotemas
                 </TabsTrigger>
                 <TabsTrigger
@@ -166,7 +163,7 @@ function ConfiguracaoPage() {
               <TabsContent value="geral" className="mt-4">
                 <AbaGeral />
               </TabsContent>
-              <TabsContent value="macrotemas" className="mt-4">
+              <TabsContent value="temas" className="mt-4">
                 <AbaMacrotemas />
               </TabsContent>
               <TabsContent value="modalidades" className="mt-4">

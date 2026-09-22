@@ -72,11 +72,11 @@ const aulasPadrao: AulaConteudo[] = [
 ];
 
 /**
- * Material da etapa de conteúdo. O macrotema apenas personaliza os títulos:
+ * Material da etapa de conteúdo. O tema apenas personaliza os títulos:
  * a estrutura vale para qualquer configuração de trilha.
  */
-export function materialDaEtapa(macrotemaNome?: string): MaterialConteudo {
-  const tema = macrotemaNome?.split("—").pop()?.trim();
+export function materialDaEtapa(temaNome?: string): MaterialConteudo {
+  const tema = temaNome?.split("—").pop()?.trim();
   return {
     aulas: aulasPadrao.map((a) => ({
       ...a,

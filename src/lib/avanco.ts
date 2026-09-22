@@ -48,12 +48,12 @@ export function ofertaDoDocente(
   pessoa: Pessoa,
   etapa: Etapa,
 ): OfertaConteudo | undefined {
-  const { macrotemaId, modalidadeId } = percursoDoDocente(estado, pessoa);
-  if (!macrotemaId || !modalidadeId) return undefined;
+  const { temaId, modalidadeId } = percursoDoDocente(estado, pessoa);
+  if (!temaId || !modalidadeId) return undefined;
   return estado.ofertas.find(
     (o) =>
       o.etapaId === etapa.id &&
-      o.macrotemaId === macrotemaId &&
+      o.temaId === temaId &&
       o.modalidadeId === modalidadeId,
   );
 }

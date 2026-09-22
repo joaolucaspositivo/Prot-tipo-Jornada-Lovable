@@ -69,7 +69,7 @@ export function OcupacaoTurmas() {
                     <div className="min-w-0">
                       <p className="font-medium">{t.turma.nome}</p>
                       <p className="text-sm text-muted-foreground">
-                        {t.macrotemaNome}
+                        {t.temaNome}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {t.modalidadeNome} · {t.turma.periodo} ·{" "}
@@ -126,9 +126,7 @@ export function OcupacaoTurmas() {
 export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
   const { estado, pessoaAtiva, atualizar } = useStore();
   const ofertasDaTurma = estado.ofertas.filter(
-    (o) =>
-      o.macrotemaId === turma.macrotemaId &&
-      o.modalidadeId === turma.modalidadeId,
+    (o) => o.temaId === turma.temaId && o.modalidadeId === turma.modalidadeId,
   );
 
   const [etapaIdBruto, setEtapaIdBruto] = useState("");

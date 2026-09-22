@@ -79,14 +79,11 @@ function AulasPage() {
   const [etapaId, setEtapaId] = useState<string>(etapas[0]?.id ?? "");
   const etapa = etapas.find((e) => e.id === etapaId) ?? etapas[0];
 
-  const { turma, modalidade, macrotemaNome } = percursoDoDocente(
+  const { turma, modalidade, temaNome } = percursoDoDocente(
     estado,
     pessoaAtiva,
   );
-  const material = useMemo(
-    () => materialDaEtapa(macrotemaNome),
-    [macrotemaNome],
-  );
+  const material = useMemo(() => materialDaEtapa(temaNome), [temaNome]);
   const [tarefa, setTarefa] = useState("");
   const [abaConteudoBruta, setAbaConteudoBruta] = useState("");
 

@@ -29,7 +29,7 @@ import {
   baixarCSV,
   csvDosDocentes,
   pendenciasDeAlocacao,
-  porMacrotema,
+  porTema,
   porUnidade,
   type GrupoAgregado,
 } from "@/lib/gestao";
@@ -41,14 +41,14 @@ export function PainelGestaoCiclo() {
   const linhas = useMemo(() => linhasDaEquipe(estado), [estado]);
 
   const [unidade, setUnidade] = useState(TODOS);
-  const [macrotema, setMacrotema] = useState(TODOS);
+  const [tema, setTema] = useState(TODOS);
   const [etapa, setEtapa] = useState(TODOS);
 
   const unidades = [...new Set(linhas.map((l) => l.pessoa.unidade))].sort();
 
   const filtradas = aplicarFiltro(linhas, {
     unidade: unidade === TODOS ? undefined : unidade,
-    macrotemaNome: macrotema === TODOS ? undefined : macrotema,
+    temaNome: tema === TODOS ? undefined : tema,
     etapaId: etapa === TODOS ? undefined : etapa,
   });
 
@@ -81,9 +81,9 @@ export function PainelGestaoCiclo() {
           />
           <Campo
             rotulo="Macrotema"
-            valor={macrotema}
-            aoMudar={setMacrotema}
-            opcoes={estado.cicloConfig.macrotemas.map((m) => ({
+            valor={tema}
+            aoMudar={setTema}
+            opcoes={estado.cicloConfig.temas.map((m) => ({
               valor: m.nome,
               rotulo: m.nome,
             }))}
@@ -113,10 +113,7 @@ export function PainelGestaoCiclo() {
 
       <FunilEtapas estado={estado} linhas={filtradas} />
 
-      <Agregado
-        titulo="Progresso por macrotema"
-        grupos={porMacrotema(filtradas)}
-      />
+      <Agregado titulo="Progresso por macrotema" grupos={porTema(filtradas)} />
 
       <Card>
         <CardHeader>

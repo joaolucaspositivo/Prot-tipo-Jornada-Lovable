@@ -7,35 +7,36 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { moverItem, novoId, reindexar, usoDoMacrotema } from "@/lib/ciclo";
-import type { Macrotema } from "@/data/types";
+import { moverItem, novoId, reindexar, usoDoTema } from "@/lib/ciclo";
+import type { Tema } from "@/data/types";
 
 export function AbaMacrotemas() {
   const { estado, config, salvarConfig } = useCicloConfig();
   const { confirmar, dialogo } = useAvisoImpacto();
 
-  const macrotemas = [...config.macrotemas].sort((a, b) => a.ordem - b.ordem);
+  const temas = [...config.temas].sort((a, b) => a.ordem - b.ordem);
 
-  const gravar = (lista: Macrotema[]) =>
-    salvarConfig((c) => ({ ...c, macrotemas: reindexar(lista) }));
+  const gravar = (lista: Tema[]) =>
+    salvarConfig((c) => ({ ...c, temas: reindexar(lista) }));
 
-  const editar = (id: string, mudanca: Partial<Macrotema>) =>
-    gravar(macrotemas.map((m) => (m.id === id ? { ...m, ...mudanca } : m)));
+  const editar = (id: string, mudanca: Partial<Tema>) =>
+    gravar(temas.map((m) => (m.id === id ? { ...m, ...mudanca } : m)));
 
   const adicionar = () =>
     gravar([
-      ...macrotemas,
+      ...temas,
       {
         id: novoId("mt"),
-        nome: `Macrotema ${macrotemas.length + 1}`,
+        linhagemId: novoId("mt"),
+        nome: `Macrotema ${temas.length + 1}`,
         descricao: "",
         ativo: true,
-        ordem: macrotemas.length + 1,
+        ordem: temas.length + 1,
       },
     ]);
 
-  const remover = (m: Macrotema) => {
-    const uso = usoDoMacrotema(estado, m.id);
+  const remover = (m: Tema) => {
+    const uso = usoDoTema(estado, m.id);
     confirmar({
       titulo: `Remover “${m.nome}”?`,
       descricao:
@@ -46,20 +47,19 @@ export function AbaMacrotemas() {
           ? `Este macrotema está em uso: ${uso.turmas} turma(s) e ${uso.inscricoes} inscrição(ões) já registradas. Essas pessoas ficarão sem percurso vinculado.`
           : undefined,
       rotuloAcao: "Remover",
-      aoConfirmar: () => gravar(macrotemas.filter((x) => x.id !== m.id)),
+      aoConfirmar: () => gravar(temas.filter((x) => x.id !== m.id)),
     });
   };
 
   const mover = (de: number, para: number) =>
-    gravar(moverItem(macrotemas, de, para));
+    gravar(moverItem(temas, de, para));
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {macrotemas.length} macrotema(s) configurado(s) ·{" "}
-          {macrotemas.filter((m) => m.ativo).length} ativo(s). A quantidade é
-          livre.
+          {temas.length} macrotema(s) configurado(s) ·{" "}
+          {temas.filter((m) => m.ativo).length} ativo(s). A quantidade é livre.
         </p>
         <Button onClick={adicionar}>
           <Plus className="size-4" /> Adicionar macrotema
@@ -67,13 +67,13 @@ export function AbaMacrotemas() {
       </div>
 
       <ul className="space-y-3">
-        {macrotemas.map((m, i) => {
-          const uso = usoDoMacrotema(estado, m.id);
+        {temas.map((m, i) => {
+          const uso = usoDoTema(estado, m.id);
           return (
             <ItemArrastavel
               key={m.id}
               indice={i}
-              total={macrotemas.length}
+              total={temas.length}
               aoMover={mover}
               rotulo={m.nome}
             >

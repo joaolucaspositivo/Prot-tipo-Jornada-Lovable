@@ -53,7 +53,7 @@ export function PainelModeracao() {
                   <div className="min-w-0">
                     <CardTitle className="text-base">{t.turma.nome}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {t.macrotemaNome}
+                      {t.temaNome}
                     </p>
                   </div>
                   <Badge variant="secondary">{t.modalidadeNome}</Badge>

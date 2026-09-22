@@ -272,7 +272,7 @@ export function AgendaObservacoes({ escopo }: Props) {
                       </span>
                       <span className="block text-sm text-muted-foreground">
                         {c.turma?.nome ?? "Turma"} · {c.docente?.unidade} ·{" "}
-                        {c.macrotema?.nome ?? "Macrotema"}
+                        {c.tema?.nome ?? "Macrotema"}
                       </span>
                     </span>
                     <span className="flex items-center gap-2">
@@ -339,7 +339,7 @@ function DetalheObservacao({
         </SheetTitle>
         <SheetDescription>
           {c.turma?.nome ?? "Turma"} · {c.docente?.unidade} ·{" "}
-          {c.macrotema?.nome ?? "Macrotema"} · {formatarData(c.dataAula)} às{" "}
+          {c.tema?.nome ?? "Macrotema"} · {formatarData(c.dataAula)} às{" "}
           {hora(c.dataAula)}
         </SheetDescription>
         <div className="flex flex-wrap gap-2 pt-1">

@@ -61,7 +61,7 @@ export function PainelEquipe({
   const [fEtapa, setFEtapa] = useState(TODOS);
   const [fSituacao, setFSituacao] = useState(TODOS);
   const [fUnidade, setFUnidade] = useState(TODOS);
-  const [fMacrotema, setFMacrotema] = useState(TODOS);
+  const [fTema, setFTema] = useState(TODOS);
   const [fParticipacao, setFParticipacao] = useState(TODOS);
   const [coluna, setColuna] = useState<ColunaEquipe>("nome");
   const [ascendente, setAscendente] = useState(true);
@@ -74,7 +74,7 @@ export function PainelEquipe({
       (fEtapa === TODOS || l.etapaAtual?.id === fEtapa) &&
       (fSituacao === TODOS || l.situacao === fSituacao) &&
       (fUnidade === TODOS || l.pessoa.unidade === fUnidade) &&
-      (fMacrotema === TODOS || l.macrotemaNome === fMacrotema) &&
+      (fTema === TODOS || l.temaNome === fTema) &&
       (fParticipacao === TODOS || l.tipoParticipacao === fParticipacao),
   );
 
@@ -178,9 +178,9 @@ export function PainelEquipe({
         />
         <Filtro
           rotulo="Macrotema"
-          valor={fMacrotema}
-          aoMudar={setFMacrotema}
-          opcoes={estado.cicloConfig.macrotemas.map((m) => ({
+          valor={fTema}
+          aoMudar={setFTema}
+          opcoes={estado.cicloConfig.temas.map((m) => ({
             valor: m.nome,
             rotulo: m.nome,
           }))}
@@ -282,7 +282,7 @@ export function PainelEquipe({
                       : "regente"}
                   </span>
                   <span className="block text-xs text-muted-foreground">
-                    {l.macrotemaNome ?? "Sem escolha"} · {l.turmaNome ?? "—"}
+                    {l.temaNome ?? "Sem escolha"} · {l.turmaNome ?? "—"}
                   </span>
                 </TableCell>
                 <TableCell className="text-sm">

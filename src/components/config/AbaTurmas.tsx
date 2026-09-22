@@ -37,7 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Macrotema, Modalidade, Pessoa, Turma } from "@/data/types";
+import type { Modalidade, Pessoa, Tema, Turma } from "@/data/types";
 import { ROTULO_DIA_SEMANA, novoId, usoDaTurma } from "@/lib/ciclo";
 
 const TODOS = "todos";
@@ -56,7 +56,7 @@ export function AbaTurmas() {
     null,
   );
 
-  const [fMacrotema, setFMacrotema] = useState(TODOS);
+  const [fTema, setFTema] = useState(TODOS);
   const [fModalidade, setFModalidade] = useState(TODOS);
   const [fDia, setFDia] = useState(TODOS);
   const [fProfessor, setFProfessor] = useState(TODOS);
@@ -77,7 +77,7 @@ export function AbaTurmas() {
 
   const filtradas = turmas.filter(
     (t) =>
-      (fMacrotema === TODOS || t.macrotemaId === fMacrotema) &&
+      (fTema === TODOS || t.temaId === fTema) &&
       (fModalidade === TODOS || t.modalidadeId === fModalidade) &&
       (fDia === TODOS || t.diasSemana.includes(Number(fDia))) &&
       (fProfessor === TODOS || t.professorNome === fProfessor) &&
@@ -157,9 +157,9 @@ export function AbaTurmas() {
       <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
         <Filtro
           rotulo="Macrotema"
-          valor={fMacrotema}
-          aoMudar={setFMacrotema}
-          opcoes={config.macrotemas.map((m) => ({
+          valor={fTema}
+          aoMudar={setFTema}
+          opcoes={config.temas.map((m) => ({
             valor: m.id,
             rotulo: m.nome,
           }))}
@@ -219,9 +219,7 @@ export function AbaTurmas() {
               </TableRow>
             )}
             {filtradas.map((turma) => {
-              const macrotema = config.macrotemas.find(
-                (m) => m.id === turma.macrotemaId,
-              );
+              const tema = config.temas.find((m) => m.id === turma.temaId);
               const modalidade = config.modalidades.find(
                 (m) => m.id === turma.modalidadeId,
               );
@@ -229,7 +227,7 @@ export function AbaTurmas() {
                 <TableRow key={turma.id}>
                   <TableCell className="font-medium">{turma.nome}</TableCell>
                   <TableCell className="text-sm">
-                    {macrotema?.nome ?? "Macrotema removido"}
+                    {tema?.nome ?? "Macrotema removido"}
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary">
@@ -343,7 +341,7 @@ export function AbaTurmas() {
       <DialogoTurma
         aberto={dialogoAberto}
         turma={turmaEmEdicao}
-        macrotemas={config.macrotemas}
+        temas={config.temas}
         modalidades={config.modalidades}
         aoFechar={() => setDialogoAberto(false)}
         aoSalvar={salvar}
@@ -391,7 +389,7 @@ function Filtro({
 function DialogoTurma({
   aberto,
   turma,
-  macrotemas,
+  temas,
   modalidades,
   aoFechar,
   aoSalvar,
@@ -399,12 +397,12 @@ function DialogoTurma({
   aberto: boolean;
   /** presente = edição; ausente = criação */
   turma: Turma | undefined;
-  macrotemas: Macrotema[];
+  temas: Tema[];
   modalidades: Modalidade[];
   aoFechar: () => void;
   aoSalvar: (dados: DadosTurma) => void;
 }) {
-  const [macrotemaId, setMacrotemaId] = useState("");
+  const [temaId, setTemaId] = useState("");
   const [modalidadeId, setModalidadeId] = useState("");
   const [nome, setNome] = useState("");
   const [periodo, setPeriodo] = useState("");
@@ -418,7 +416,7 @@ function DialogoTurma({
   // Recarrega os campos toda vez que o diálogo abre — criação ou edição.
   useEffect(() => {
     if (!aberto) return;
-    setMacrotemaId(turma?.macrotemaId ?? macrotemas[0]?.id ?? "");
+    setTemaId(turma?.temaId ?? temas[0]?.id ?? "");
     setModalidadeId(turma?.modalidadeId ?? modalidades[0]?.id ?? "");
     setNome(turma?.nome ?? "");
     setPeriodo(turma?.periodo ?? "");
@@ -428,7 +426,7 @@ function DialogoTurma({
     setDiasSemana(turma?.diasSemana ?? []);
     setEncontrosPrevistos(turma?.encontrosPrevistos ?? 4);
     setLinkAcesso(turma?.linkAcesso ?? "");
-  }, [aberto, turma, macrotemas, modalidades]);
+  }, [aberto, turma, temas, modalidades]);
 
   const modalidade = modalidades.find((m) => m.id === modalidadeId);
   const sincrona = modalidade ? !modalidade.presencaAutomatica : false;
@@ -443,10 +441,10 @@ function DialogoTurma({
   }
 
   function salvar() {
-    if (!nome.trim() || !macrotemaId || !modalidadeId) return;
+    if (!nome.trim() || !temaId || !modalidadeId) return;
     aoSalvar({
       nome: nome.trim(),
-      macrotemaId,
+      temaId,
       modalidadeId,
       periodo,
       professorNome,
@@ -471,15 +469,15 @@ function DialogoTurma({
             <div className="space-y-1.5">
               <Label htmlFor="turma-macrotema">Macrotema</Label>
               <Select
-                value={macrotemaId}
-                onValueChange={setMacrotemaId}
+                value={temaId}
+                onValueChange={setTemaId}
                 disabled={turma !== undefined}
               >
                 <SelectTrigger id="turma-macrotema">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {macrotemas.map((m) => (
+                  {temas.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
                       {m.nome}
                     </SelectItem>

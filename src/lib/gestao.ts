@@ -1,5 +1,5 @@
 // Leituras agregadas do ciclo para a equipe operadora.
-// Nada aqui presume quantidade ou nome de etapas, macrotemas ou unidades:
+// Nada aqui presume quantidade ou nome de etapas, temas ou unidades:
 // tudo é derivado da configuração em runtime e do estado persistido.
 
 import type { EstadoApp, Etapa, Modalidade, Pessoa, Turma } from "@/data/types";
@@ -8,7 +8,7 @@ import type { LinhaEquipe } from "@/lib/equipe";
 
 export interface FiltroGestao {
   unidade?: string | undefined;
-  macrotemaNome?: string | undefined;
+  temaNome?: string | undefined;
   etapaId?: string | undefined;
 }
 
@@ -19,7 +19,7 @@ export function aplicarFiltro(
   return linhas.filter(
     (l) =>
       (!f.unidade || l.pessoa.unidade === f.unidade) &&
-      (!f.macrotemaNome || l.macrotemaNome === f.macrotemaNome) &&
+      (!f.temaNome || l.temaNome === f.temaNome) &&
       (!f.etapaId || l.etapaAtual?.id === f.etapaId),
   );
 }
@@ -102,10 +102,10 @@ export function porUnidade(linhas: LinhaEquipe[]): GrupoAgregado[] {
   }));
 }
 
-export function porMacrotema(linhas: LinhaEquipe[]): GrupoAgregado[] {
+export function porTema(linhas: LinhaEquipe[]): GrupoAgregado[] {
   return agrupar(linhas, (l) => ({
-    chave: l.macrotemaNome ?? "sem-macrotema",
-    rotulo: l.macrotemaNome ?? "Sem inscrição",
+    chave: l.temaNome ?? "sem-tema",
+    rotulo: l.temaNome ?? "Sem inscrição",
   }));
 }
 
@@ -234,7 +234,7 @@ export function conferencias(
 
 export interface OcupacaoTurma {
   turma: Turma;
-  macrotemaNome: string;
+  temaNome: string;
   modalidadeNome: string;
   /** objeto completo, não só o nome — usado para saber se a turma é síncrona */
   modalidade: Modalidade | undefined;
@@ -251,9 +251,9 @@ export function ocupacaoDasTurmas(estado: EstadoApp): OcupacaoTurma[] {
     );
     return {
       turma,
-      macrotemaNome:
-        estado.cicloConfig.macrotemas.find((m) => m.id === turma.macrotemaId)
-          ?.nome ?? "Macrotema removido",
+      temaNome:
+        estado.cicloConfig.temas.find((m) => m.id === turma.temaId)?.nome ??
+        "Macrotema removido",
       modalidadeNome: modalidade?.nome ?? "Modalidade removida",
       modalidade,
       livres,
@@ -333,7 +333,7 @@ export function csvDosDocentes(linhas: LinhaEquipe[]): string {
     l.pessoa.matricula,
     l.pessoa.unidade,
     l.tipoParticipacao,
-    l.macrotemaNome ?? "",
+    l.temaNome ?? "",
     l.turmaNome ?? "",
     l.etapaAtual?.nome ?? "Trilha concluída",
     String(l.percentual),

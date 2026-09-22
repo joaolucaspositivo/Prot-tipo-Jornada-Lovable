@@ -135,7 +135,7 @@ export function DetalheDocente({
           <SheetDescription>
             {linha.tipoParticipacao === "corregente" ? "Corregente" : "Regente"}{" "}
             · {linha.pessoa.unidade}
-            {linha.macrotemaNome ? ` · ${linha.macrotemaNome}` : ""}
+            {linha.temaNome ? ` · ${linha.temaNome}` : ""}
           </SheetDescription>
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <Badge variant="outline">{linha.percentual}% da trilha</Badge>

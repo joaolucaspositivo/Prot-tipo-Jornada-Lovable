@@ -24,13 +24,15 @@ export type StatusEtapa =
   | "atrasada"
   | "nao_iniciada";
 
-export interface Macrotema {
+export interface Tema {
   id: string;
+  /** persiste entre macrociclos — raiz da linhagem deste tema (D54, fundação p/ TemaVersao) */
+  linhagemId: string;
   nome: string;
   descricao: string;
   ativo: boolean;
   ordem: number;
-  /** dimensão da autoavaliação sugerida por este macrotema (opcional) */
+  /** dimensão da autoavaliação sugerida por este tema (opcional) */
   dimensaoRelacionada?: string | undefined;
 }
 
@@ -151,7 +153,7 @@ export interface CicloConfig {
   periodo: string;
   /** data de início do ciclo — base do encadeamento de prazos (D38) */
   dataInicioCiclo: string;
-  macrotemas: Macrotema[];
+  temas: Tema[];
   modalidades: Modalidade[];
   etapas: Etapa[];
   /** formulários/telas reutilizáveis que uma etapa pode escolher (D30) */
@@ -175,7 +177,7 @@ export interface Pessoa {
 export interface Turma {
   id: string;
   nome: string;
-  macrotemaId: string;
+  temaId: string;
   modalidadeId: string;
   periodo: string;
   horario: string;
@@ -195,7 +197,7 @@ export interface Inscricao {
   id: string;
   pessoaId: string;
   turmaId: string;
-  macrotemaId: string;
+  temaId: string;
   /** regente ou corregente — passa a ser parte da inscrição, não da pessoa (D34) */
   tipoParticipacao: TipoParticipacao;
   criadaEmISO: string;
@@ -288,13 +290,13 @@ export interface Autoavaliacao {
   concluidaEmISO?: string | undefined;
 }
 
-/** Macrotema já cumprido pelo docente em um ciclo anterior. */
-export interface HistoricoMacrotema {
+/** Tema já cumprido pelo docente em um ciclo anterior. */
+export interface HistoricoTema {
   id: string;
   pessoaId: string;
-  macrotemaId: string;
-  /** nome registrado à época, caso o macrotema mude de nome ou seja removido */
-  macrotemaNome: string;
+  temaId: string;
+  /** nome registrado à época, caso o tema mude de nome ou seja removido */
+  temaNome: string;
   ciclo: string;
   ano: number;
   turmaNome?: string | undefined;
@@ -364,13 +366,13 @@ export interface PerguntaOpcaoMultipla {
 }
 
 /**
- * Oferta: o que existe para um macrotema, em uma modalidade, dentro de uma
+ * Oferta: o que existe para um tema, em uma modalidade, dentro de uma
  * etapa de conteúdo (D14). É aqui que moram os itens e os critérios de avanço.
  */
 export interface OfertaConteudo {
   id: string;
   etapaId: string;
-  macrotemaId: string;
+  temaId: string;
   modalidadeId: string;
   criterios: CriterioAvanco[];
 }
@@ -479,7 +481,7 @@ export interface EstadoApp {
   observacoes: Observacao[];
   notificacoes: Notificacao[];
   autoavaliacoes: Autoavaliacao[];
-  historicoMacrotemas: HistoricoMacrotema[];
+  historicoTemas: HistoricoTema[];
   portfolios: Portfolio[];
   midias: Midia[];
   ofertas: OfertaConteudo[];
