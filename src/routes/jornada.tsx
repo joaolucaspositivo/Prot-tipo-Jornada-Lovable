@@ -140,6 +140,11 @@ function JornadaPage() {
               )}
             </div>
           </>
+        ) : trilha.length === 0 ? (
+          <p className="text-lg leading-snug text-muted-foreground">
+            A jornada deste ciclo ainda não foi configurada. Assim que a equipe
+            operadora montar a trilha, as etapas aparecem aqui.
+          </p>
         ) : (
           <p className="flex items-center gap-2 text-lg">
             <PartyPopper className="size-5 text-conquista" aria-hidden />
