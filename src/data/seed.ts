@@ -26,6 +26,7 @@ import type {
   RespostaEnquete,
   Subtipo,
   Tema,
+  TemaVersao,
   TipoCriterioAvanco,
   Turma,
 } from "./types";
@@ -84,6 +85,20 @@ const temasSeed: Tema[] = [
     dimensaoRelacionada: "clima",
   },
 ].map((m, i) => ({ ...m, linhagemId: m.id, ativo: true, ordem: i + 1 }));
+
+// Snapshot congelado (D53/D54): a primeira versão de cada tema, gerada a
+// partir do próprio seed. Nada além do schema — sem tela que crie uma
+// versão nova ainda (isso é edição de tema entre macrociclos, Pacote 1).
+const temaVersoesSeed: TemaVersao[] = temasSeed.map((t) => ({
+  id: `${t.id}-v1`,
+  temaId: t.id,
+  linhagemId: t.linhagemId,
+  numeroVersao: 1,
+  nome: t.nome,
+  descricao: t.descricao,
+  criadaEmISO: ABERTURA,
+  criadaPorId: "oper-1",
+}));
 
 const modalidadesSeed = [
   {
@@ -1330,6 +1345,12 @@ export function criarEstadoInicial(): EstadoApp {
     notificacoes: [...derivado.notificacoes, ...conteudo.notificacoesAlertas],
     autoavaliacoes: derivado.autoavaliacoes,
     historicoTemas: derivado.historicoTemas,
+    temaVersoes: temaVersoesSeed,
+    // Sem lógica que gere conclusão/certificado ainda (Pacote 0 é só o
+    // schema) — o gatilho de conclusão entra no Pacote 2, junto do
+    // encerramento; emissão de certificado está fora do MVP de dezembro.
+    conclusoes: [],
+    certificados: [],
     portfolios: [],
     midias: conteudo.midias,
     ofertas: conteudo.ofertas,

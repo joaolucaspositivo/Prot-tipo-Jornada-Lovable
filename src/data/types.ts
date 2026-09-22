@@ -36,6 +36,26 @@ export interface Tema {
   dimensaoRelacionada?: string | undefined;
 }
 
+/**
+ * Snapshot congelado do conteúdo de um tema (D53/D54) — não substitui a
+ * leitura corrente de `Tema` (as ~46 referências de `temaId` no app
+ * continuam lendo o tema vigente, nunca uma versão). Só quem precisa do
+ * retrato de um momento específico — `Conclusao`, e portanto `Certificado`
+ * — aponta para cá. Editar um tema entre macrociclos cria uma versão nova;
+ * não sobrescreve. Sem tela que gere isso ainda (Pacote 0 é só o schema).
+ */
+export interface TemaVersao {
+  id: string;
+  temaId: string;
+  /** mesma linhagem do Tema de origem (D54) */
+  linhagemId: string;
+  numeroVersao: number;
+  nome: string;
+  descricao: string;
+  criadaEmISO: string;
+  criadaPorId: string;
+}
+
 export interface Modalidade {
   id: string;
   nome: string;
@@ -290,7 +310,12 @@ export interface Autoavaliacao {
   concluidaEmISO?: string | undefined;
 }
 
-/** Tema já cumprido pelo docente em um ciclo anterior. */
+/**
+ * Tema já cumprido pelo docente em um ciclo anterior — dado IMPORTADO de
+ * fora do sistema, só para apresentação (D27), fora do MVP. Não é o mesmo
+ * que `Conclusao`: histórico de jornada anterior nunca deve ficar
+ * indistinguível de uma conclusão gerada pelo próprio sistema.
+ */
 export interface HistoricoTema {
   id: string;
   pessoaId: string;
@@ -306,6 +331,34 @@ export interface HistoricoTema {
   devolutivaTexto?: string | undefined;
   devolutivaAutor?: string | undefined;
   conquistas?: string[] | undefined;
+}
+
+/**
+ * Registro de conclusão do tema pelo docente, gerado pelo próprio sistema
+ * (D53/D54/D56) — nunca aponta para `Tema`, só para a `TemaVersao` vigente
+ * no momento da conclusão: uma reemissão futura precisa mostrar o nome e a
+ * carga horária de então, não os atuais. `cargaHorariaCongelada` é lida daqui
+ * na emissão do certificado, nunca do tema. Sem nenhuma tela ou lógica que
+ * gere isto ainda — o gatilho entra no Pacote 2, junto do encerramento.
+ */
+export interface Conclusao {
+  id: string;
+  docenteId: string;
+  temaVersaoId: string;
+  cargaHorariaCongelada: number;
+  concluidoEmISO: string;
+}
+
+/**
+ * Lê exclusivamente de `Conclusao` (D54) — nunca referencia `Tema` ou
+ * `TemaVersao` diretamente. Só o tipo nasce neste pacote: emissão real de
+ * certificado está fora do MVP de dezembro (D05/D17).
+ */
+export interface Certificado {
+  id: string;
+  conclusaoId: string;
+  emitidoEmISO: string;
+  emitidoPorId: string;
 }
 
 /** Aula em vídeo marcada como assistida dentro de uma etapa de conteúdo. */
@@ -482,6 +535,9 @@ export interface EstadoApp {
   notificacoes: Notificacao[];
   autoavaliacoes: Autoavaliacao[];
   historicoTemas: HistoricoTema[];
+  temaVersoes: TemaVersao[];
+  conclusoes: Conclusao[];
+  certificados: Certificado[];
   portfolios: Portfolio[];
   midias: Midia[];
   ofertas: OfertaConteudo[];
