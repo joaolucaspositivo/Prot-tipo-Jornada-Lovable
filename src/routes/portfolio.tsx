@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useStore } from "@/data/store";
 import type { AnexoPortfolio, EstadoApp } from "@/data/types";
 import {
-  cicloAtivo,
+  cicloDoDocente,
   coordenadorPrincipalDoDocente,
   formatarData,
   formularioVersaoVigente,
@@ -64,9 +64,9 @@ export const Route = createFileRoute("/portfolio")({
 
 function PortfolioPage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  const { mesociclo, config } = cicloAtivo(estado);
-  const etapa = etapaDePortfolio(estado);
-  const campos = reflexoesConfiguradas(estado);
+  const { mesociclo, config } = cicloDoDocente(estado, pessoaAtiva.id);
+  const etapa = etapaDePortfolio(estado, pessoaAtiva.id);
+  const campos = reflexoesConfiguradas(estado, pessoaAtiva.id);
   const salvo = portfolioDoDocente(estado, pessoaAtiva.id);
   const itens = itensDoCiclo(estado, pessoaAtiva.id);
   const conquistas = conquistasDoDocente(estado, pessoaAtiva.id);

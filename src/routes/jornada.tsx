@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useStore } from "@/data/store";
 import {
-  cicloConfigAtivo,
+  cicloDaTurma,
   formatarData,
   tipoParticipacaoDaPessoa,
 } from "@/lib/ciclo";
@@ -67,7 +67,7 @@ function JornadaPage() {
   const turmaDoDocente = inscricao
     ? estado.turmas.find((t) => t.id === inscricao.turmaId)
     : undefined;
-  const config = cicloConfigAtivo(estado);
+  const { config } = cicloDaTurma(estado, turmaDoDocente);
   const temaDoDocente = inscricao
     ? config.temas.find(
         (m) => m.id === (turmaDoDocente?.temaId ?? inscricao.temaId),

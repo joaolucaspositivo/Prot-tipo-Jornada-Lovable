@@ -18,8 +18,14 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { dimensaoMaisFragil } from "@/data/autoavaliacao";
 import { useStore } from "@/data/store";
-import type { EstadoApp, Tema, TipoParticipacao, Turma } from "@/data/types";
-import { cicloAtivo, cicloConfigAtivo, novoId, temasAtivos } from "@/lib/ciclo";
+import type {
+  CicloConfig,
+  EstadoApp,
+  Tema,
+  TipoParticipacao,
+  Turma,
+} from "@/data/types";
+import { cicloAtivo, cicloDaTurma, novoId, temasAtivos } from "@/lib/ciclo";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/percurso")({
@@ -42,14 +48,22 @@ export const Route = createFileRoute("/percurso")({
 
 function PercursoPage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  const { mesociclo, config } = cicloAtivo(estado);
-  const turmasDoCiclo = estado.turmas.filter(
-    (t) => t.mesocicloId === mesociclo.id,
-  );
+  const { mesociclo } = cicloAtivo(estado);
 
   const inscricao = estado.inscricoes.find(
     (i) => i.pessoaId === pessoaAtiva.id,
   );
+  const turmaInscrita = inscricao
+    ? estado.turmas.find((t) => t.id === inscricao.turmaId)
+    : undefined;
+  // Havendo inscrição, a configuração é sempre a do mesociclo da turma —
+  // nunca a vigente. cicloDaTurma cai na vigente sozinho quando não há
+  // inscrição ainda (escolha inicial).
+  const { config } = cicloDaTurma(estado, turmaInscrita);
+  const turmasDoCiclo = estado.turmas.filter(
+    (t) => t.mesocicloId === (turmaInscrita?.mesocicloId ?? mesociclo.id),
+  );
+
   const [temaEscolhido, setTemaEscolhido] = useState<string | null>(null);
   const [trocando, setTrocando] = useState(false);
   // Campo estruturado de participação (D34) — antes um atributo fixo da
@@ -179,6 +193,7 @@ function PercursoPage() {
     return (
       <div className="mx-auto max-w-3xl space-y-6">
         <Cabecalho
+          config={config}
           tipoParticipacao={tipoParticipacao}
           aoMudarParticipacao={setTipoParticipacao}
         />
@@ -240,6 +255,7 @@ function PercursoPage() {
     return (
       <div className="mx-auto max-w-3xl space-y-6">
         <Cabecalho
+          config={config}
           tipoParticipacao={tipoParticipacao}
           aoMudarParticipacao={setTipoParticipacao}
         />
@@ -291,6 +307,7 @@ function PercursoPage() {
     return (
       <div className="mx-auto max-w-3xl space-y-6">
         <Cabecalho
+          config={config}
           tipoParticipacao={tipoParticipacao}
           aoMudarParticipacao={setTipoParticipacao}
         />
@@ -334,6 +351,7 @@ function PercursoPage() {
   return (
     <div className="space-y-6">
       <Cabecalho
+        config={config}
         tipoParticipacao={tipoParticipacao}
         aoMudarParticipacao={setTipoParticipacao}
       />
@@ -363,14 +381,14 @@ function PercursoPage() {
 }
 
 function Cabecalho({
+  config,
   tipoParticipacao,
   aoMudarParticipacao,
 }: {
+  config: CicloConfig;
   tipoParticipacao: TipoParticipacao;
   aoMudarParticipacao: (v: TipoParticipacao) => void;
 }) {
-  const { estado } = useStore();
-  const config = cicloConfigAtivo(estado);
   return (
     <header className="space-y-3">
       <div className="space-y-1">

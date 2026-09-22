@@ -8,10 +8,19 @@ import type {
   RespostaEnquete,
   TipoRespondente,
 } from "@/data/types";
-import { cicloConfigAtivo, etapasEmOrdem } from "@/lib/ciclo";
+import { cicloConfigAtivo, cicloDoDocente, etapasEmOrdem } from "@/lib/ciclo";
 
-export function etapaDeEnquete(estado: EstadoApp): Etapa | undefined {
-  return etapasEmOrdem(cicloConfigAtivo(estado)).find(
+/**
+ * Etapa da trilha que a Enquete 360° conclui, para UM docente específico —
+ * quem está sendo avaliado, não quem responde. O formulário em si (perguntas
+ * e públicos, abaixo) não é escopado por turma: qualquer um pode responder
+ * sobre qualquer docente, a qualquer momento.
+ */
+export function etapaDeEnquete(
+  estado: EstadoApp,
+  pessoaId: string,
+): Etapa | undefined {
+  return etapasEmOrdem(cicloDoDocente(estado, pessoaId).config).find(
     (e) => e.tela === "enquete",
   );
 }

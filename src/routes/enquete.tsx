@@ -58,7 +58,6 @@ function EnquetePage() {
     [estado.pessoas],
   );
 
-  const etapa = etapaDeEnquete(estado);
   const ehDocente = pessoaAtiva.perfil.startsWith("docente");
 
   const [docenteId, setDocenteId] = useState(
@@ -96,7 +95,9 @@ function EnquetePage() {
         formularioVersaoId: formularioVersaoVigente(anterior, "enquete")?.id,
       };
 
-      // Quando o próprio docente responde, a etapa configurada é concluída.
+      // Quando o próprio docente responde, a etapa configurada é concluída
+      // — a etapa é do CICLO DO DOCENTE avaliado, não da vigente.
+      const etapa = etapaDeEnquete(anterior, docenteId);
       const concluiEtapa = etapa && publicoId === publicos[0]?.id && docenteId;
       const progressoEtapas =
         concluiEtapa && etapa

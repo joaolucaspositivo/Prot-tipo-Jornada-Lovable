@@ -23,8 +23,7 @@ import { Label } from "@/components/ui/label";
 import { useStore } from "@/data/store";
 import type { EstadoApp } from "@/data/types";
 import {
-  cicloAtivo,
-  cicloConfigAtivo,
+  cicloDoDocente,
   formatarData,
   novoId,
   prazoDaEtapa,
@@ -73,7 +72,7 @@ interface ArquivoSimulado {
 
 function EntregaPage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  const etapas = etapasDeEntrega(estado);
+  const etapas = etapasDeEntrega(estado, pessoaAtiva.id);
   const [etapaId, setEtapaId] = useState<string>(etapas[0]?.id ?? "");
   const etapa = etapas.find((e) => e.id === etapaId) ?? etapas[0];
 
@@ -104,8 +103,8 @@ function EntregaPage() {
   const [editando, setEditando] = useState(!entrega);
 
   const janela = useMemo(
-    () => (etapa ? janelaDaAula(estado, etapa) : null),
-    [estado, etapa],
+    () => (etapa ? janelaDaAula(estado, pessoaAtiva.id, etapa) : null),
+    [estado, pessoaAtiva.id, etapa],
   );
 
   if (!etapa || !janela) {
@@ -196,8 +195,10 @@ function EntregaPage() {
           ];
 
       // A data informada entra automaticamente na agenda de quem observa.
-      const etapaEncontro = cicloConfigAtivo(anterior)
-        .etapas.filter((e) => e.tipo === "encontro" && e.ordem > etapa!.ordem)
+      const etapaEncontro = cicloDoDocente(anterior, pessoaAtiva.id)
+        .config.etapas.filter(
+          (e) => e.tipo === "encontro" && e.ordem > etapa!.ordem,
+        )
         .sort((a, b) => a.ordem - b.ordem)[0];
       const responsavelId =
         destino.tipo === "coordenador"
@@ -269,7 +270,7 @@ function EntregaPage() {
     );
   }
 
-  const { mesociclo, config } = cicloAtivo(estado);
+  const { mesociclo, config } = cicloDoDocente(estado, pessoaAtiva.id);
   const prazo = prazoDaEtapa(mesociclo.dataInicio, config, etapa);
   const progresso = estado.progressoEtapas.find(
     (p) => p.pessoaId === pessoaAtiva.id && p.etapaId === etapa.id,

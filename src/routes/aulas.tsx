@@ -35,7 +35,7 @@ import {
 } from "@/lib/avanco";
 import {
   ROTULO_DIA_SEMANA,
-  cicloAtivo,
+  cicloDoDocente,
   formatarData,
   novoId,
   prazoDaEtapa,
@@ -76,7 +76,7 @@ export const Route = createFileRoute("/aulas")({
 
 function AulasPage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  const etapas = etapasDeConteudo(estado);
+  const etapas = etapasDeConteudo(estado, pessoaAtiva.id);
   const [etapaId, setEtapaId] = useState<string>(etapas[0]?.id ?? "");
   const etapa = etapas.find((e) => e.id === etapaId) ?? etapas[0];
 
@@ -424,7 +424,7 @@ function AulasPage() {
     );
   }
 
-  const { mesociclo, config } = cicloAtivo(estado);
+  const { mesociclo, config } = cicloDoDocente(estado, pessoaAtiva.id);
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
