@@ -8,14 +8,16 @@ import type {
   RespostaEnquete,
   TipoRespondente,
 } from "@/data/types";
-import { etapasEmOrdem } from "@/lib/ciclo";
+import { cicloConfigAtivo, etapasEmOrdem } from "@/lib/ciclo";
 
 export function etapaDeEnquete(estado: EstadoApp): Etapa | undefined {
-  return etapasEmOrdem(estado.cicloConfig).find((e) => e.tela === "enquete");
+  return etapasEmOrdem(cicloConfigAtivo(estado)).find(
+    (e) => e.tela === "enquete",
+  );
 }
 
 export function publicosDaEnquete(estado: EstadoApp): TipoRespondente[] {
-  return estado.cicloConfig.enquete.respondentes;
+  return cicloConfigAtivo(estado).enquete.respondentes;
 }
 
 /** Perguntas visíveis para um público, na ordem configurada. */
@@ -23,7 +25,7 @@ export function perguntasDoPublico(
   estado: EstadoApp,
   respondenteTipoId: string,
 ): PerguntaEnquete[] {
-  return [...estado.cicloConfig.enquete.perguntas]
+  return [...cicloConfigAtivo(estado).enquete.perguntas]
     .filter(
       (p) =>
         p.respondentes.length === 0 ||
@@ -70,7 +72,7 @@ export function resumoDaEnquete(
     : estado.respostasEnquete;
   const publicos = publicosDaEnquete(estado);
 
-  return [...estado.cicloConfig.enquete.perguntas]
+  return [...cicloConfigAtivo(estado).enquete.perguntas]
     .sort((a, b) => a.ordem - b.ordem)
     .map((pergunta) => {
       const notas = base

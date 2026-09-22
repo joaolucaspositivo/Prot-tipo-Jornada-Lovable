@@ -7,12 +7,40 @@ import type {
   Etapa,
   FaseCanonica,
   FormularioVersao,
+  Mesociclo,
   Pessoa,
   TelaEtapa,
   Tema,
   TipoEtapa,
   TipoParticipacao,
+  Turma,
 } from "@/data/types";
+
+/**
+ * Ciclo vigente: quem decide é a operadora, via `Macrociclo.mesocicloVigenteId`
+ * (tela de macrociclo) — não é calculado por data. Enquanto não houver um
+ * jeito de saber em qual mesociclo um docente específico está (depende de
+ * `Inscricao` ganhar essa informação, fora desta sessão), toda leitura fora
+ * da tela de configuração usa o vigente.
+ */
+export function cicloAtivo(estado: EstadoApp): {
+  mesociclo: Mesociclo;
+  config: CicloConfig;
+} {
+  const macrociclo = estado.macrociclos[0]!;
+  const mesociclo =
+    estado.mesociclos.find((m) => m.id === macrociclo.mesocicloVigenteId) ??
+    estado.mesociclos[0]!;
+  const config =
+    estado.cicloConfigs.find((c) => c.mesocicloId === mesociclo.id) ??
+    estado.cicloConfigs[0]!;
+  return { mesociclo, config };
+}
+
+/** Atalho para quem só precisa da config do ciclo vigente, sem a data. */
+export function cicloConfigAtivo(estado: EstadoApp): CicloConfig {
+  return cicloAtivo(estado).config;
+}
 
 export const ROTULO_TIPO_ETAPA: Record<TipoEtapa, string> = {
   escolha: "Escolha de tema e turma",
@@ -96,20 +124,24 @@ export function temasAtivos(config: CicloConfig): Tema[] {
 
 /**
  * Data limite de uma etapa. Encadeada (D38): cada etapa conta seus
- * `prazoDias` a partir do vencimento da etapa anterior, começando de
- * `dataInicioCiclo` — não mais um deslocamento fixo desde a abertura.
+ * `prazoDias` a partir do vencimento da etapa anterior, começando da
+ * `dataInicio` do MESOCICLO (D39) — não mais de um ciclo único.
  */
-export function prazoDaEtapa(config: CicloConfig, etapa: Etapa): Date {
+export function prazoDaEtapa(
+  dataInicio: string,
+  config: CicloConfig,
+  etapa: Etapa,
+): Date {
   const ordenadas = etapasEmOrdem(config);
-  let data = new Date(config.dataInicioCiclo);
+  let data = new Date(dataInicio);
   for (const e of ordenadas) {
     data = new Date(data);
     data.setDate(data.getDate() + e.prazoDias);
     if (e.id === etapa.id) return data;
   }
   // Etapa fora da lista configurada (não deveria acontecer): mesma conta,
-  // isolada, a partir do início do ciclo.
-  const isolado = new Date(config.dataInicioCiclo);
+  // isolada, a partir do início do mesociclo.
+  const isolado = new Date(dataInicio);
   isolado.setDate(isolado.getDate() + etapa.prazoDias);
   return isolado;
 }
@@ -222,9 +254,15 @@ export function docentesDaTurma(estado: EstadoApp, turmaId: string) {
   return estado.pessoas.filter((p) => idsInscritos.has(p.id));
 }
 
-/** Se um passo do modo guiado da Configuração do Ciclo está travado. */
-export function passoGuiadoTravado(estado: EstadoApp, passo: string): boolean {
-  const config = estado.cicloConfig;
+/**
+ * Se um passo do modo guiado da Configuração de ciclos está travado.
+ * Recebe a `CicloConfig` do mesociclo em edição — não necessariamente o
+ * vigente: a operadora pode estar configurando um ciclo futuro.
+ */
+export function passoGuiadoTravado(
+  config: CicloConfig,
+  passo: string,
+): boolean {
   if (passo === "modalidades") return temasAtivos(config).length === 0;
   if (passo === "turmas") {
     return (
@@ -248,15 +286,24 @@ export interface ResumoConferenciaCiclo {
   ofertasVazias: number;
 }
 
-/** Resumo do ciclo para o passo de Conferência do modo guiado (3.4). */
+/**
+ * Resumo do ciclo para o passo de Conferência do modo guiado (3.4).
+ * Recebe a `CicloConfig` do mesociclo em edição e as turmas já filtradas
+ * para esse mesociclo — nada aqui deve vir do vigente por padrão.
+ */
 export function resumoConferenciaCiclo(
   estado: EstadoApp,
+  config: CicloConfig,
+  turmas: Turma[],
 ): ResumoConferenciaCiclo {
-  const config = estado.cicloConfig;
   const etapasEmOrdem = [...config.etapas]
     .sort((a, b) => a.ordem - b.ordem)
     .map((e) => e.nome);
 
+  const idsEtapasDoMesociclo = new Set(config.etapas.map((e) => e.id));
+  const ofertasDoMesociclo = estado.ofertas.filter((o) =>
+    idsEtapasDoMesociclo.has(o.etapaId),
+  );
   const itensPorOferta = new Map<string, number>();
   for (const item of estado.itensConteudo) {
     itensPorOferta.set(
@@ -266,7 +313,7 @@ export function resumoConferenciaCiclo(
   }
   let ofertasComConteudo = 0;
   let ofertasVazias = 0;
-  for (const oferta of estado.ofertas) {
+  for (const oferta of ofertasDoMesociclo) {
     if ((itensPorOferta.get(oferta.id) ?? 0) > 0) ofertasComConteudo += 1;
     else ofertasVazias += 1;
   }
@@ -274,8 +321,8 @@ export function resumoConferenciaCiclo(
   return {
     temasAtivos: temasAtivos(config).length,
     modalidadesAtivas: config.modalidades.filter((m) => m.ativa).length,
-    totalTurmas: estado.turmas.length,
-    totalVagas: estado.turmas.reduce((soma, t) => soma + t.vagas, 0),
+    totalTurmas: turmas.length,
+    totalVagas: turmas.reduce((soma, t) => soma + t.vagas, 0),
     etapasEmOrdem,
     ofertasComConteudo,
     ofertasVazias,
@@ -297,4 +344,36 @@ export function reindexar<T extends { ordem: number }>(itens: T[]): T[] {
 
 export function novoId(prefixo: string): string {
   return `${prefixo}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/**
+ * `CicloConfig` de um mesociclo recém-criado: nasce vazia, igual ao ciclo
+ * 2028 do seed. `temas` é copiado de uma config existente do mesmo
+ * macrociclo — é o campo transitório (ver comentário em `CicloConfig.temas`,
+ * types.ts), não uma escolha nova; todo o resto começa do zero mesmo.
+ */
+export function novaCicloConfigVazia(
+  mesocicloId: string,
+  temas: Tema[],
+): CicloConfig {
+  return {
+    id: novoId("ciclo"),
+    mesocicloId,
+    nome: "",
+    descricao: "",
+    periodo: "",
+    temas,
+    modalidades: [],
+    etapas: [],
+    subtipos: [],
+    conquistas: [],
+    reflexoesPortfolio: [],
+    dimensoesAutoavaliacao: [],
+    enquete: {
+      titulo: "Enquete 360°",
+      instrucao: "",
+      respondentes: [],
+      perguntas: [],
+    },
+  };
 }

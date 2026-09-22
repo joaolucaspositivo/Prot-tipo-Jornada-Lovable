@@ -34,7 +34,7 @@ const ICONE_TIPO: Record<TipoEtapa, typeof BookOpen> = {
 
 /** Pré-visualização da trilha exatamente como o docente a verá. */
 export function PreviaTrilha() {
-  const { config } = useCicloConfig();
+  const { config, mesociclo } = useCicloConfig();
   const etapas = etapasEmOrdem(config);
   const temas = temasAtivos(config);
 
@@ -80,7 +80,9 @@ export function PreviaTrilha() {
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {ROTULO_TIPO_ETAPA[etapa.tipo]} · até{" "}
-                  {formatarData(prazoDaEtapa(config, etapa))}
+                  {formatarData(
+                    prazoDaEtapa(mesociclo.dataInicio, config, etapa),
+                  )}
                 </p>
                 {etapa.descricao ? (
                   <p className="mt-1 text-sm text-muted-foreground">

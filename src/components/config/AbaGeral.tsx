@@ -6,7 +6,7 @@ import { useCicloConfig } from "./comum";
 
 /** Nome, descrição e data de início da jornada — antes de tudo (D27, D38). */
 export function AbaGeral() {
-  const { config, salvarConfig } = useCicloConfig();
+  const { config, salvarConfig, mesociclo, salvarMesociclo } = useCicloConfig();
 
   return (
     <div className="max-w-xl space-y-5">
@@ -40,12 +40,12 @@ export function AbaGeral() {
         <Input
           id="geral-inicio"
           type="date"
-          value={config.dataInicioCiclo.slice(0, 10)}
+          value={mesociclo.dataInicio.slice(0, 10)}
           onChange={(e) => {
             if (!e.target.value) return;
-            salvarConfig((c) => ({
-              ...c,
-              dataInicioCiclo: new Date(
+            salvarMesociclo((m) => ({
+              ...m,
+              dataInicio: new Date(
                 `${e.target.value}T00:00:00.000Z`,
               ).toISOString(),
             }));

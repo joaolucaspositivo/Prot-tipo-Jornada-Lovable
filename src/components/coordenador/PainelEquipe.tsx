@@ -23,7 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useStore } from "@/data/store";
-import { formatarData, novoId } from "@/lib/ciclo";
+import { cicloConfigAtivo, formatarData, novoId } from "@/lib/ciclo";
 import {
   ROTULO_SITUACAO,
   contadores,
@@ -42,6 +42,7 @@ export function PainelEquipe({
   escopo: "coordenador" | "operadora" | "diretor" | "moderador";
 }) {
   const { estado, pessoaAtiva, atualizar } = useStore();
+  const config = cicloConfigAtivo(estado);
 
   const linhas = useMemo(
     () =>
@@ -158,7 +159,7 @@ export function PainelEquipe({
           rotulo="Etapa"
           valor={fEtapa}
           aoMudar={setFEtapa}
-          opcoes={[...estado.cicloConfig.etapas]
+          opcoes={[...config.etapas]
             .sort((a, b) => a.ordem - b.ordem)
             .map((e) => ({ valor: e.id, rotulo: e.nome }))}
         />
@@ -180,7 +181,7 @@ export function PainelEquipe({
           rotulo="Macrotema"
           valor={fTema}
           aoMudar={setFTema}
-          opcoes={estado.cicloConfig.temas.map((m) => ({
+          opcoes={config.temas.map((m) => ({
             valor: m.nome,
             rotulo: m.nome,
           }))}

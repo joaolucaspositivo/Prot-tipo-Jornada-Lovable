@@ -119,8 +119,7 @@ function referenciaDriveParaMidia(
 }
 
 export function AbaConteudo() {
-  const { estado, pessoaAtiva, atualizar } = useCicloConfig();
-  const config = estado.cicloConfig;
+  const { estado, pessoaAtiva, atualizar, config } = useCicloConfig();
 
   const etapasConteudo = [...config.etapas]
     .filter((e) => e.tipo === "conteudo")

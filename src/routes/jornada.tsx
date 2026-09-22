@@ -9,7 +9,11 @@ import { EstadoBadge } from "@/components/EstadoBadge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useStore } from "@/data/store";
-import { formatarData, tipoParticipacaoDaPessoa } from "@/lib/ciclo";
+import {
+  cicloConfigAtivo,
+  formatarData,
+  tipoParticipacaoDaPessoa,
+} from "@/lib/ciclo";
 import {
   conquistasDoDocente,
   progressoDaTrilha,
@@ -63,8 +67,9 @@ function JornadaPage() {
   const turmaDoDocente = inscricao
     ? estado.turmas.find((t) => t.id === inscricao.turmaId)
     : undefined;
+  const config = cicloConfigAtivo(estado);
   const temaDoDocente = inscricao
-    ? estado.cicloConfig.temas.find(
+    ? config.temas.find(
         (m) => m.id === (turmaDoDocente?.temaId ?? inscricao.temaId),
       )
     : undefined;
@@ -77,7 +82,7 @@ function JornadaPage() {
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-        {estado.cicloConfig.descricao} · {estado.cicloConfig.periodo}
+        {config.descricao} · {config.periodo}
       </p>
       {inscricao && (
         <p className="text-sm text-muted-foreground">

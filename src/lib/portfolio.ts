@@ -7,16 +7,16 @@ import type {
   PerguntaReflexao,
   Portfolio,
 } from "@/data/types";
-import { etapasEmOrdem } from "@/lib/ciclo";
+import { cicloConfigAtivo, etapasEmOrdem } from "@/lib/ciclo";
 
 /** Etapa de portfólio, resolvida em runtime (nunca fixa no código). */
 export function etapaDePortfolio(estado: EstadoApp): Etapa | undefined {
-  const etapas = etapasEmOrdem(estado.cicloConfig);
+  const etapas = etapasEmOrdem(cicloConfigAtivo(estado));
   return etapas.find((e) => e.tela === "portfolio");
 }
 
 export function reflexoesConfiguradas(estado: EstadoApp): PerguntaReflexao[] {
-  return [...estado.cicloConfig.reflexoesPortfolio].sort(
+  return [...cicloConfigAtivo(estado).reflexoesPortfolio].sort(
     (a, b) => a.ordem - b.ordem,
   );
 }
@@ -42,12 +42,11 @@ export function itensDoCiclo(
   estado: EstadoApp,
   pessoaId: string,
 ): ItemDoCiclo[] {
+  const config = cicloConfigAtivo(estado);
   return estado.entregas
     .filter((e) => e.pessoaId === pessoaId)
     .map((entrega) => {
-      const etapa = estado.cicloConfig.etapas.find(
-        (e) => e.id === entrega.etapaId,
-      );
+      const etapa = config.etapas.find((e) => e.id === entrega.etapaId);
       const dev = estado.devolutivas.find((d) => d.entregaId === entrega.id);
       const autor = dev
         ? estado.pessoas.find((p) => p.id === dev.autorId)?.nome
@@ -69,8 +68,8 @@ export function conquistasDoDocente(
   estado: EstadoApp,
   pessoaId: string,
 ): string[] {
-  return estado.cicloConfig.conquistas
-    .filter((c) =>
+  return cicloConfigAtivo(estado)
+    .conquistas.filter((c) =>
       estado.progressoEtapas.some(
         (p) =>
           p.pessoaId === pessoaId &&

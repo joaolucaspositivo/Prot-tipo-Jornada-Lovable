@@ -266,14 +266,50 @@ export type FormularioVersao =
       criadaEmISO: string;
     };
 
+/**
+ * A jornada inteira, 2027–2030 (D39/D40) — nunca aparece na interface,
+ * é vocabulário de equipe. `mesocicloVigenteId` é a única fonte de qual
+ * ciclo está rodando agora: a operadora declara, o sistema não calcula
+ * por data (decisão explícita — "vigente" é informação de negócio).
+ */
+export interface Macrociclo {
+  id: string;
+  nome: string;
+  descricao: string;
+  mesocicloVigenteId: string;
+}
+
+/**
+ * Cada ano dentro do macrociclo (D39) — também vocabulário de equipe, nunca
+ * na interface ("ciclo" é o termo exibido). `dataInicio` é a única fonte do
+ * encadeamento de prazos das etapas (D38); `CicloConfig` não guarda mais
+ * essa data, para não duplicar o mesmo valor em dois lugares.
+ */
+export interface Mesociclo {
+  id: string;
+  macrocicloId: string;
+  nome: string;
+  dataInicio: string;
+  /** fases obrigatórias do funil agregado (D59) — schema só; painel bloqueado até a validação do cliente (Pacote 6) */
+  fasesObrigatorias: FaseCanonica[];
+}
+
 export interface CicloConfig {
   id: string;
+  /** mesociclo ao qual esta configuração pertence — cada mesociclo tem a sua, isolada das demais */
+  mesocicloId: string;
   nome: string;
   /** descrição livre da jornada, ex. "Jornada 2027 a 2030" (D27) */
   descricao: string;
   periodo: string;
-  /** data de início do ciclo — base do encadeamento de prazos (D38) */
-  dataInicioCiclo: string;
+  /**
+   * TRANSITÓRIO (Pacote 1, sessão 1): ainda duplicado entre os mesociclos
+   * do mesmo macrociclo — cada CicloConfig tem o seu próprio array, com o
+   * mesmo conteúdo. Isso é andaime, não modelo: a sessão 2 move `temas`
+   * para `Macrociclo` (D40) e o mesociclo passa a apenas herdar. Não
+   * construa nada em cima do fato de que hoje existem "temas por ciclo" —
+   * essa duplicação não é uma regra, é um efeito colateral temporário.
+   */
   temas: Tema[];
   modalidades: Modalidade[];
   etapas: Etapa[];
@@ -299,6 +335,8 @@ export interface Pessoa {
 
 export interface Turma {
   id: string;
+  /** mesociclo ao qual a turma pertence (D39) */
+  mesocicloId: string;
   nome: string;
   temaId: string;
   modalidadeId: string;
@@ -649,7 +687,10 @@ export interface EstadoApp {
   versao: number;
   perfilAtivo: PerfilId;
   pessoaAtivaId: string;
-  cicloConfig: CicloConfig;
+  macrociclos: Macrociclo[];
+  mesociclos: Mesociclo[];
+  /** uma por mesociclo — nunca lida direto, sempre por `cicloAtivo`/`cicloConfigAtivo` (lib/ciclo.ts) */
+  cicloConfigs: CicloConfig[];
   pessoas: Pessoa[];
   turmas: Turma[];
   inscricoes: Inscricao[];

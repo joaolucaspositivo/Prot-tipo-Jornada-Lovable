@@ -24,7 +24,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useStore } from "@/data/store";
 import type { Etapa } from "@/data/types";
-import { ROTULO_TIPO_ETAPA, formatarData, novoId } from "@/lib/ciclo";
+import {
+  ROTULO_TIPO_ETAPA,
+  cicloConfigAtivo,
+  formatarData,
+  novoId,
+} from "@/lib/ciclo";
 import { formatarDataHora } from "@/lib/conteudo";
 import { ROTULO_STATUS_ENTREGA, formatarTamanho } from "@/lib/entrega";
 import type { LinhaEquipe } from "@/lib/equipe";
@@ -73,7 +78,7 @@ export function DetalheDocente({
 
   const entrega = linha.entrega;
   const etapaEntrega = entrega
-    ? estado.cicloConfig.etapas.find((e) => e.id === entrega.etapaId)
+    ? cicloConfigAtivo(estado).etapas.find((e) => e.id === entrega.etapaId)
     : undefined;
   const opcoes = pareceresDaEtapa(etapaEntrega);
   const historico = etapaEntrega

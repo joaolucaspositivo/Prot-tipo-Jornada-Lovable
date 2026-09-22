@@ -1,5 +1,6 @@
 import type { EstadoApp, Notificacao, Pessoa } from "@/data/types";
 
+import { cicloConfigAtivo } from "./ciclo";
 import { linhasDaEquipe } from "./equipe";
 import { trilhaDoDocente } from "./jornada";
 import { compromissosDeObservacao, pendentesDoCoordenador } from "./observacao";
@@ -34,12 +35,13 @@ function derivadas(
   agora: Date,
 ): Notificacao[] {
   const lista: Notificacao[] = [];
+  const config = cicloConfigAtivo(estado);
 
   if (pessoa.perfil === "docente") {
     estado.progressoEtapas
       .filter((p) => p.pessoaId === pessoa.id && p.status === "concluida")
       .forEach((p) => {
-        const etapa = estado.cicloConfig.etapas.find((e) => e.id === p.etapaId);
+        const etapa = config.etapas.find((e) => e.id === p.etapaId);
         if (!etapa) return;
         lista.push({
           id: `der-etapa-${pessoa.id}-${etapa.id}`,

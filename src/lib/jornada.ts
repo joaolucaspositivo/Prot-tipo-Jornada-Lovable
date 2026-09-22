@@ -28,6 +28,8 @@ import {
   ofertaDoDocente,
 } from "@/lib/avanco";
 import {
+  cicloAtivo,
+  cicloConfigAtivo,
   etapasEmOrdem,
   prazoDaEtapa,
   tipoParticipacaoDaPessoa,
@@ -123,7 +125,7 @@ export function trilhaDoDocente(
   pessoa: Pessoa,
   agora: Date = new Date(),
 ): ItemTrilha[] {
-  const config = estado.cicloConfig;
+  const { mesociclo, config } = cicloAtivo(estado);
   const tipoParticipacao = tipoParticipacaoDaPessoa(estado, pessoa.id);
   // Vazio = a etapa vale para todo tipo de participação (D34).
   const etapas = etapasEmOrdem(config).filter(
@@ -139,7 +141,7 @@ export function trilhaDoDocente(
     const progresso = estado.progressoEtapas.find(
       (p) => p.pessoaId === pessoa.id && p.etapaId === etapa.id,
     );
-    const prazo = prazoDaEtapa(config, etapa);
+    const prazo = prazoDaEtapa(mesociclo.dataInicio, config, etapa);
 
     // Etapa de conteúdo com oferta configurada conclui pelos critérios de
     // avanço OU pelo ProgressoEtapa gravado — nunca só pelos critérios: o
@@ -224,10 +226,9 @@ export function conquistasDoDocente(
   estado: EstadoApp,
   pessoa: Pessoa,
 ): ConquistaTrilha[] {
-  return estado.cicloConfig.conquistas.map((conquista) => {
-    const etapa = estado.cicloConfig.etapas.find(
-      (e) => e.id === conquista.etapaId,
-    );
+  const config = cicloConfigAtivo(estado);
+  return config.conquistas.map((conquista) => {
+    const etapa = config.etapas.find((e) => e.id === conquista.etapaId);
     const conquistada = estado.progressoEtapas.some(
       (p) =>
         p.pessoaId === pessoa.id &&

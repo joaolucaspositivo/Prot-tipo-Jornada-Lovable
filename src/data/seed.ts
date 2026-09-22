@@ -16,6 +16,8 @@ import type {
   HistoricoTema,
   Inscricao,
   ItemConteudo,
+  Macrociclo,
+  Mesociclo,
   Midia,
   Notificacao,
   Observacao,
@@ -37,10 +39,44 @@ import type {
 // deste arquivo já usam "tema"; o texto literal do seed (nome/descrição
 // exibidos ao docente) continua dizendo "macrotema" até o Pacote 1, que é
 // quem faz a varredura de rótulo de interface.
-export const VERSAO_ESTADO = 9;
+export const VERSAO_ESTADO = 10;
 export const CHAVE_STORAGE = "jornada-prototipo-v1";
 
 const ABERTURA = "2027-02-08T00:00:00.000Z";
+const ABERTURA_MESOCICLO_2028 = "2028-02-07T00:00:00.000Z";
+
+const MACROCICLO_ID = "macro-1";
+const MESOCICLO_2027_ID = "meso-2027";
+const MESOCICLO_2028_ID = "meso-2028";
+
+// Pacote 1, sessão 1: macrociclo e mesociclo nascem aqui. "Vigente" é
+// declarado pela operadora (Macrociclo.mesocicloVigenteId), não calculado
+// por data — 2027 é o vigente porque é o que já roda na demonstração.
+export const macrociclosSeed: Macrociclo[] = [
+  {
+    id: MACROCICLO_ID,
+    nome: "Jornada 2027–2030",
+    descricao: "Trilha formativa de quatro anos do Grupo Positivo.",
+    mesocicloVigenteId: MESOCICLO_2027_ID,
+  },
+];
+
+export const mesociclosSeed: Mesociclo[] = [
+  {
+    id: MESOCICLO_2027_ID,
+    macrocicloId: MACROCICLO_ID,
+    nome: "2027",
+    dataInicio: ABERTURA,
+    fasesObrigatorias: [],
+  },
+  {
+    id: MESOCICLO_2028_ID,
+    macrocicloId: MACROCICLO_ID,
+    nome: "2028",
+    dataInicio: ABERTURA_MESOCICLO_2028,
+    fasesObrigatorias: [],
+  },
+];
 
 const alertaPadrao = {
   diasAntes: 3,
@@ -405,11 +441,11 @@ const dimensoesAutoavaliacaoSeed: DimensaoAutoavaliacao[] = [
 ];
 
 export const cicloConfigSeed: CicloConfig = {
-  id: "ciclo-2",
+  id: "ciclo-2027",
+  mesocicloId: MESOCICLO_2027_ID,
   nome: "Ciclo 2",
   descricao: "Jornada 2027 a 2030",
   periodo: "2027–2030",
-  dataInicioCiclo: ABERTURA,
   temas: temasSeed,
   modalidades: modalidadesSeed,
   etapas: etapasSeed,
@@ -534,6 +570,37 @@ export const cicloConfigSeed: CicloConfig = {
     ],
   },
 };
+
+// Ciclo 2028: nasce vazio (item 8, Pacote 1 sessão 1) — a operadora
+// configura do zero, isolado do 2027. `temas` ainda é copiado de
+// `temasSeed` só porque o campo é transitório (ver comentário em
+// `CicloConfig.temas`, types.ts) — sai na sessão 2, quando migra para o
+// Macrociclo.
+export const cicloConfig2028Seed: CicloConfig = {
+  id: "ciclo-2028",
+  mesocicloId: MESOCICLO_2028_ID,
+  nome: "Ciclo 3",
+  descricao: "",
+  periodo: "2028",
+  temas: temasSeed,
+  modalidades: [],
+  etapas: [],
+  subtipos: [],
+  conquistas: [],
+  reflexoesPortfolio: [],
+  dimensoesAutoavaliacao: [],
+  enquete: {
+    titulo: "Enquete 360°",
+    instrucao: "",
+    respondentes: [],
+    perguntas: [],
+  },
+};
+
+export const cicloConfigsSeed: CicloConfig[] = [
+  cicloConfigSeed,
+  cicloConfig2028Seed,
+];
 
 // Snapshot congelado (D53): a primeira versão do conjunto de perguntas de
 // cada "formulário", gerada a partir do próprio cicloConfigSeed. Sem tela
@@ -751,6 +818,7 @@ export const turmasSeed: Turma[] = temasSeed.flatMap((tema, i) =>
     const horarios = sincrona ? horariosSincronos : horariosAssincronos;
     return horarios.map((h, k) => ({
       id: `turma-${i + 1}-${j + 1}-${k + 1}`,
+      mesocicloId: MESOCICLO_2027_ID,
       nome: `${tema.nome.split("—")[0]!.trim()} · ${mod.nome} · ${h.sufixo}`,
       temaId: tema.id,
       modalidadeId: mod.id,
@@ -1457,7 +1525,9 @@ export function criarEstadoInicial(): EstadoApp {
     versao: VERSAO_ESTADO,
     perfilAtivo: "docente-regente",
     pessoaAtivaId: "doc-1",
-    cicloConfig: cicloConfigSeed,
+    macrociclos: macrociclosSeed,
+    mesociclos: mesociclosSeed,
+    cicloConfigs: cicloConfigsSeed,
     pessoas: pessoasSeed,
     turmas: derivado.turmas,
     inscricoes: derivado.inscricoes,

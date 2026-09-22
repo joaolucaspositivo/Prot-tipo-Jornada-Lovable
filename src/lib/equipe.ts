@@ -9,7 +9,7 @@ import type {
   Pessoa,
   TipoParticipacao,
 } from "@/data/types";
-import { prazoDaEtapa } from "@/lib/ciclo";
+import { cicloAtivo, cicloConfigAtivo, prazoDaEtapa } from "@/lib/ciclo";
 import {
   progressoDaTrilha,
   proximaEtapa,
@@ -66,6 +66,7 @@ export function linhaDoDocente(
   pessoa: Pessoa,
   agora: Date = new Date(),
 ): LinhaEquipe {
+  const { mesociclo, config: configDoCiclo } = cicloAtivo(estado);
   const trilha = trilhaDoDocente(estado, pessoa, agora);
   const { concluidas, total, percentual } = progressoDaTrilha(trilha);
   const atual = proximaEtapa(trilha);
@@ -111,7 +112,7 @@ export function linhaDoDocente(
 
   const inscricao = estado.inscricoes.find((i) => i.pessoaId === pessoa.id);
   const turma = estado.turmas.find((t) => t.id === inscricao?.turmaId);
-  const temaNome = estado.cicloConfig.temas.find(
+  const temaNome = cicloConfigAtivo(estado).temas.find(
     (m) => m.id === (turma?.temaId ?? inscricao?.temaId),
   )?.nome;
   const tipoParticipacao: TipoParticipacao =
@@ -135,7 +136,11 @@ export function linhaDoDocente(
     prazoMaisProximo: atual
       ? atual.prazo
       : trilha.length
-        ? prazoDaEtapa(estado.cicloConfig, trilha[trilha.length - 1]!.etapa)
+        ? prazoDaEtapa(
+            mesociclo.dataInicio,
+            configDoCiclo,
+            trilha[trilha.length - 1]!.etapa,
+          )
         : undefined,
     situacao,
     diasAtraso,

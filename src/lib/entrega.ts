@@ -9,6 +9,8 @@ import type {
   Pessoa,
 } from "@/data/types";
 import {
+  cicloAtivo,
+  cicloConfigAtivo,
   coordenadoresDoDocente,
   coordenadorPrincipalDoDocente,
   etapasEmOrdem,
@@ -20,7 +22,9 @@ export const DESTINO_EQUIPE_CENTRAL = "equipe-central";
 
 /** Etapas de entrega, na ordem configurada. */
 export function etapasDeEntrega(estado: EstadoApp): Etapa[] {
-  return etapasEmOrdem(estado.cicloConfig).filter((e) => e.tipo === "entrega");
+  return etapasEmOrdem(cicloConfigAtivo(estado)).filter(
+    (e) => e.tipo === "entrega",
+  );
 }
 
 export interface DestinoEntrega {
@@ -59,16 +63,19 @@ export function destinoDaEntrega(
 
 /** Janela válida para a data da aula a ser observada. */
 export function janelaDaAula(estado: EstadoApp, etapa: Etapa) {
-  const config = estado.cicloConfig;
+  const { mesociclo, config } = cicloAtivo(estado);
   const seguintes = etapasEmOrdem(config).filter(
     (e) => e.ordem > etapa.ordem && e.tipo === "encontro",
   );
   const fim = seguintes[0]
-    ? prazoDaEtapa(config, seguintes[0])
-    : new Date(prazoDaEtapa(config, etapa).getTime() + 30 * 86400000);
+    ? prazoDaEtapa(mesociclo.dataInicio, config, seguintes[0])
+    : new Date(
+        prazoDaEtapa(mesociclo.dataInicio, config, etapa).getTime() +
+          30 * 86400000,
+      );
   const hoje = new Date();
   const inicio = new Date(
-    Math.max(hoje.getTime(), new Date(config.dataInicioCiclo).getTime()),
+    Math.max(hoje.getTime(), new Date(mesociclo.dataInicio).getTime()),
   );
   return { inicio, fim };
 }
@@ -127,11 +134,12 @@ export function entregasRecebidas(
   estado: EstadoApp,
   filtro: { coordenadorId?: string; apenasEquipeCentral?: boolean } = {},
 ): EntregaRecebida[] {
+  const config = cicloConfigAtivo(estado);
   return estado.entregas
     .map((entrega) => ({
       entrega,
       docente: estado.pessoas.find((p) => p.id === entrega.pessoaId),
-      etapa: estado.cicloConfig.etapas.find((e) => e.id === entrega.etapaId),
+      etapa: config.etapas.find((e) => e.id === entrega.etapaId),
       devolutiva: estado.devolutivas.find((d) => d.entregaId === entrega.id),
     }))
     .filter((item) => {

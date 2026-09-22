@@ -42,13 +42,12 @@ import { ROTULO_DIA_SEMANA, novoId, usoDaTurma } from "@/lib/ciclo";
 
 const TODOS = "todos";
 
-type DadosTurma = Omit<Turma, "id" | "vagasOcupadas">;
+type DadosTurma = Omit<Turma, "id" | "vagasOcupadas" | "mesocicloId">;
 
 export function AbaTurmas() {
-  const { estado, atualizar } = useCicloConfig();
+  const { estado, atualizar, config, mesociclo } = useCicloConfig();
   const { confirmar, dialogo } = useAvisoImpacto();
-  const config = estado.cicloConfig;
-  const turmas = estado.turmas;
+  const turmas = estado.turmas.filter((t) => t.mesocicloId === mesociclo.id);
 
   const [dialogoAberto, setDialogoAberto] = useState(false);
   const [turmaEmEdicaoId, setTurmaEmEdicaoId] = useState<string | null>(null);
@@ -63,7 +62,13 @@ export function AbaTurmas() {
   const [fHorario, setFHorario] = useState(TODOS);
 
   const gravar = (lista: Turma[]) =>
-    atualizar((anterior) => ({ ...anterior, turmas: lista }));
+    atualizar((anterior) => ({
+      ...anterior,
+      turmas: [
+        ...anterior.turmas.filter((t) => t.mesocicloId !== mesociclo.id),
+        ...lista,
+      ],
+    }));
 
   const editar = (id: string, mudanca: Partial<Turma>) =>
     gravar(turmas.map((t) => (t.id === id ? { ...t, ...mudanca } : t)));
@@ -137,7 +142,15 @@ export function AbaTurmas() {
       editar(turmaEmEdicao.id, dados);
     } else {
       // Nova turma no topo da lista — ordem decrescente de criação.
-      gravar([{ id: novoId("turma"), vagasOcupadas: 0, ...dados }, ...turmas]);
+      gravar([
+        {
+          id: novoId("turma"),
+          mesocicloId: mesociclo.id,
+          vagasOcupadas: 0,
+          ...dados,
+        },
+        ...turmas,
+      ]);
     }
     setDialogoAberto(false);
   }

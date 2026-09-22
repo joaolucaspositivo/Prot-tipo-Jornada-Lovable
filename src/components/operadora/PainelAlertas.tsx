@@ -5,14 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStore } from "@/data/store";
-import { ROTULO_TIPO_ETAPA } from "@/lib/ciclo";
+import { ROTULO_TIPO_ETAPA, cicloConfigAtivo } from "@/lib/ciclo";
 import { formatarDataHora } from "@/lib/conteudo";
 import { alertasDisparados } from "@/lib/gestao";
 
 /** O que está configurado, o que já disparou e para quem. */
 export function PainelAlertas() {
   const { estado } = useStore();
-  const etapas = [...estado.cicloConfig.etapas].sort(
+  const etapas = [...cicloConfigAtivo(estado).etapas].sort(
     (a, b) => a.ordem - b.ordem,
   );
   const historico = alertasDisparados(estado);

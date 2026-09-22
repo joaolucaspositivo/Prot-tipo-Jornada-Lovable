@@ -6,8 +6,8 @@ import {
   Lock,
 } from "lucide-react";
 
+import { useCicloConfig } from "./comum";
 import { Button } from "@/components/ui/button";
-import type { EstadoApp } from "@/data/types";
 import { resumoConferenciaCiclo } from "@/lib/ciclo";
 
 /** As 8 abas, na ordem de dependência (3.3), mais o passo de síntese final. */
@@ -147,8 +147,10 @@ export function CabecalhoModoGuiado({
 }
 
 /** Passo final do modo guiado: resumo do ciclo, sem edição. */
-export function ResumoConferencia({ estado }: { estado: EstadoApp }) {
-  const resumo = resumoConferenciaCiclo(estado);
+export function ResumoConferencia() {
+  const { estado, config, mesociclo } = useCicloConfig();
+  const turmas = estado.turmas.filter((t) => t.mesocicloId === mesociclo.id);
+  const resumo = resumoConferenciaCiclo(estado, config, turmas);
 
   return (
     <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">

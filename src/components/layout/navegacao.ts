@@ -68,7 +68,7 @@ export const NAVEGACAO_POR_PERFIL: Record<PerfilId, ItemNav[]> = {
   operadora: [
     {
       para: "/configuracao",
-      rotulo: "Configuração do Ciclo",
+      rotulo: "Configuração de ciclos",
       Icone: Settings2,
     },
     { para: "/gestao", rotulo: "Gestão do ciclo", Icone: Gauge },

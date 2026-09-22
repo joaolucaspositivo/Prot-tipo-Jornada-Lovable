@@ -35,6 +35,7 @@ import {
 } from "@/lib/avanco";
 import {
   ROTULO_DIA_SEMANA,
+  cicloAtivo,
   formatarData,
   novoId,
   prazoDaEtapa,
@@ -423,10 +424,12 @@ function AulasPage() {
     );
   }
 
+  const { mesociclo, config } = cicloAtivo(estado);
+
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-        {estado.cicloConfig.descricao} · {estado.cicloConfig.periodo}
+        {config.descricao} · {config.periodo}
       </p>
       <h1 className="mt-1 text-2xl sm:text-3xl">{etapa.nome}</h1>
       <p className="mt-1 text-muted-foreground">{etapa.descricao}</p>
@@ -434,7 +437,8 @@ function AulasPage() {
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <EstadoBadge status={progresso?.status ?? "nao_iniciada"} />
         <Badge variant="outline">
-          Prazo: {formatarData(prazoDaEtapa(estado.cicloConfig, etapa))}
+          Prazo:{" "}
+          {formatarData(prazoDaEtapa(mesociclo.dataInicio, config, etapa))}
         </Badge>
         {turma && <Badge variant="outline">{turma.nome}</Badge>}
         {modalidade && <Badge variant="outline">{modalidade.nome}</Badge>}

@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useStore } from "@/data/store";
-import { tipoParticipacaoDaPessoa } from "@/lib/ciclo";
+import { cicloConfigAtivo, tipoParticipacaoDaPessoa } from "@/lib/ciclo";
 
 export const Route = createFileRoute("/acesso")({
   head: () => ({
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/acesso")({
 function AcessoPage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
   const navigate = useNavigate();
-  const config = estado.cicloConfig;
+  const config = cicloConfigAtivo(estado);
 
   const docentes = estado.pessoas.filter((p) => p.perfil === "docente");
 

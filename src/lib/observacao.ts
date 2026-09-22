@@ -10,7 +10,11 @@ import type {
   Tema,
   Turma,
 } from "@/data/types";
-import { coordenadoresDoDocente, etapasEmOrdem } from "@/lib/ciclo";
+import {
+  cicloConfigAtivo,
+  coordenadoresDoDocente,
+  etapasEmOrdem,
+} from "@/lib/ciclo";
 import { DESTINO_EQUIPE_CENTRAL } from "@/lib/entrega";
 
 /** Critérios observáveis do parecer, com escala curta e explícita. */
@@ -56,7 +60,7 @@ export function etapaDeObservacao(
   estado: EstadoApp,
   etapaEntrega: Etapa | undefined,
 ): Etapa | undefined {
-  const etapas = etapasEmOrdem(estado.cicloConfig).filter(
+  const etapas = etapasEmOrdem(cicloConfigAtivo(estado)).filter(
     (e) => e.tipo === "encontro",
   );
   if (!etapaEntrega) return etapas[0];
@@ -79,20 +83,19 @@ export function compromissosDeObservacao(
   filtro: { coordenadorId?: string; todos?: boolean } = {},
 ): Compromisso[] {
   const agora = new Date();
+  const config = cicloConfigAtivo(estado);
 
   return estado.entregas
     .filter((e) => Boolean(e.dataAulaISO))
     .map((entrega): Compromisso => {
       const docente = estado.pessoas.find((p) => p.id === entrega.pessoaId);
-      const etapaEntrega = estado.cicloConfig.etapas.find(
-        (e) => e.id === entrega.etapaId,
-      );
+      const etapaEntrega = config.etapas.find((e) => e.id === entrega.etapaId);
       const etapaObservacao = etapaDeObservacao(estado, etapaEntrega);
       const inscricao = estado.inscricoes.find(
         (i) => i.pessoaId === entrega.pessoaId,
       );
       const turma = estado.turmas.find((t) => t.id === inscricao?.turmaId);
-      const tema = estado.cicloConfig.temas.find(
+      const tema = config.temas.find(
         (m) => m.id === (inscricao?.temaId ?? turma?.temaId),
       );
       const observacao = estado.observacoes.find(

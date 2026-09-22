@@ -24,7 +24,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useStore } from "@/data/store";
 import type { Presenca, Turma } from "@/data/types";
-import { docentesDaTurma, novoId } from "@/lib/ciclo";
+import { cicloConfigAtivo, docentesDaTurma, novoId } from "@/lib/ciclo";
 import { ocupacaoDasTurmas } from "@/lib/gestao";
 
 export function OcupacaoTurmas() {
@@ -125,6 +125,11 @@ export function OcupacaoTurmas() {
 /** Exportado: o moderador (D33) reaproveita o mesmo lançamento de presença. */
 export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
   const { estado, pessoaAtiva, atualizar } = useStore();
+  // Config do PRÓPRIO mesociclo da turma — quem chama esta tela (moderador,
+  // gestão) pode estar olhando uma turma de qualquer ciclo, não só o vigente.
+  const config =
+    estado.cicloConfigs.find((c) => c.mesocicloId === turma.mesocicloId) ??
+    cicloConfigAtivo(estado);
   const ofertasDaTurma = estado.ofertas.filter(
     (o) => o.temaId === turma.temaId && o.modalidadeId === turma.modalidadeId,
   );
@@ -133,7 +138,7 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
   const etapaId = ofertasDaTurma.some((o) => o.etapaId === etapaIdBruto)
     ? etapaIdBruto
     : (ofertasDaTurma[0]?.etapaId ?? "");
-  const etapa = estado.cicloConfig.etapas.find((e) => e.id === etapaId);
+  const etapa = config.etapas.find((e) => e.id === etapaId);
 
   const [encontro, setEncontro] = useState(1);
   const [justificandoId, setJustificandoId] = useState<string | null>(null);
@@ -236,9 +241,7 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
               </SelectTrigger>
               <SelectContent>
                 {ofertasDaTurma.map((o) => {
-                  const e = estado.cicloConfig.etapas.find(
-                    (x) => x.id === o.etapaId,
-                  );
+                  const e = config.etapas.find((x) => x.id === o.etapaId);
                   return (
                     <SelectItem key={o.etapaId} value={o.etapaId}>
                       {e?.nome ?? o.etapaId}

@@ -19,7 +19,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { dimensaoMaisFragil } from "@/data/autoavaliacao";
 import { useStore } from "@/data/store";
 import type { EstadoApp, Tema, TipoParticipacao, Turma } from "@/data/types";
-import { novoId, temasAtivos } from "@/lib/ciclo";
+import { cicloAtivo, cicloConfigAtivo, novoId, temasAtivos } from "@/lib/ciclo";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/percurso")({
@@ -42,7 +42,10 @@ export const Route = createFileRoute("/percurso")({
 
 function PercursoPage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  const config = estado.cicloConfig;
+  const { mesociclo, config } = cicloAtivo(estado);
+  const turmasDoCiclo = estado.turmas.filter(
+    (t) => t.mesocicloId === mesociclo.id,
+  );
 
   const inscricao = estado.inscricoes.find(
     (i) => i.pessoaId === pessoaAtiva.id,
@@ -227,7 +230,7 @@ function PercursoPage() {
   // ---- troca de turma dentro da mesma modalidade ----
   if (inscricao && trocando) {
     const turmaAtual = estado.turmas.find((t) => t.id === inscricao.turmaId);
-    const opcoes = estado.turmas.filter(
+    const opcoes = turmasDoCiclo.filter(
       (t) =>
         t.temaId === inscricao.temaId &&
         t.modalidadeId === turmaAtual?.modalidadeId &&
@@ -283,7 +286,7 @@ function PercursoPage() {
   // ---- passo 2: turmas do tema escolhido ----
   if (temaEscolhido) {
     const tema = ativos.find((m) => m.id === temaEscolhido);
-    const turmas = estado.turmas.filter((t) => t.temaId === temaEscolhido);
+    const turmas = turmasDoCiclo.filter((t) => t.temaId === temaEscolhido);
 
     return (
       <div className="mx-auto max-w-3xl space-y-6">
@@ -367,11 +370,12 @@ function Cabecalho({
   aoMudarParticipacao: (v: TipoParticipacao) => void;
 }) {
   const { estado } = useStore();
+  const config = cicloConfigAtivo(estado);
   return (
     <header className="space-y-3">
       <div className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {estado.cicloConfig.descricao} · {estado.cicloConfig.periodo}
+          {config.descricao} · {config.periodo}
         </p>
         <h1 className="text-3xl">Escolha do seu percurso</h1>
         <p className="text-muted-foreground">

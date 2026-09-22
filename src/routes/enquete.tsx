@@ -19,7 +19,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useStore } from "@/data/store";
 import type { EstadoApp } from "@/data/types";
-import { formularioVersaoVigente, novoId } from "@/lib/ciclo";
+import { cicloConfigAtivo, formularioVersaoVigente, novoId } from "@/lib/ciclo";
 import {
   etapaDeEnquete,
   perguntasDoPublico,
@@ -51,7 +51,7 @@ export const Route = createFileRoute("/enquete")({
 
 function EnquetePage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  const config = estado.cicloConfig.enquete;
+  const config = cicloConfigAtivo(estado).enquete;
   const publicos = publicosDaEnquete(estado);
   const docentes = useMemo(
     () => estado.pessoas.filter((p) => p.perfil.startsWith("docente")),

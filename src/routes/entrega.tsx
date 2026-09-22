@@ -22,7 +22,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useStore } from "@/data/store";
 import type { EstadoApp } from "@/data/types";
-import { formatarData, novoId, prazoDaEtapa } from "@/lib/ciclo";
+import {
+  cicloAtivo,
+  cicloConfigAtivo,
+  formatarData,
+  novoId,
+  prazoDaEtapa,
+} from "@/lib/ciclo";
 import { formatarDataHora, percursoDoDocente } from "@/lib/conteudo";
 import {
   DESTINO_EQUIPE_CENTRAL,
@@ -190,8 +196,8 @@ function EntregaPage() {
           ];
 
       // A data informada entra automaticamente na agenda de quem observa.
-      const etapaEncontro = anterior.cicloConfig.etapas
-        .filter((e) => e.tipo === "encontro" && e.ordem > etapa!.ordem)
+      const etapaEncontro = cicloConfigAtivo(anterior)
+        .etapas.filter((e) => e.tipo === "encontro" && e.ordem > etapa!.ordem)
         .sort((a, b) => a.ordem - b.ordem)[0];
       const responsavelId =
         destino.tipo === "coordenador"
@@ -263,7 +269,8 @@ function EntregaPage() {
     );
   }
 
-  const prazo = prazoDaEtapa(estado.cicloConfig, etapa);
+  const { mesociclo, config } = cicloAtivo(estado);
+  const prazo = prazoDaEtapa(mesociclo.dataInicio, config, etapa);
   const progresso = estado.progressoEtapas.find(
     (p) => p.pessoaId === pessoaAtiva.id && p.etapaId === etapa.id,
   );
@@ -271,7 +278,7 @@ function EntregaPage() {
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">
-        {estado.cicloConfig.descricao} · {estado.cicloConfig.periodo}
+        {config.descricao} · {config.periodo}
       </p>
       <h1 className="mt-1 text-2xl sm:text-3xl">{etapa.nome}</h1>
       <p className="mt-1 text-muted-foreground">{etapa.descricao}</p>

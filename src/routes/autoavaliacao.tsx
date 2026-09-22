@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calcularDimensoes } from "@/data/autoavaliacao";
 import { useStore } from "@/data/store";
 import type { Autoavaliacao, EstadoApp } from "@/data/types";
-import { formularioVersaoVigente, novoId } from "@/lib/ciclo";
+import { cicloConfigAtivo, formularioVersaoVigente, novoId } from "@/lib/ciclo";
 
 export const Route = createFileRoute("/autoavaliacao")({
   head: () => ({
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/autoavaliacao")({
 
 function AutoavaliacaoPage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  const config = estado.cicloConfig;
+  const config = cicloConfigAtivo(estado);
 
   const etapa = [...config.etapas]
     .sort((a, b) => a.ordem - b.ordem)

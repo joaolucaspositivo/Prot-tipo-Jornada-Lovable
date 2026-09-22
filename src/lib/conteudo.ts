@@ -2,11 +2,17 @@
 // presença vêm sempre da configuração do ciclo e da inscrição do docente.
 
 import type { EstadoApp, Etapa, Modalidade, Pessoa, Turma } from "@/data/types";
-import { coordenadoresDoDocente, etapasEmOrdem } from "@/lib/ciclo";
+import {
+  cicloConfigAtivo,
+  coordenadoresDoDocente,
+  etapasEmOrdem,
+} from "@/lib/ciclo";
 
 /** Etapas de conteúdo, na ordem configurada. */
 export function etapasDeConteudo(estado: EstadoApp): Etapa[] {
-  return etapasEmOrdem(estado.cicloConfig).filter((e) => e.tipo === "conteudo");
+  return etapasEmOrdem(cicloConfigAtivo(estado)).filter(
+    (e) => e.tipo === "conteudo",
+  );
 }
 
 export interface PercursoDoDocente {
@@ -23,13 +29,14 @@ export function percursoDoDocente(
   estado: EstadoApp,
   pessoa: Pessoa,
 ): PercursoDoDocente {
+  const config = cicloConfigAtivo(estado);
   const inscricao = estado.inscricoes.find((i) => i.pessoaId === pessoa.id);
   const turma = estado.turmas.find((t) => t.id === inscricao?.turmaId);
   const temaId = turma?.temaId ?? inscricao?.temaId;
-  const modalidade = estado.cicloConfig.modalidades.find(
+  const modalidade = config.modalidades.find(
     (m) => m.id === turma?.modalidadeId,
   );
-  const temaNome = estado.cicloConfig.temas.find((m) => m.id === temaId)?.nome;
+  const temaNome = config.temas.find((m) => m.id === temaId)?.nome;
   return {
     turma,
     modalidade,
@@ -98,6 +105,7 @@ export function presencasAutomaticas(
   estado: EstadoApp,
   filtro?: { coordenadorId?: string | undefined },
 ): RegistroPresenca[] {
+  const config = cicloConfigAtivo(estado);
   return estado.progressoEtapas
     .filter((p) => Boolean(p.presencaEmISO))
     .map((p) => {
@@ -108,9 +116,9 @@ export function presencasAutomaticas(
       const turma = estado.turmas.find((t) => t.id === inscricao?.turmaId);
       return {
         pessoa,
-        etapa: estado.cicloConfig.etapas.find((e) => e.id === p.etapaId),
+        etapa: config.etapas.find((e) => e.id === p.etapaId),
         turma,
-        modalidade: estado.cicloConfig.modalidades.find(
+        modalidade: config.modalidades.find(
           (m) => m.id === turma?.modalidadeId,
         ),
         quandoISO: p.presencaEmISO!,

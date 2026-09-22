@@ -3,7 +3,7 @@
 // tudo é derivado da configuração em runtime e do estado persistido.
 
 import type { EstadoApp, Etapa, Modalidade, Pessoa, Turma } from "@/data/types";
-import { etapasEmOrdem } from "@/lib/ciclo";
+import { cicloConfigAtivo, etapasEmOrdem } from "@/lib/ciclo";
 import type { LinhaEquipe } from "@/lib/equipe";
 
 export interface FiltroGestao {
@@ -38,7 +38,7 @@ export function funilDeEtapas(
   estado: EstadoApp,
   linhas: LinhaEquipe[],
 ): PassoFunil[] {
-  const etapas = etapasEmOrdem(estado.cicloConfig);
+  const etapas = etapasEmOrdem(cicloConfigAtivo(estado));
   return etapas.map((etapa) => {
     let concluidas = 0;
     let emAndamento = 0;
@@ -134,6 +134,7 @@ export function conferencias(
   estado: EstadoApp,
   linhas: LinhaEquipe[],
 ): Conferencia[] {
+  const config = cicloConfigAtivo(estado);
   const semInscricao: ItemConferencia[] = [];
   const semTarefa: ItemConferencia[] = [];
   const semPresenca: ItemConferencia[] = [];
@@ -174,9 +175,7 @@ export function conferencias(
 
     entregas.forEach((entrega) => {
       const dev = estado.devolutivas.find((d) => d.entregaId === entrega.id);
-      const etapa = estado.cicloConfig.etapas.find(
-        (e) => e.id === entrega.etapaId,
-      );
+      const etapa = config.etapas.find((e) => e.id === entrega.etapaId);
       if (!dev) {
         semDevolutiva.push({
           pessoa: l.pessoa,
@@ -246,13 +245,18 @@ export interface OcupacaoTurma {
 export function ocupacaoDasTurmas(estado: EstadoApp): OcupacaoTurma[] {
   return estado.turmas.map((turma) => {
     const livres = Math.max(0, turma.vagas - turma.vagasOcupadas);
-    const modalidade = estado.cicloConfig.modalidades.find(
+    // Cada turma resolve pela config do PRÓPRIO mesociclo — não pela do
+    // ciclo vigente, porque esta lista mostra turmas de todos os ciclos.
+    const config =
+      estado.cicloConfigs.find((c) => c.mesocicloId === turma.mesocicloId) ??
+      cicloConfigAtivo(estado);
+    const modalidade = config.modalidades.find(
       (m) => m.id === turma.modalidadeId,
     );
     return {
       turma,
       temaNome:
-        estado.cicloConfig.temas.find((m) => m.id === turma.temaId)?.nome ??
+        config.temas.find((m) => m.id === turma.temaId)?.nome ??
         "Macrotema removido",
       modalidadeNome: modalidade?.nome ?? "Modalidade removida",
       modalidade,

@@ -4,7 +4,13 @@ import {
   ChevronUp,
   TriangleAlert,
 } from "lucide-react";
-import { useCallback, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  type ReactNode,
+} from "react";
 
 import {
   AlertDialog,
@@ -18,26 +24,76 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/data/store";
-import type { CicloConfig } from "@/data/types";
+import type { CicloConfig, Mesociclo } from "@/data/types";
 
-/** Lê e grava a configuração do ciclo (persistida em localStorage pelo store). */
+/**
+ * Qual mesociclo a tela de Configuração de ciclos está editando agora —
+ * não é o mesmo conceito de "ciclo vigente" (`cicloAtivo`, lib/ciclo.ts).
+ * A operadora pode configurar um ciclo futuro sem que ele esteja rodando.
+ */
+const MesocicloEmEdicaoCtx = createContext<string | null>(null);
+
+export function MesocicloEmEdicaoProvider({
+  mesocicloId,
+  children,
+}: {
+  mesocicloId: string;
+  children: ReactNode;
+}) {
+  return (
+    <MesocicloEmEdicaoCtx.Provider value={mesocicloId}>
+      {children}
+    </MesocicloEmEdicaoCtx.Provider>
+  );
+}
+
+/** Lê e grava a configuração do mesociclo em edição (persistida em localStorage pelo store). */
 export function useCicloConfig() {
   const { estado, atualizar, pessoaAtiva } = useStore();
+  const mesocicloId = useContext(MesocicloEmEdicaoCtx);
+  if (!mesocicloId) {
+    throw new Error(
+      "useCicloConfig precisa estar dentro de MesocicloEmEdicaoProvider",
+    );
+  }
+
+  const config =
+    estado.cicloConfigs.find((c) => c.mesocicloId === mesocicloId) ??
+    estado.cicloConfigs[0]!;
+  const mesociclo =
+    estado.mesociclos.find((m) => m.id === mesocicloId) ??
+    estado.mesociclos[0]!;
 
   const salvarConfig = useCallback(
     (mudanca: (c: CicloConfig) => CicloConfig) => {
       atualizar((anterior) => ({
         ...anterior,
-        cicloConfig: mudanca(anterior.cicloConfig),
+        cicloConfigs: anterior.cicloConfigs.map((c) =>
+          c.mesocicloId === mesocicloId ? mudanca(c) : c,
+        ),
       }));
     },
-    [atualizar],
+    [atualizar, mesocicloId],
+  );
+
+  const salvarMesociclo = useCallback(
+    (mudanca: (m: Mesociclo) => Mesociclo) => {
+      atualizar((anterior) => ({
+        ...anterior,
+        mesociclos: anterior.mesociclos.map((m) =>
+          m.id === mesocicloId ? mudanca(m) : m,
+        ),
+      }));
+    },
+    [atualizar, mesocicloId],
   );
 
   return {
     estado,
-    config: estado.cicloConfig,
+    config,
+    mesociclo,
     salvarConfig,
+    salvarMesociclo,
     atualizar,
     pessoaAtiva,
   };

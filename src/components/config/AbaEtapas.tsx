@@ -53,7 +53,7 @@ const ROTULO_PARTICIPACAO: Record<TipoParticipacao, string> = {
 const TIPOS_PARTICIPACAO: TipoParticipacao[] = ["regente", "corregente"];
 
 export function AbaEtapas() {
-  const { estado, config, salvarConfig } = useCicloConfig();
+  const { estado, config, salvarConfig, mesociclo } = useCicloConfig();
   const { confirmar, dialogo } = useAvisoImpacto();
   const [subtipoParaCriar, setSubtipoParaCriar] = useState<Etapa | null>(null);
 
@@ -294,7 +294,10 @@ export function AbaEtapas() {
                       className="h-10"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Vence em {formatarData(prazoDaEtapa(config, etapa))}
+                      Vence em{" "}
+                      {formatarData(
+                        prazoDaEtapa(mesociclo.dataInicio, config, etapa),
+                      )}
                     </p>
                   </div>
                   <div className="space-y-1.5">

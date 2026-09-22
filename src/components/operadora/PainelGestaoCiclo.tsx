@@ -23,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useStore } from "@/data/store";
+import { cicloConfigAtivo } from "@/lib/ciclo";
 import { contadores, linhasDaEquipe } from "@/lib/equipe";
 import {
   aplicarFiltro,
@@ -38,6 +39,7 @@ const TODOS = "todos";
 
 export function PainelGestaoCiclo() {
   const { estado } = useStore();
+  const config = cicloConfigAtivo(estado);
   const linhas = useMemo(() => linhasDaEquipe(estado), [estado]);
 
   const [unidade, setUnidade] = useState(TODOS);
@@ -60,7 +62,7 @@ export function PainelGestaoCiclo() {
 
   function exportar() {
     baixarCSV(
-      `jornada-${estado.cicloConfig.periodo.replace(/\D/g, "")}-docentes.csv`,
+      `jornada-${config.periodo.replace(/\D/g, "")}-docentes.csv`,
       csvDosDocentes(filtradas),
     );
     toast.success(
@@ -83,7 +85,7 @@ export function PainelGestaoCiclo() {
             rotulo="Macrotema"
             valor={tema}
             aoMudar={setTema}
-            opcoes={estado.cicloConfig.temas.map((m) => ({
+            opcoes={config.temas.map((m) => ({
               valor: m.nome,
               rotulo: m.nome,
             }))}
@@ -92,7 +94,7 @@ export function PainelGestaoCiclo() {
             rotulo="Etapa atual"
             valor={etapa}
             aoMudar={setEtapa}
-            opcoes={[...estado.cicloConfig.etapas]
+            opcoes={[...config.etapas]
               .sort((a, b) => a.ordem - b.ordem)
               .map((e) => ({ valor: e.id, rotulo: e.nome }))}
           />

@@ -10,6 +10,7 @@ import { PainelGestaoCiclo } from "@/components/operadora/PainelGestaoCiclo";
 import { ResumoEnquete } from "@/components/enquete/ResumoEnquete";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useStore } from "@/data/store";
+import { cicloConfigAtivo } from "@/lib/ciclo";
 
 export const Route = createFileRoute("/gestao")({
   head: () => ({
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/gestao")({
 
 function GestaoPage() {
   const { estado } = useStore();
-  const config = estado.cicloConfig;
+  const config = cicloConfigAtivo(estado);
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">

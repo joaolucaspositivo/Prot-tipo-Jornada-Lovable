@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/sheet";
 import { ROTULO_PERFIL, useStore } from "@/data/store";
 import type { PerfilId } from "@/data/types";
+import { cicloConfigAtivo } from "@/lib/ciclo";
 import { trilhaDoDocente, type RotaEtapa } from "@/lib/jornada";
 import { cn } from "@/lib/utils";
 
@@ -154,7 +155,7 @@ function BotaoReset() {
 export function AppShell({ children }: { children: ReactNode }) {
   const { estado, pessoaAtiva } = useStore();
   const [menuAberto, setMenuAberto] = useState(false);
-  const ciclo = estado.cicloConfig;
+  const ciclo = cicloConfigAtivo(estado);
 
   return (
     <div className="min-h-screen bg-background">
