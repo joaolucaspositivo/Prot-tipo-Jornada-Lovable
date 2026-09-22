@@ -30,16 +30,13 @@ import type {
   RespostaEnquete,
   Subtipo,
   Tema,
+  TemaNoMesociclo,
   TemaVersao,
   TipoCriterioAvanco,
   Turma,
 } from "./types";
 
-// v3 (D39/D40): "macrotema" saiu do vocabulário — é "tema". Os identificadores
-// deste arquivo já usam "tema"; o texto literal do seed (nome/descrição
-// exibidos ao docente) continua dizendo "macrotema" até o Pacote 1, que é
-// quem faz a varredura de rótulo de interface.
-export const VERSAO_ESTADO = 10;
+export const VERSAO_ESTADO = 11;
 export const CHAVE_STORAGE = "jornada-prototipo-v1";
 
 const ABERTURA = "2027-02-08T00:00:00.000Z";
@@ -85,44 +82,53 @@ const alertaPadrao = {
   alertarDocente: true,
 };
 
+// Do macrociclo (D40): os dois mesociclos do seed (2027, 2028) herdam este
+// mesmo array — nenhum dos dois tem cópia própria (ver `temasDoMesociclo`,
+// lib/ciclo.ts).
 const temasSeed: Tema[] = [
   {
     id: "mt-1",
-    nome: "Macrotema 1 — Planejamento e intencionalidade",
+    nome: "Tema 1 — Planejamento e intencionalidade",
     descricao: "Como o planejamento se conecta às intenções de aprendizagem.",
     dimensaoRelacionada: "planejamento",
   },
   {
     id: "mt-2",
-    nome: "Macrotema 2 — Mediação e engajamento",
+    nome: "Tema 2 — Mediação e engajamento",
     descricao: "Estratégias de mediação que sustentam o engajamento da turma.",
     dimensaoRelacionada: "mediacao",
   },
   {
     id: "mt-3",
-    nome: "Macrotema 3 — Avaliação formativa",
+    nome: "Tema 3 — Avaliação formativa",
     descricao: "Uso da avaliação como instrumento de percurso.",
     dimensaoRelacionada: "avaliacao",
   },
   {
     id: "mt-4",
-    nome: "Macrotema 4 — Cultura de sala e convivência",
+    nome: "Tema 4 — Cultura de sala e convivência",
     descricao: "Clima, combinados e relações na sala de aula.",
     dimensaoRelacionada: "clima",
   },
   {
     id: "mt-5",
-    nome: "Macrotema 5 — Tecnologias na aprendizagem",
+    nome: "Tema 5 — Tecnologias na aprendizagem",
     descricao: "Integração de recursos digitais com propósito pedagógico.",
     dimensaoRelacionada: "planejamento",
   },
   {
     id: "mt-6",
-    nome: "Macrotema 6 — Inclusão e equidade",
+    nome: "Tema 6 — Inclusão e equidade",
     descricao: "Práticas que ampliam o acesso de todos à aprendizagem.",
     dimensaoRelacionada: "clima",
   },
-].map((m, i) => ({ ...m, linhagemId: m.id, ativo: true, ordem: i + 1 }));
+].map((m, i) => ({
+  ...m,
+  macrocicloId: MACROCICLO_ID,
+  linhagemId: m.id,
+  ativo: true,
+  ordem: i + 1,
+}));
 
 // Snapshot congelado (D53/D54): a primeira versão de cada tema, gerada a
 // partir do próprio seed. Nada além do schema — sem tela que crie uma
@@ -137,6 +143,21 @@ const temaVersoesSeed: TemaVersao[] = temasSeed.map((t) => ({
   criadaEmISO: ABERTURA,
   criadaPorId: "oper-1",
 }));
+
+// Carga horária por tema × mesociclo (D56) — mesma carga nos dois
+// mesociclos no ponto de partida; o critério de aceite de dar valores
+// diferentes por ano é uma ação da operadora, não um dado pré-divergente.
+const temasNoMesocicloSeed: TemaNoMesociclo[] = [
+  MESOCICLO_2027_ID,
+  MESOCICLO_2028_ID,
+].flatMap((mesocicloId) =>
+  temasSeed.map((t) => ({
+    id: `tnm-${mesocicloId}-${t.id}`,
+    mesocicloId,
+    temaId: t.id,
+    cargaHoraria: 20,
+  })),
+);
 
 const modalidadesSeed = [
   {
@@ -235,7 +256,7 @@ const etapasSeed: Etapa[] = [
   },
   {
     id: "et-2",
-    nome: "Escolha do macrotema e da turma",
+    nome: "Escolha do tema e da turma",
     descricao: "Escolha o tema do ciclo e garanta sua vaga.",
     tipo: "escolha",
     faseCanonica: "inscricao",
@@ -249,8 +270,8 @@ const etapasSeed: Etapa[] = [
   },
   {
     id: "et-3",
-    nome: "Conteúdo base do macrotema",
-    descricao: "Aulas em vídeo e texto-base do seu macrotema.",
+    nome: "Conteúdo base do tema",
+    descricao: "Aulas em vídeo e texto-base do seu tema.",
     tipo: "conteudo",
     faseCanonica: "formacao",
     ordem: 3,
@@ -265,7 +286,7 @@ const etapasSeed: Etapa[] = [
   {
     id: "et-4",
     nome: "Encontro formativo",
-    descricao: "Encontro com a turma para aprofundar o macrotema.",
+    descricao: "Encontro com a turma para aprofundar o tema.",
     tipo: "encontro",
     faseCanonica: "formacao",
     ordem: 4,
@@ -446,7 +467,6 @@ export const cicloConfigSeed: CicloConfig = {
   nome: "Ciclo 2",
   descricao: "Jornada 2027 a 2030",
   periodo: "2027–2030",
-  temas: temasSeed,
   modalidades: modalidadesSeed,
   etapas: etapasSeed,
   subtipos: subtiposSeed,
@@ -499,7 +519,7 @@ export const cicloConfigSeed: CicloConfig = {
     {
       id: "rf-4",
       pergunta: "O que você leva deste ciclo para o próximo?",
-      ajuda: "Um compromisso concreto para o próximo macrotema.",
+      ajuda: "Um compromisso concreto para o próximo tema.",
       ordem: 4,
     },
   ],
@@ -572,17 +592,14 @@ export const cicloConfigSeed: CicloConfig = {
 };
 
 // Ciclo 2028: nasce vazio (item 8, Pacote 1 sessão 1) — a operadora
-// configura do zero, isolado do 2027. `temas` ainda é copiado de
-// `temasSeed` só porque o campo é transitório (ver comentário em
-// `CicloConfig.temas`, types.ts) — sai na sessão 2, quando migra para o
-// Macrociclo.
+// configura do zero, isolado do 2027. Os temas não são copiados: vêm do
+// macrociclo (D40), o mesmo para os dois mesociclos.
 export const cicloConfig2028Seed: CicloConfig = {
   id: "ciclo-2028",
   mesocicloId: MESOCICLO_2028_ID,
   nome: "Ciclo 3",
   descricao: "",
   periodo: "2028",
-  temas: temasSeed,
   modalidades: [],
   etapas: [],
   subtipos: [],
@@ -875,7 +892,7 @@ function construirProgresso() {
         modalidadeNome: k === 0 ? "Síncrona" : "Assíncrona",
         entregaTitulo: "Planejamento de aula e portfólio",
         entregaResumo:
-          "Sequência didática construída a partir do macrotema, com registro da aula observada.",
+          "Sequência didática construída a partir do tema, com registro da aula observada.",
         devolutivaTexto:
           "Percurso cumprido com consistência. Destaque para o registro das evidências de aprendizagem.",
         devolutivaAutor:
@@ -960,7 +977,7 @@ function construirProgresso() {
         pessoaId: doc.id,
         etapaId: "et-5",
         texto:
-          "Planejamento da sequência didática desenvolvida a partir do macrotema do ciclo.",
+          "Planejamento da sequência didática desenvolvida a partir do tema do ciclo.",
         arquivoNome: "planejamento-aula.pdf",
         arquivoTipo: "application/pdf",
         arquivoTamanho: 248_000,
@@ -990,7 +1007,7 @@ function construirProgresso() {
           pessoaId: doc.id,
           autorId: coordenadorId,
           texto:
-            "Planejamento coerente com o macrotema. Sugiro ampliar as estratégias de mediação na etapa de fechamento.",
+            "Planejamento coerente com o tema. Sugiro ampliar as estratégias de mediação na etapa de fechamento.",
           parecer: "Atende",
           criadaEmISO: dias(88 + (i % 5)),
           cienciaEmISO: i % 3 === 0 ? dias(90 + (i % 5)) : undefined,
@@ -1106,7 +1123,7 @@ function construirConteudoDemonstravel() {
   const midias: Midia[] = [
     {
       id: "midia-mt1-sync-webconf",
-      nome: "Encontro síncrono — Macrotema 1",
+      nome: "Encontro síncrono — Tema 1",
       tipo: "link",
       url: "https://encontro.rede.edu.br/jornada/mt1-sincrona",
       enviadaEmISO: dias(20),
@@ -1239,8 +1256,8 @@ function construirConteudoDemonstravel() {
       id: "item-mt1-sync-webconf",
       ofertaId: "oferta-mt1-sync",
       tipo: "webconferencia",
-      titulo: "Encontro síncrono do macrotema",
-      descricao: "Encontro ao vivo com a turma para o Macrotema 1.",
+      titulo: "Encontro síncrono do tema",
+      descricao: "Encontro ao vivo com a turma para o Tema 1.",
       ordem: 1,
       midiaId: "midia-mt1-sync-webconf",
     },
@@ -1248,7 +1265,7 @@ function construirConteudoDemonstravel() {
       id: "item-mt1-sync-texto",
       ofertaId: "oferta-mt1-sync",
       tipo: "texto",
-      titulo: "Texto-base do macrotema",
+      titulo: "Texto-base do tema",
       descricao: "Leitura de apoio para o encontro síncrono.",
       ordem: 2,
       midiaId: "midia-mt1-sync-texto",
@@ -1303,7 +1320,7 @@ function construirConteudoDemonstravel() {
       id: "item-mt1-async-texto",
       ofertaId: "oferta-mt1-async",
       tipo: "texto",
-      titulo: "Texto-base do macrotema",
+      titulo: "Texto-base do tema",
       descricao: "Leitura de apoio às quatro aulas.",
       ordem: 5,
       midiaId: "midia-mt1-async-texto",
@@ -1322,8 +1339,8 @@ function construirConteudoDemonstravel() {
       id: "item-mt2-sync-texto",
       ofertaId: "oferta-mt2-sync",
       tipo: "texto",
-      titulo: "Texto-base do macrotema",
-      descricao: "Leitura de apoio para o Macrotema 2.",
+      titulo: "Texto-base do tema",
+      descricao: "Leitura de apoio para o Tema 2.",
       ordem: 1,
       midiaId: "midia-mt2-sync-texto",
     },
@@ -1430,7 +1447,7 @@ function construirConteudoDemonstravel() {
       pessoaId: "doc-3",
       autorId: "coord-1",
       texto:
-        "Registro consistente e alinhado ao macrotema. A prática proposta é concreta e viável.",
+        "Registro consistente e alinhado ao tema. A prática proposta é concreta e viável.",
       parecer: "Atende",
       nota: 8,
       criadaEmISO: dias(44),
@@ -1496,7 +1513,7 @@ function construirConteudoDemonstravel() {
     {
       id: "not-antes-doc-6",
       pessoaId: "doc-6",
-      titulo: "Prazo próximo: Conteúdo base do macrotema",
+      titulo: "Prazo próximo: Conteúdo base do tema",
       descricao: "Faltam 3 dias para o prazo desta etapa.",
       criadaEmISO: dias(42),
       lida: false,
@@ -1527,6 +1544,8 @@ export function criarEstadoInicial(): EstadoApp {
     pessoaAtivaId: "doc-1",
     macrociclos: macrociclosSeed,
     mesociclos: mesociclosSeed,
+    temas: temasSeed,
+    temasNoMesociclo: temasNoMesocicloSeed,
     cicloConfigs: cicloConfigsSeed,
     pessoas: pessoasSeed,
     turmas: derivado.turmas,

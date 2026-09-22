@@ -24,7 +24,7 @@ export interface MaterialConteudo {
 }
 
 const textoPadrao: TextoBase = {
-  titulo: "Texto-base do macrotema",
+  titulo: "Texto-base do tema",
   autoria: "Equipe de Desenvolvimento Pedagógico",
   tempoLeituraMin: 9,
   paragrafos: [
@@ -40,17 +40,17 @@ const textoPadrao: TextoBase = {
 const aulasPadrao: AulaConteudo[] = [
   {
     id: "aula-1",
-    titulo: "Abertura: por que este macrotema",
+    titulo: "Abertura: por que este tema",
     resumo:
-      "Apresentação do macrotema, do que se espera do ciclo e de como as etapas se conectam.",
+      "Apresentação do tema, do que se espera do ciclo e de como as etapas se conectam.",
     duracaoMin: 8,
-    arquivoDrive: "drive-institucional/abertura-macrotema.mp4",
+    arquivoDrive: "drive-institucional/abertura-tema.mp4",
   },
   {
     id: "aula-2",
     titulo: "Fundamentos da prática",
     resumo:
-      "Os conceitos centrais do macrotema, com exemplos de sala de aula da própria rede.",
+      "Os conceitos centrais do tema, com exemplos de sala de aula da própria rede.",
     duracaoMin: 17,
     arquivoDrive: "drive-institucional/fundamentos-da-pratica.mp4",
   },
