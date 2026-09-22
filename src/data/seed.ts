@@ -1484,5 +1484,8 @@ export function criarEstadoInicial(): EstadoApp {
     itensConteudo: conteudo.itensConteudo,
     presencas: conteudo.presencas,
     respostasEnquete: construirRespostasEnquete(),
+    // Sem tela que grave auditoria ainda — nasce vazia, como
+    // conclusoes/certificados.
+    auditorias: [],
   };
 }

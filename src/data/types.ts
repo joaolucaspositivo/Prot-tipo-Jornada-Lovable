@@ -466,6 +466,25 @@ export interface Certificado {
   emitidoPorId: string;
 }
 
+/**
+ * Registro de auditoria de uma alteração em algo que afeta histórico (D57
+ * nível 3) — ex.: edição de nome de um tema imutável (D41/D42), campo
+ * cosmético de uma etapa já iniciada. `entidade` é o nome do tipo alterado
+ * (ex. "Tema", "Etapa") e `entidadeId` o registro específico — sem os dois,
+ * a auditoria não diz o que mudou. Só o tipo e o armazenamento nascem
+ * aqui; nenhuma tela escreve nele ainda — quem grava é a tela de edição de
+ * cada entidade protegida, ainda não construída.
+ */
+export interface Auditoria {
+  id: string;
+  entidade: string;
+  entidadeId: string;
+  campo: string;
+  valorAnterior: string;
+  autorId: string;
+  dataISO: string;
+}
+
 /** Aula em vídeo marcada como assistida dentro de uma etapa de conteúdo. */
 export interface ProgressoAula {
   id: string;
@@ -654,4 +673,5 @@ export interface EstadoApp {
   itensConteudo: ItemConteudo[];
   presencas: Presenca[];
   respostasEnquete: RespostaEnquete[];
+  auditorias: Auditoria[];
 }
