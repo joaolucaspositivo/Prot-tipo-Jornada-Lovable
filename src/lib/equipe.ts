@@ -115,8 +115,7 @@ export function linhaDoDocente(
 
   const inscricao = estado.inscricoes.find((i) => i.pessoaId === pessoa.id);
   const turma = estado.turmas.find((t) => t.id === inscricao?.turmaId);
-  // Reaproveita configDoCiclo (já resolvido acima) em vez de buscar de novo.
-  const temaNome = configDoCiclo.temas.find(
+  const temaNome = estado.temas.find(
     (m) => m.id === (turma?.temaId ?? inscricao?.temaId),
   )?.nome;
   const tipoParticipacao: TipoParticipacao =

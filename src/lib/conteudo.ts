@@ -37,7 +37,7 @@ export function percursoDoDocente(
   const modalidade = config.modalidades.find(
     (m) => m.id === turma?.modalidadeId,
   );
-  const temaNome = config.temas.find((m) => m.id === temaId)?.nome;
+  const temaNome = estado.temas.find((m) => m.id === temaId)?.nome;
   return {
     turma,
     modalidade,

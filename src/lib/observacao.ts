@@ -100,7 +100,7 @@ export function compromissosDeObservacao(
       const { config } = cicloDaTurma(estado, turma);
       const etapaEntrega = config.etapas.find((e) => e.id === entrega.etapaId);
       const etapaObservacao = etapaDeObservacao(config, etapaEntrega);
-      const tema = config.temas.find(
+      const tema = estado.temas.find(
         (m) => m.id === (inscricao?.temaId ?? turma?.temaId),
       );
       const observacao = estado.observacoes.find(

@@ -145,7 +145,7 @@ export function conferencias(
     if (!inscricao) {
       semInscricao.push({
         pessoa: l.pessoa,
-        detalhe: "Ainda não escolheu macrotema e turma",
+        detalhe: "Ainda não escolheu tema e turma",
       });
     }
 
@@ -204,7 +204,7 @@ export function conferencias(
     {
       id: "sem_inscricao",
       titulo: "Não se inscreveram",
-      explicacao: "Docentes sem macrotema e turma escolhidos neste ciclo.",
+      explicacao: "Docentes sem tema e turma escolhidos neste ciclo.",
       itens: semInscricao,
     },
     {
@@ -262,8 +262,8 @@ export function ocupacaoDasTurmas(estado: EstadoApp): OcupacaoTurma[] {
     return {
       turma,
       temaNome:
-        config.temas.find((m) => m.id === turma.temaId)?.nome ??
-        "Macrotema removido",
+        estado.temas.find((m) => m.id === turma.temaId)?.nome ??
+        "Tema removido",
       modalidadeNome: modalidade?.nome ?? "Modalidade removida",
       modalidade,
       livres,
@@ -331,7 +331,7 @@ export function csvDosDocentes(linhas: LinhaEquipe[]): string {
     "Matrícula",
     "Unidade",
     "Cargo",
-    "Macrotema",
+    "Tema",
     "Turma",
     "Etapa atual",
     "Progresso (%)",

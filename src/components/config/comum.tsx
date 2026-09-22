@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/data/store";
 import type { CicloConfig, Mesociclo } from "@/data/types";
+import { temasDoMesociclo } from "@/lib/ciclo";
 
 /**
  * Qual mesociclo a tela de Configuração de ciclos está editando agora —
@@ -63,6 +64,8 @@ export function useCicloConfig() {
   const mesociclo =
     estado.mesociclos.find((m) => m.id === mesocicloId) ??
     estado.mesociclos[0]!;
+  // Herdados do macrociclo (D40) — o mesmo conjunto para todo mesociclo dele.
+  const temas = temasDoMesociclo(estado, mesociclo.id);
 
   const salvarConfig = useCallback(
     (mudanca: (c: CicloConfig) => CicloConfig) => {
@@ -92,6 +95,7 @@ export function useCicloConfig() {
     estado,
     config,
     mesociclo,
+    temas,
     salvarConfig,
     salvarMesociclo,
     atualizar,
