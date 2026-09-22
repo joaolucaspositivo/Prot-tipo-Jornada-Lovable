@@ -95,7 +95,7 @@ export function ResultadoAutoavaliacao({
           </CardHeader>
           <CardContent className="flex items-start gap-2 text-sm text-muted-foreground">
             <Sparkles className="mt-0.5 size-4 shrink-0" aria-hidden />
-            Ao escolher seu macrotema, considere um percurso que fortaleça essa
+            Ao escolher seu tema, considere um percurso que fortaleça essa
             dimensão. Este resultado fica guardado na sua trilha.
           </CardContent>
         </Card>

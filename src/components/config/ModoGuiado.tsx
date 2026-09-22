@@ -10,10 +10,14 @@ import { useCicloConfig } from "./comum";
 import { Button } from "@/components/ui/button";
 import { resumoConferenciaCiclo } from "@/lib/ciclo";
 
-/** As 8 abas, na ordem de dependência (3.3), mais o passo de síntese final. */
+/**
+ * As 8 abas, na ordem de dependência (3.3), mais o passo de síntese final.
+ * "temas" vem primeiro: é a peça do macrociclo, definida antes de configurar
+ * qualquer ciclo específico — a ordem real de trabalho da operadora.
+ */
 export const PASSOS_GUIADOS = [
-  "geral",
   "temas",
+  "geral",
   "modalidades",
   "turmas",
   "etapas",
@@ -27,7 +31,7 @@ export type PassoGuiado = (typeof PASSOS_GUIADOS)[number];
 
 export const TITULO_PASSO_GUIADO: Record<PassoGuiado, string> = {
   geral: "Geral",
-  temas: "Macrotemas",
+  temas: "Temas",
   modalidades: "Modalidades",
   turmas: "Turmas",
   etapas: "Etapas da trilha",
@@ -165,7 +169,7 @@ export function ResumoConferencia() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-border p-3">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Macrotemas ativos
+            Temas ativos
           </p>
           <p className="text-2xl font-semibold">{resumo.temasAtivos}</p>
         </div>

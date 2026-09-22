@@ -25,7 +25,13 @@ import type {
   TipoParticipacao,
   Turma,
 } from "@/data/types";
-import { cicloAtivo, cicloDaTurma, novoId, temasAtivos } from "@/lib/ciclo";
+import {
+  cicloAtivo,
+  cicloDaTurma,
+  novoId,
+  temasAtivos,
+  temasDoMesociclo,
+} from "@/lib/ciclo";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/percurso")({
@@ -34,12 +40,12 @@ export const Route = createFileRoute("/percurso")({
       { title: "Escolha do percurso — Jornada Pedagógica de Desenvolvimento" },
       {
         name: "description",
-        content: "Escolha de macrotema, modalidade e turma com autoinscrição.",
+        content: "Escolha de tema, modalidade e turma com autoinscrição.",
       },
       { property: "og:title", content: "Escolha do percurso da jornada" },
       {
         property: "og:description",
-        content: "Escolha de macrotema, modalidade e turma com autoinscrição.",
+        content: "Escolha de tema, modalidade e turma com autoinscrição.",
       },
     ],
   }),
@@ -72,7 +78,7 @@ function PercursoPage() {
     inscricao?.tipoParticipacao ?? "regente",
   );
 
-  const ativos = temasAtivos(config);
+  const ativos = temasAtivos(temasDoMesociclo(estado, config.mesocicloId));
   const historico = estado.historicoTemas.filter(
     (h) => h.pessoaId === pessoaAtiva.id,
   );
@@ -185,7 +191,7 @@ function PercursoPage() {
   // ---- já inscrito ----
   if (inscricao && !trocando) {
     const turma = estado.turmas.find((t) => t.id === inscricao.turmaId);
-    const tema = config.temas.find((m) => m.id === inscricao.temaId);
+    const tema = estado.temas.find((m) => m.id === inscricao.temaId);
     const modalidade = config.modalidades.find(
       (m) => m.id === turma?.modalidadeId,
     );
@@ -212,7 +218,7 @@ function PercursoPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <dl className="grid gap-3 sm:grid-cols-2">
-              <Resumo rotulo="Macrotema" valor={tema?.nome ?? "—"} />
+              <Resumo rotulo="Tema" valor={tema?.nome ?? "—"} />
               <Resumo rotulo="Turma" valor={turma?.nome ?? "—"} />
               <Resumo rotulo="Modalidade" valor={modalidade?.nome ?? "—"} />
               <Resumo
@@ -276,7 +282,7 @@ function PercursoPage() {
         {opcoes.length === 0 ? (
           <Card>
             <CardContent className="py-6 text-muted-foreground">
-              Não há outra turma desta modalidade neste macrotema.
+              Não há outra turma desta modalidade neste tema.
             </CardContent>
           </Card>
         ) : (
@@ -313,7 +319,7 @@ function PercursoPage() {
         />
         <Button variant="ghost" onClick={() => setTemaEscolhido(null)}>
           <ArrowLeft className="size-4" aria-hidden />
-          Trocar de macrotema
+          Trocar de tema
         </Button>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -324,7 +330,7 @@ function PercursoPage() {
         {turmas.length === 0 ? (
           <Card>
             <CardContent className="py-6 text-muted-foreground">
-              Ainda não há turmas abertas para este macrotema.
+              Ainda não há turmas abertas para este tema.
             </CardContent>
           </Card>
         ) : (
@@ -347,7 +353,7 @@ function PercursoPage() {
     );
   }
 
-  // ---- passo 1: macrotemas ----
+  // ---- passo 1: temas ----
   return (
     <div className="space-y-6">
       <Cabecalho
@@ -356,11 +362,11 @@ function PercursoPage() {
         aoMudarParticipacao={setTipoParticipacao}
       />
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Passo 1 de 2 · Escolha do macrotema
+        Passo 1 de 2 · Escolha do tema
       </p>
       <div className="grid gap-4 md:grid-cols-2">
         {ativos.map((m) => (
-          <CardMacrotema
+          <CardTema
             key={m.id}
             tema={m}
             bloqueio={cumprido(m.id)}
@@ -372,7 +378,7 @@ function PercursoPage() {
       {ativos.length === 0 && (
         <Card>
           <CardContent className="py-6 text-muted-foreground">
-            Nenhum macrotema ativo na configuração desta jornada.
+            Nenhum tema ativo na configuração desta jornada.
           </CardContent>
         </Card>
       )}
@@ -423,7 +429,7 @@ function Cabecalho({
   );
 }
 
-function CardMacrotema({
+function CardTema({
   tema,
   bloqueio,
   sugerido,
@@ -461,12 +467,12 @@ function CardMacrotema({
       <CardContent>
         {bloqueio ? (
           <p className="text-sm text-muted-foreground">
-            Você concluiu este macrotema no {bloqueio.ciclo}, em {bloqueio.ano}.
-            Por isso ele não pode ser escolhido de novo.
+            Você concluiu este tema no {bloqueio.ciclo}, em {bloqueio.ano}. Por
+            isso ele não pode ser escolhido de novo.
           </p>
         ) : (
           <Button className="w-full" onClick={aoEscolher}>
-            Escolher este macrotema
+            Escolher este tema
           </Button>
         )}
       </CardContent>

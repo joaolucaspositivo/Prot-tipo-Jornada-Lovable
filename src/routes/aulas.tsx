@@ -112,7 +112,7 @@ function AulasPage() {
     (feitas.size / Math.max(1, material.aulas.length)) * 100,
   );
 
-  // Oferta configurada pela operadora para a combinação (etapa, macrotema,
+  // Oferta configurada pela operadora para a combinação (etapa, tema,
   // modalidade) do docente. Sem oferta, a tela segue no comportamento
   // anterior (material mock acima, três abas fixas) — "acrescida, não
   // redesenhada".

@@ -45,7 +45,7 @@ const TODOS = "todos";
 type DadosTurma = Omit<Turma, "id" | "vagasOcupadas" | "mesocicloId">;
 
 export function AbaTurmas() {
-  const { estado, atualizar, config, mesociclo } = useCicloConfig();
+  const { estado, atualizar, config, mesociclo, temas } = useCicloConfig();
   const { confirmar, dialogo } = useAvisoImpacto();
   const turmas = estado.turmas.filter((t) => t.mesocicloId === mesociclo.id);
 
@@ -169,10 +169,10 @@ export function AbaTurmas() {
 
       <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
         <Filtro
-          rotulo="Macrotema"
+          rotulo="Tema"
           valor={fTema}
           aoMudar={setFTema}
-          opcoes={config.temas.map((m) => ({
+          opcoes={temas.map((m) => ({
             valor: m.id,
             rotulo: m.nome,
           }))}
@@ -214,7 +214,7 @@ export function AbaTurmas() {
           <TableHeader>
             <TableRow>
               <TableHead>Turma</TableHead>
-              <TableHead>Macrotema</TableHead>
+              <TableHead>Tema</TableHead>
               <TableHead>Modalidade</TableHead>
               <TableHead>Professor</TableHead>
               <TableHead>Vagas</TableHead>
@@ -232,7 +232,7 @@ export function AbaTurmas() {
               </TableRow>
             )}
             {filtradas.map((turma) => {
-              const tema = config.temas.find((m) => m.id === turma.temaId);
+              const tema = temas.find((m) => m.id === turma.temaId);
               const modalidade = config.modalidades.find(
                 (m) => m.id === turma.modalidadeId,
               );
@@ -240,7 +240,7 @@ export function AbaTurmas() {
                 <TableRow key={turma.id}>
                   <TableCell className="font-medium">{turma.nome}</TableCell>
                   <TableCell className="text-sm">
-                    {tema?.nome ?? "Macrotema removido"}
+                    {tema?.nome ?? "Tema removido"}
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary">
@@ -354,7 +354,7 @@ export function AbaTurmas() {
       <DialogoTurma
         aberto={dialogoAberto}
         turma={turmaEmEdicao}
-        temas={config.temas}
+        temas={temas}
         modalidades={config.modalidades}
         aoFechar={() => setDialogoAberto(false)}
         aoSalvar={salvar}
@@ -480,13 +480,13 @@ function DialogoTurma({
         <div className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="turma-macrotema">Macrotema</Label>
+              <Label htmlFor="turma-tema">Tema</Label>
               <Select
                 value={temaId}
                 onValueChange={setTemaId}
                 disabled={turma !== undefined}
               >
-                <SelectTrigger id="turma-macrotema">
+                <SelectTrigger id="turma-tema">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

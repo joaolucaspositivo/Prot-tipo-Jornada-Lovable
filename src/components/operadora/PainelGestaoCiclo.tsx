@@ -82,10 +82,10 @@ export function PainelGestaoCiclo() {
             opcoes={unidades.map((u) => ({ valor: u, rotulo: u }))}
           />
           <Campo
-            rotulo="Macrotema"
+            rotulo="Tema"
             valor={tema}
             aoMudar={setTema}
-            opcoes={config.temas.map((m) => ({
+            opcoes={estado.temas.map((m) => ({
               valor: m.nome,
               rotulo: m.nome,
             }))}
@@ -115,7 +115,7 @@ export function PainelGestaoCiclo() {
 
       <FunilEtapas estado={estado} linhas={filtradas} />
 
-      <Agregado titulo="Progresso por macrotema" grupos={porTema(filtradas)} />
+      <Agregado titulo="Progresso por tema" grupos={porTema(filtradas)} />
 
       <Card>
         <CardHeader>

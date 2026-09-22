@@ -119,12 +119,18 @@ function referenciaDriveParaMidia(
 }
 
 export function AbaConteudo() {
-  const { estado, pessoaAtiva, atualizar, config } = useCicloConfig();
+  const {
+    estado,
+    pessoaAtiva,
+    atualizar,
+    config,
+    temas: temasDoCiclo,
+  } = useCicloConfig();
 
   const etapasConteudo = [...config.etapas]
     .filter((e) => e.tipo === "conteudo")
     .sort((a, b) => a.ordem - b.ordem);
-  const temas = temasAtivos(config);
+  const temas = temasAtivos(temasDoCiclo);
   const modalidadesAtivas = config.modalidades.filter((m) => m.ativa);
 
   const [etapaIdBruto, setEtapaIdBruto] = useState("");
@@ -300,7 +306,7 @@ export function AbaConteudo() {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="conteudo-tema">Macrotema</Label>
+          <Label htmlFor="conteudo-tema">Tema</Label>
           <Select value={temaId} onValueChange={setTemaIdBruto}>
             <SelectTrigger id="conteudo-tema" className="h-10">
               <SelectValue>{tema?.nome}</SelectValue>

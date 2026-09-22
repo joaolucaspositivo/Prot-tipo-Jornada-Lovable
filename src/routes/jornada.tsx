@@ -69,7 +69,7 @@ function JornadaPage() {
     : undefined;
   const { config } = cicloDaTurma(estado, turmaDoDocente);
   const temaDoDocente = inscricao
-    ? config.temas.find(
+    ? estado.temas.find(
         (m) => m.id === (turmaDoDocente?.temaId ?? inscricao.temaId),
       )
     : undefined;
@@ -87,7 +87,7 @@ function JornadaPage() {
       {inscricao && (
         <p className="text-sm text-muted-foreground">
           {turmaDoDocente?.nome ?? "Turma removida"} ·{" "}
-          {temaDoDocente?.nome ?? "Macrotema removido"}
+          {temaDoDocente?.nome ?? "Tema removido"}
         </p>
       )}
       <h1 className="mt-1 text-2xl sm:text-3xl">Minha Jornada</h1>

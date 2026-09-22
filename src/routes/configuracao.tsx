@@ -7,8 +7,8 @@ import { AbaConteudo } from "@/components/config/AbaConteudo";
 import { AbaEncerramento } from "@/components/config/AbaEncerramento";
 import { AbaEtapas } from "@/components/config/AbaEtapas";
 import { AbaGeral } from "@/components/config/AbaGeral";
-import { AbaMacrotemas } from "@/components/config/AbaMacrotemas";
 import { AbaModalidades } from "@/components/config/AbaModalidades";
+import { AbaTemas } from "@/components/config/AbaTemas";
 import { AbaTurmas } from "@/components/config/AbaTurmas";
 import { MesocicloEmEdicaoProvider } from "@/components/config/comum";
 import {
@@ -32,7 +32,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useStore } from "@/data/store";
 import type { Macrociclo, Mesociclo } from "@/data/types";
-import { novaCicloConfigVazia, novoId, passoGuiadoTravado } from "@/lib/ciclo";
+import {
+  novaCicloConfigVazia,
+  novoId,
+  passoGuiadoTravado,
+  temasDoMacrociclo,
+} from "@/lib/ciclo";
 
 export const Route = createFileRoute("/configuracao")({
   head: () => ({
@@ -43,13 +48,13 @@ export const Route = createFileRoute("/configuracao")({
       {
         name: "description",
         content:
-          "Edição de macrotemas, modalidades, turmas, etapas, conteúdo e alertas de cada ciclo.",
+          "Edição de temas, modalidades, turmas, etapas, conteúdo e alertas de cada ciclo.",
       },
       { property: "og:title", content: "Configuração de ciclos" },
       {
         property: "og:description",
         content:
-          "Edição de macrotemas, modalidades, turmas, etapas, conteúdo e alertas de cada ciclo.",
+          "Edição de temas, modalidades, turmas, etapas, conteúdo e alertas de cada ciclo.",
       },
     ],
   }),
@@ -70,16 +75,19 @@ function ConfiguracaoPage() {
   const config =
     estado.cicloConfigs.find((c) => c.mesocicloId === mesociclo.id) ??
     estado.cicloConfigs[0]!;
+  const temas = temasDoMacrociclo(estado, macrociclo.id);
 
   const [guiado, setGuiado] = useState(false);
-  const [aba, setAba] = useState<PassoGuiado>("geral");
+  const [aba, setAba] = useState<PassoGuiado>("temas");
   const [passosConcluidos, setPassosConcluidos] = useState<Set<PassoGuiado>>(
     new Set(),
   );
   const [dialogoNovoCiclo, setDialogoNovoCiclo] = useState(false);
 
   function passoTravado(p: PassoGuiado): boolean {
-    return guiado && p !== "conferencia" && passoGuiadoTravado(config, p);
+    return (
+      guiado && p !== "conferencia" && passoGuiadoTravado(config, temas, p)
+    );
   }
 
   const travadoAgora = passoTravado(aba);
@@ -95,7 +103,11 @@ function ConfiguracaoPage() {
     // Trocar de ciclo pode tornar o passo atual inválido (ex.: Conteúdo
     // num ciclo sem nenhuma etapa ainda) — mesma lógica de trava acima,
     // disparada pela troca em vez da edição.
-    if (guiado && aba !== "conferencia" && passoGuiadoTravado(config, aba)) {
+    if (
+      guiado &&
+      aba !== "conferencia" &&
+      passoGuiadoTravado(config, temas, aba)
+    ) {
       setAba("geral");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -142,7 +154,7 @@ function ConfiguracaoPage() {
       dataInicio,
       fasesObrigatorias: [],
     };
-    const novaConfig = novaCicloConfigVazia(novoMesociclo.id, config.temas);
+    const novaConfig = novaCicloConfigVazia(novoMesociclo.id);
     atualizar((anterior) => ({
       ...anterior,
       mesociclos: [...anterior.mesociclos, novoMesociclo],
@@ -227,11 +239,11 @@ function ConfiguracaoPage() {
             ) : (
               <Tabs value={aba} onValueChange={(v) => setAba(v as PassoGuiado)}>
                 <TabsList className="flex h-auto flex-wrap justify-start gap-1">
+                  <TabsTrigger value="temas" disabled={passoTravado("temas")}>
+                    Temas
+                  </TabsTrigger>
                   <TabsTrigger value="geral" disabled={passoTravado("geral")}>
                     Geral
-                  </TabsTrigger>
-                  <TabsTrigger value="temas" disabled={passoTravado("temas")}>
-                    Macrotemas
                   </TabsTrigger>
                   <TabsTrigger
                     value="modalidades"
@@ -265,11 +277,11 @@ function ConfiguracaoPage() {
                   </TabsTrigger>
                 </TabsList>
 
+                <TabsContent value="temas" className="mt-4">
+                  <AbaTemas />
+                </TabsContent>
                 <TabsContent value="geral" className="mt-4">
                   <AbaGeral />
-                </TabsContent>
-                <TabsContent value="temas" className="mt-4">
-                  <AbaMacrotemas />
                 </TabsContent>
                 <TabsContent value="modalidades" className="mt-4">
                   <AbaModalidades />

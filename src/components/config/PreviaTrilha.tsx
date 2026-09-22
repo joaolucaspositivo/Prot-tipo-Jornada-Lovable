@@ -34,9 +34,9 @@ const ICONE_TIPO: Record<TipoEtapa, typeof BookOpen> = {
 
 /** Pré-visualização da trilha exatamente como o docente a verá. */
 export function PreviaTrilha() {
-  const { config, mesociclo } = useCicloConfig();
+  const { config, mesociclo, temas: temasDoCiclo } = useCicloConfig();
   const etapas = etapasEmOrdem(config);
-  const temas = temasAtivos(config);
+  const temas = temasAtivos(temasDoCiclo);
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
@@ -49,14 +49,14 @@ export function PreviaTrilha() {
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Escolha do percurso
         </p>
-        <p className="text-sm">{temas.length} macrotema(s) disponível(is)</p>
+        <p className="text-sm">{temas.length} tema(s) disponível(is)</p>
         <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
           {temas.map((m) => (
             <li key={m.id}>· {m.nome}</li>
           ))}
           {temas.length === 0 ? (
             <li className="text-atraso">
-              Nenhum macrotema ativo: o docente não terá o que escolher.
+              Nenhum tema ativo: o docente não terá o que escolher.
             </li>
           ) : null}
         </ul>

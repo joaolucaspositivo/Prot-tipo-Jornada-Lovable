@@ -178,10 +178,10 @@ export function PainelEquipe({
           opcoes={unidades.map((u) => ({ valor: u, rotulo: u }))}
         />
         <Filtro
-          rotulo="Macrotema"
+          rotulo="Tema"
           valor={fTema}
           aoMudar={setFTema}
-          opcoes={config.temas.map((m) => ({
+          opcoes={estado.temas.map((m) => ({
             valor: m.nome,
             rotulo: m.nome,
           }))}

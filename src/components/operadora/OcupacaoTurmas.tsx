@@ -152,9 +152,9 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
         <SheetHeader>
           <SheetTitle>Lançar presença — {turma.nome}</SheetTitle>
           <SheetDescription>
-            Nenhuma oferta de conteúdo configurada para este macrotema e
-            modalidade ainda. Cadastre o conteúdo da etapa na aba Conteúdo antes
-            de lançar presença.
+            Nenhuma oferta de conteúdo configurada para este tema e modalidade
+            ainda. Cadastre o conteúdo da etapa na aba Conteúdo antes de lançar
+            presença.
           </SheetDescription>
         </SheetHeader>
       </div>

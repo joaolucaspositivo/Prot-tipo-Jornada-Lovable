@@ -12,13 +12,13 @@ export const Route = createFileRoute("/historico")({
       {
         name: "description",
         content:
-          "Linha do tempo com macrotemas cumpridos, turmas, entregas, devolutivas e conquistas de jornadas anteriores.",
+          "Linha do tempo com temas cumpridos, turmas, entregas, devolutivas e conquistas de jornadas anteriores.",
       },
       { property: "og:title", content: "Jornadas anteriores" },
       {
         property: "og:description",
         content:
-          "Macrotemas cumpridos, turmas, entregas, devolutivas e conquistas das jornadas anteriores.",
+          "Temas cumpridos, turmas, entregas, devolutivas e conquistas das jornadas anteriores.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -41,8 +41,8 @@ function HistoricoPage() {
         </p>
         <h1 className="text-2xl sm:text-3xl">Jornadas anteriores</h1>
         <p className="text-muted-foreground">
-          Estes macrotemas já foram cumpridos e, por isso, aparecem bloqueados
-          na escolha do percurso desta jornada.
+          Estes temas já foram cumpridos e, por isso, aparecem bloqueados na
+          escolha do percurso desta jornada.
         </p>
       </header>
 
