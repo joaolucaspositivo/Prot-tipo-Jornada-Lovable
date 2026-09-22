@@ -26,7 +26,7 @@ import { useStore } from "@/data/store";
 import type { Etapa } from "@/data/types";
 import {
   ROTULO_TIPO_ETAPA,
-  cicloConfigAtivo,
+  cicloDoDocente,
   formatarData,
   novoId,
 } from "@/lib/ciclo";
@@ -78,7 +78,9 @@ export function DetalheDocente({
 
   const entrega = linha.entrega;
   const etapaEntrega = entrega
-    ? cicloConfigAtivo(estado).etapas.find((e) => e.id === entrega.etapaId)
+    ? cicloDoDocente(estado, linha.pessoa.id).config.etapas.find(
+        (e) => e.id === entrega.etapaId,
+      )
     : undefined;
   const opcoes = pareceresDaEtapa(etapaEntrega);
   const historico = etapaEntrega
