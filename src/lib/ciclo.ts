@@ -18,10 +18,14 @@ import type {
 
 /**
  * Ciclo vigente: quem decide é a operadora, via `Macrociclo.mesocicloVigenteId`
- * (tela de macrociclo) — não é calculado por data. Enquanto não houver um
- * jeito de saber em qual mesociclo um docente específico está (depende de
- * `Inscricao` ganhar essa informação, fora desta sessão), toda leitura fora
- * da tela de configuração usa o vigente.
+ * (tela de macrociclo) — não é calculado por data.
+ *
+ * REGRA (vale para todo o app): havendo turma em mãos — direto ou via
+ * inscrição —, a configuração vem SEMPRE do mesociclo dela, nunca da
+ * vigente (`cicloDaTurma`/`cicloDoDocente` abaixo). `cicloAtivo` só é a
+ * fonte correta onde não existe turma nem inscrição: a escolha inicial do
+ * percurso, e chrome de tela que não é dado de nenhum docente específico
+ * (cabeçalho do AppShell, filtros de página da operadora/coordenador).
  */
 export function cicloAtivo(estado: EstadoApp): {
   mesociclo: Mesociclo;
@@ -40,6 +44,42 @@ export function cicloAtivo(estado: EstadoApp): {
 /** Atalho para quem só precisa da config do ciclo vigente, sem a data. */
 export function cicloConfigAtivo(estado: EstadoApp): CicloConfig {
   return cicloAtivo(estado).config;
+}
+
+/**
+ * Config do mesociclo de uma turma específica. Use esta função (não
+ * `cicloDoDocente`) sempre que a turma já estiver resolvida no chamador —
+ * por exemplo dentro de um loop que atende vários docentes — para não
+ * repetir a busca inscrição→turma a cada item.
+ */
+export function cicloDaTurma(
+  estado: EstadoApp,
+  turma: Turma | undefined,
+): { mesociclo: Mesociclo; config: CicloConfig } {
+  if (turma) {
+    const mesociclo = estado.mesociclos.find((m) => m.id === turma.mesocicloId);
+    const config = estado.cicloConfigs.find(
+      (c) => c.mesocicloId === turma.mesocicloId,
+    );
+    if (mesociclo && config) return { mesociclo, config };
+  }
+  return cicloAtivo(estado);
+}
+
+/**
+ * Config do ciclo de um docente: resolve a turma pela inscrição e delega a
+ * `cicloDaTurma`. Sem inscrição (ou sem turma associada), cai no vigente —
+ * é a escolha inicial, antes de a inscrição existir.
+ */
+export function cicloDoDocente(
+  estado: EstadoApp,
+  pessoaId: string,
+): { mesociclo: Mesociclo; config: CicloConfig } {
+  const inscricao = estado.inscricoes.find((i) => i.pessoaId === pessoaId);
+  const turma = inscricao
+    ? estado.turmas.find((t) => t.id === inscricao.turmaId)
+    : undefined;
+  return cicloDaTurma(estado, turma);
 }
 
 export const ROTULO_TIPO_ETAPA: Record<TipoEtapa, string> = {

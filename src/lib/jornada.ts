@@ -28,8 +28,7 @@ import {
   ofertaDoDocente,
 } from "@/lib/avanco";
 import {
-  cicloAtivo,
-  cicloConfigAtivo,
+  cicloDoDocente,
   etapasEmOrdem,
   prazoDaEtapa,
   tipoParticipacaoDaPessoa,
@@ -125,7 +124,7 @@ export function trilhaDoDocente(
   pessoa: Pessoa,
   agora: Date = new Date(),
 ): ItemTrilha[] {
-  const { mesociclo, config } = cicloAtivo(estado);
+  const { mesociclo, config } = cicloDoDocente(estado, pessoa.id);
   const tipoParticipacao = tipoParticipacaoDaPessoa(estado, pessoa.id);
   // Vazio = a etapa vale para todo tipo de participação (D34).
   const etapas = etapasEmOrdem(config).filter(
@@ -226,7 +225,7 @@ export function conquistasDoDocente(
   estado: EstadoApp,
   pessoa: Pessoa,
 ): ConquistaTrilha[] {
-  const config = cicloConfigAtivo(estado);
+  const { config } = cicloDoDocente(estado, pessoa.id);
   return config.conquistas.map((conquista) => {
     const etapa = config.etapas.find((e) => e.id === conquista.etapaId);
     const conquistada = estado.progressoEtapas.some(
