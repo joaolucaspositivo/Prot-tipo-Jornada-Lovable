@@ -2,6 +2,7 @@
 // Nenhuma tela deve presumir quantidade, ordem ou nomes: tudo vem daqui.
 
 import type {
+  Auditoria,
   CicloConfig,
   EstadoApp,
   Etapa,
@@ -11,6 +12,7 @@ import type {
   Pessoa,
   TelaEtapa,
   Tema,
+  TemaVersao,
   TipoEtapa,
   TipoParticipacao,
   Turma,
@@ -80,6 +82,44 @@ export function cicloDoDocente(
     ? estado.turmas.find((t) => t.id === inscricao.turmaId)
     : undefined;
   return cicloDaTurma(estado, turma);
+}
+
+/** Temas do macrociclo (D40) — todo mesociclo do mesmo macrociclo enxerga o mesmo conjunto. */
+export function temasDoMacrociclo(
+  estado: EstadoApp,
+  macrocicloId: string,
+): Tema[] {
+  return estado.temas.filter((t) => t.macrocicloId === macrocicloId);
+}
+
+/**
+ * Temas herdados por um mesociclo — resolve o macrociclo dele e delega a
+ * `temasDoMacrociclo`. Use esta função (não `estado.temas` direto) sempre
+ * que precisar da LISTA de temas de um ciclo específico; para um lookup
+ * pontual por id, `estado.temas.find(...)` já basta — o id é global.
+ */
+export function temasDoMesociclo(
+  estado: EstadoApp,
+  mesocicloId: string,
+): Tema[] {
+  const mesociclo = estado.mesociclos.find((m) => m.id === mesocicloId);
+  if (!mesociclo) return [];
+  return temasDoMacrociclo(estado, mesociclo.macrocicloId);
+}
+
+/**
+ * Carga horária declarada de um tema dentro de um mesociclo (D56).
+ * `undefined` = ainda não declarada para esta combinação, nunca 0 por
+ * omissão — não confundir "não declarado" com "declarado como zero".
+ */
+export function cargaHorariaDoTema(
+  estado: EstadoApp,
+  mesocicloId: string,
+  temaId: string,
+): number | undefined {
+  return estado.temasNoMesociclo.find(
+    (t) => t.mesocicloId === mesocicloId && t.temaId === temaId,
+  )?.cargaHoraria;
 }
 
 export const ROTULO_TIPO_ETAPA: Record<TipoEtapa, string> = {
@@ -156,10 +196,8 @@ export function etapasEmOrdem(config: CicloConfig): Etapa[] {
   return [...config.etapas].sort((a, b) => a.ordem - b.ordem);
 }
 
-export function temasAtivos(config: CicloConfig): Tema[] {
-  return [...config.temas]
-    .filter((m) => m.ativo)
-    .sort((a, b) => a.ordem - b.ordem);
+export function temasAtivos(temas: Tema[]): Tema[] {
+  return [...temas].filter((m) => m.ativo).sort((a, b) => a.ordem - b.ordem);
 }
 
 /**
@@ -297,16 +335,19 @@ export function docentesDaTurma(estado: EstadoApp, turmaId: string) {
 /**
  * Se um passo do modo guiado da Configuração de ciclos está travado.
  * Recebe a `CicloConfig` do mesociclo em edição — não necessariamente o
- * vigente: a operadora pode estar configurando um ciclo futuro.
+ * vigente: a operadora pode estar configurando um ciclo futuro. `temas` é
+ * o conjunto herdado do macrociclo (D40), já resolvido pelo chamador.
  */
 export function passoGuiadoTravado(
   config: CicloConfig,
+  temas: Tema[],
   passo: string,
 ): boolean {
-  if (passo === "modalidades") return temasAtivos(config).length === 0;
+  if (passo === "temas") return false;
+  if (passo === "modalidades") return temasAtivos(temas).length === 0;
   if (passo === "turmas") {
     return (
-      temasAtivos(config).length === 0 ||
+      temasAtivos(temas).length === 0 ||
       config.modalidades.filter((m) => m.ativa).length === 0
     );
   }
@@ -336,6 +377,7 @@ export function resumoConferenciaCiclo(
   config: CicloConfig,
   turmas: Turma[],
 ): ResumoConferenciaCiclo {
+  const temas = temasDoMesociclo(estado, config.mesocicloId);
   const etapasEmOrdem = [...config.etapas]
     .sort((a, b) => a.ordem - b.ordem)
     .map((e) => e.nome);
@@ -359,7 +401,7 @@ export function resumoConferenciaCiclo(
   }
 
   return {
-    temasAtivos: temasAtivos(config).length,
+    temasAtivos: temasAtivos(temas).length,
     modalidadesAtivas: config.modalidades.filter((m) => m.ativa).length,
     totalTurmas: turmas.length,
     totalVagas: turmas.reduce((soma, t) => soma + t.vagas, 0),
@@ -388,21 +430,16 @@ export function novoId(prefixo: string): string {
 
 /**
  * `CicloConfig` de um mesociclo recém-criado: nasce vazia, igual ao ciclo
- * 2028 do seed. `temas` é copiado de uma config existente do mesmo
- * macrociclo — é o campo transitório (ver comentário em `CicloConfig.temas`,
- * types.ts), não uma escolha nova; todo o resto começa do zero mesmo.
+ * 2028 do seed. Os temas não entram aqui — vêm do macrociclo (D40), o
+ * mesmo conjunto para todo mesociclo dele; todo o resto começa do zero.
  */
-export function novaCicloConfigVazia(
-  mesocicloId: string,
-  temas: Tema[],
-): CicloConfig {
+export function novaCicloConfigVazia(mesocicloId: string): CicloConfig {
   return {
     id: novoId("ciclo"),
     mesocicloId,
     nome: "",
     descricao: "",
     periodo: "",
-    temas,
     modalidades: [],
     etapas: [],
     subtipos: [],
@@ -416,4 +453,76 @@ export function novaCicloConfigVazia(
       perguntas: [],
     },
   };
+}
+
+/** Novo registro de auditoria (D41) — o chamador decide quando gravar. */
+export function novaAuditoria(
+  entidade: string,
+  entidadeId: string,
+  campo: string,
+  valorAnterior: string,
+  autorId: string,
+): Auditoria {
+  return {
+    id: novoId("aud"),
+    entidade,
+    entidadeId,
+    campo,
+    valorAnterior,
+    autorId,
+    dataISO: new Date().toISOString(),
+  };
+}
+
+/**
+ * Evolução de um tema ENTRE macrociclos (D53/D54/D56) — nasce um `Tema`
+ * novo, ligado a `novoMacrocicloId`, preservando `linhagemId`; e uma
+ * `TemaVersao` nova, com o número incrementado. "Duplicar" (carregar sem
+ * mudar) e "atualizar" (mudar nome/descrição ao carregar) são a mesma
+ * operação — `mudanca` vazio é duplicar, preenchido é atualizar. Diferente
+ * de editar dentro do MESMO macrociclo (D41/D42): aquilo corrige o `Tema`
+ * em vigor, com auditoria, sem versão nova.
+ *
+ * SEM TELA que acione isto ainda — criar macrociclo é peça nova (fronteira
+ * de configurabilidade, §4), fora da lista desta sessão. A função fica
+ * pronta, testável isoladamente, para quando essa tela existir; não é
+ * código morto por engano.
+ */
+export function versionarTema(
+  estado: EstadoApp,
+  temaOrigemId: string,
+  novoMacrocicloId: string,
+  mudanca: { nome?: string; descricao?: string },
+  autorId: string,
+): { tema: Tema; versao: TemaVersao } {
+  const origem = estado.temas.find((t) => t.id === temaOrigemId);
+  if (!origem) {
+    throw new Error(`versionarTema: tema ${temaOrigemId} não encontrado`);
+  }
+  const ultimaVersao = [...estado.temaVersoes]
+    .filter((v) => v.linhagemId === origem.linhagemId)
+    .sort((a, b) => b.numeroVersao - a.numeroVersao)[0];
+  const numeroVersao = (ultimaVersao?.numeroVersao ?? 0) + 1;
+  const nome = mudanca.nome ?? origem.nome;
+  const descricao = mudanca.descricao ?? origem.descricao;
+  const agora = new Date().toISOString();
+
+  const tema: Tema = {
+    ...origem,
+    id: novoId("tema"),
+    macrocicloId: novoMacrocicloId,
+    nome,
+    descricao,
+  };
+  const versao: TemaVersao = {
+    id: novoId("temaversao"),
+    temaId: tema.id,
+    linhagemId: origem.linhagemId,
+    numeroVersao,
+    nome,
+    descricao,
+    criadaEmISO: agora,
+    criadaPorId: autorId,
+  };
+  return { tema, versao };
 }

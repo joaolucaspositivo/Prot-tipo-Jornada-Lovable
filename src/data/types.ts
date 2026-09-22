@@ -55,6 +55,8 @@ export type StatusEtapa =
 
 export interface Tema {
   id: string;
+  /** macrociclo ao qual este tema pertence (D40) — todo mesociclo do mesmo macrociclo o herda */
+  macrocicloId: string;
   /** persiste entre macrociclos — raiz da linhagem deste tema (D54, fundação p/ TemaVersao) */
   linhagemId: string;
   nome: string;
@@ -63,6 +65,24 @@ export interface Tema {
   ordem: number;
   /** dimensão da autoavaliação sugerida por este tema (opcional) */
   dimensaoRelacionada?: string | undefined;
+}
+
+/**
+ * Carga horária declarada de um tema DENTRO de um mesociclo específico
+ * (D56) — não é atributo do tema nem da `TemaVersao`: o mesmo tema pode
+ * valer 3h em 2027 e 5h em 2028 sem que isso seja mudança de conteúdo.
+ * Chaveada por `temaId`, não por versão — mudar a carga não deveria gerar
+ * uma `TemaVersao` nova, ou a linhagem se enche de versões que não
+ * representam mudança de conteúdo (o oposto do que D41 quer). Não confundir
+ * com `Etapa.cargaHoraria` (D10): aquela é carga por ETAPA, fixa desde
+ * antes desta rodada; esta é por TEMA × MESOCICLO. Sem registro para uma
+ * combinação = carga ainda não declarada, não zero.
+ */
+export interface TemaNoMesociclo {
+  id: string;
+  mesocicloId: string;
+  temaId: string;
+  cargaHoraria: number;
 }
 
 /**
@@ -157,7 +177,7 @@ export interface Etapa {
   alerta: AlertaPendencia;
   /** tela que esta etapa abre para o docente */
   tela: TelaEtapa;
-  /** carga horária declarada da etapa (D10) */
+  /** carga horária declarada da etapa (D10) — não confundir com `TemaNoMesociclo.cargaHoraria` (D56), que é por tema × mesociclo */
   cargaHoraria?: number | undefined;
   /**
    * Subtipo escolhido para preencher `tipo`/`tela` (D30). Guardado para a
@@ -302,15 +322,6 @@ export interface CicloConfig {
   /** descrição livre da jornada, ex. "Jornada 2027 a 2030" (D27) */
   descricao: string;
   periodo: string;
-  /**
-   * TRANSITÓRIO (Pacote 1, sessão 1): ainda duplicado entre os mesociclos
-   * do mesmo macrociclo — cada CicloConfig tem o seu próprio array, com o
-   * mesmo conteúdo. Isso é andaime, não modelo: a sessão 2 move `temas`
-   * para `Macrociclo` (D40) e o mesociclo passa a apenas herdar. Não
-   * construa nada em cima do fato de que hoje existem "temas por ciclo" —
-   * essa duplicação não é uma regra, é um efeito colateral temporário.
-   */
-  temas: Tema[];
   modalidades: Modalidade[];
   etapas: Etapa[];
   /** formulários/telas reutilizáveis que uma etapa pode escolher (D30) */
@@ -689,6 +700,10 @@ export interface EstadoApp {
   pessoaAtivaId: string;
   macrociclos: Macrociclo[];
   mesociclos: Mesociclo[];
+  /** do macrociclo (D40) — todo mesociclo do mesmo macrociclo herda o mesmo conjunto, nunca lida direto: sempre por `temasDoMesociclo`/`temasDoMacrociclo` (lib/ciclo.ts) */
+  temas: Tema[];
+  /** carga horária por tema × mesociclo (D56) — ver `TemaNoMesociclo` */
+  temasNoMesociclo: TemaNoMesociclo[];
   /** uma por mesociclo — nunca lida direto, sempre por `cicloAtivo`/`cicloConfigAtivo` (lib/ciclo.ts) */
   cicloConfigs: CicloConfig[];
   pessoas: Pessoa[];
