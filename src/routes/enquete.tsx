@@ -19,7 +19,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useStore } from "@/data/store";
 import type { EstadoApp } from "@/data/types";
-import { novoId } from "@/lib/ciclo";
+import { formularioVersaoVigente, novoId } from "@/lib/ciclo";
 import {
   etapaDeEnquete,
   perguntasDoPublico,
@@ -93,6 +93,7 @@ function EnquetePage() {
         escalas,
         textos,
         enviadaEmISO: agora,
+        formularioVersaoId: formularioVersaoVigente(anterior, "enquete")?.id,
       };
 
       // Quando o próprio docente responde, a etapa configurada é concluída.

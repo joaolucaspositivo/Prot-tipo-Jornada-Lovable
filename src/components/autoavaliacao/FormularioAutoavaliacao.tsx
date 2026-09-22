@@ -4,25 +4,25 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import {
-  DIMENSOES_AUTOAVALIACAO,
-  ESCALA,
-  TOTAL_AFIRMACOES,
-} from "@/data/autoavaliacao";
+import { ESCALA, totalAfirmacoes } from "@/data/autoavaliacao";
+import type { DimensaoAutoavaliacao } from "@/data/types";
 import { cn } from "@/lib/utils";
 
 export function FormularioAutoavaliacao({
   respostas,
+  dimensoes,
   aoResponder,
   aoConcluir,
 }: {
   respostas: Record<string, number>;
+  dimensoes: DimensaoAutoavaliacao[];
   aoResponder: (afirmacaoId: string, valor: number) => void;
   aoConcluir: () => void;
 }) {
   const [passo, setPasso] = useState(0);
-  const dimensao = DIMENSOES_AUTOAVALIACAO[passo]!;
-  const total = DIMENSOES_AUTOAVALIACAO.length;
+  const dimensao = dimensoes[passo]!;
+  const total = dimensoes.length;
+  const totalAfirm = useMemo(() => totalAfirmacoes(dimensoes), [dimensoes]);
 
   const respondidas = useMemo(() => Object.keys(respostas).length, [respostas]);
   const faltaNoPasso = dimensao.afirmacoes.some(
@@ -38,10 +38,10 @@ export function FormularioAutoavaliacao({
             Dimensão {passo + 1} de {total}: {dimensao.nome}
           </span>
           <span>
-            {respondidas} de {TOTAL_AFIRMACOES} afirmações respondidas
+            {respondidas} de {totalAfirm} afirmações respondidas
           </span>
         </div>
-        <Progress value={(respondidas / TOTAL_AFIRMACOES) * 100} />
+        <Progress value={(respondidas / totalAfirm) * 100} />
         <p className="flex items-center gap-1.5 text-xs text-sucesso">
           <Save className="size-3.5" aria-hidden />
           Rascunho salvo automaticamente — você pode sair e voltar depois.

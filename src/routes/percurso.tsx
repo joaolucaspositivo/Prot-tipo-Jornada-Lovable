@@ -67,7 +67,7 @@ function PercursoPage() {
     (a) => a.pessoaId === pessoaAtiva.id && a.concluidaEmISO,
   );
   const fragil = autoavaliacao
-    ? dimensaoMaisFragil(autoavaliacao.dimensoes)
+    ? dimensaoMaisFragil(autoavaliacao.dimensoes, config.dimensoesAutoavaliacao)
     : null;
   const sugerido = fragil
     ? (ativos.find(

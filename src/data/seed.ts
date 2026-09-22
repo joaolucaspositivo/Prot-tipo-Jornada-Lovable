@@ -8,9 +8,11 @@ import type {
   CicloConfig,
   CriterioAvanco,
   Devolutiva,
+  DimensaoAutoavaliacao,
   Entrega,
   EstadoApp,
   Etapa,
+  FormularioVersao,
   HistoricoTema,
   Inscricao,
   ItemConteudo,
@@ -305,6 +307,93 @@ const etapasSeed: Etapa[] = [
   },
 ];
 
+// Dimensões e afirmações da autoavaliação (v3): antes hardcoded em
+// src/data/autoavaliacao.ts — violava a regra de ouro (nenhuma regra
+// pedagógica presa em código). O conteúdo é o mesmo de sempre, só a fonte
+// virou configuração.
+const dimensoesAutoavaliacaoSeed: DimensaoAutoavaliacao[] = [
+  {
+    id: "planejamento",
+    nome: "Planejamento e intencionalidade",
+    resumo: "Como você organiza e dá propósito às suas aulas.",
+    afirmacoes: [
+      {
+        id: "planejamento-1",
+        texto:
+          "Planejo minhas aulas a partir de objetivos de aprendizagem claros.",
+      },
+      {
+        id: "planejamento-2",
+        texto:
+          "Ajusto o planejamento quando percebo que a turma não acompanhou.",
+      },
+      {
+        id: "planejamento-3",
+        texto:
+          "Escolho recursos e materiais com uma intenção pedagógica definida.",
+      },
+    ],
+  },
+  {
+    id: "mediacao",
+    nome: "Mediação e engajamento",
+    resumo: "Como você conduz a aula e envolve os estudantes.",
+    afirmacoes: [
+      {
+        id: "mediacao-1",
+        texto: "Proponho situações em que os estudantes falam mais do que eu.",
+      },
+      {
+        id: "mediacao-2",
+        texto: "Faço perguntas que ampliam o raciocínio da turma.",
+      },
+      {
+        id: "mediacao-3",
+        texto: "Percebo e retomo quem está fora da atividade durante a aula.",
+      },
+    ],
+  },
+  {
+    id: "avaliacao",
+    nome: "Avaliação formativa",
+    resumo: "Como você acompanha e devolve o aprendizado ao longo do percurso.",
+    afirmacoes: [
+      {
+        id: "avaliacao-1",
+        texto: "Verifico a aprendizagem durante o percurso, não só ao final.",
+      },
+      {
+        id: "avaliacao-2",
+        texto:
+          "Dou devolutivas que ajudam o estudante a saber o próximo passo.",
+      },
+      {
+        id: "avaliacao-3",
+        texto: "Uso os resultados das avaliações para replanejar minhas aulas.",
+      },
+    ],
+  },
+  {
+    id: "clima",
+    nome: "Cultura de sala e convivência",
+    resumo: "Como você sustenta o clima e as relações na sala.",
+    afirmacoes: [
+      {
+        id: "clima-1",
+        texto: "Construo combinados de convivência junto com a turma.",
+      },
+      {
+        id: "clima-2",
+        texto: "Lido com conflitos sem interromper o percurso da aprendizagem.",
+      },
+      {
+        id: "clima-3",
+        texto: "Garanto que todos os estudantes tenham espaço de participação.",
+      },
+    ],
+  },
+];
+
 export const cicloConfigSeed: CicloConfig = {
   id: "ciclo-2",
   nome: "Ciclo 2",
@@ -368,6 +457,7 @@ export const cicloConfigSeed: CicloConfig = {
       ordem: 4,
     },
   ],
+  dimensoesAutoavaliacao: dimensoesAutoavaliacaoSeed,
   // Enquete 360°: perguntas e públicos ainda em definição, por isso ficam aqui.
   enquete: {
     titulo: "Enquete 360°",
@@ -434,6 +524,31 @@ export const cicloConfigSeed: CicloConfig = {
     ],
   },
 };
+
+// Snapshot congelado (D53): a primeira versão do conjunto de perguntas de
+// cada "formulário", gerada a partir do próprio cicloConfigSeed. Sem tela
+// que crie uma versão nova ainda — isso é editar as perguntas entre
+// mesociclos, fora do escopo deste pacote.
+const formularioVersoesSeed: FormularioVersao[] = [
+  {
+    id: "fv-enquete-v1",
+    origem: "enquete",
+    perguntas: cicloConfigSeed.enquete.perguntas,
+    criadaEmISO: ABERTURA,
+  },
+  {
+    id: "fv-portfolio-v1",
+    origem: "portfolio",
+    perguntas: cicloConfigSeed.reflexoesPortfolio,
+    criadaEmISO: ABERTURA,
+  },
+  {
+    id: "fv-autoavaliacao-v1",
+    origem: "autoavaliacao",
+    perguntas: cicloConfigSeed.dimensoesAutoavaliacao,
+    criadaEmISO: ABERTURA,
+  },
+];
 
 const unidades = [
   "Unidade Centro",
@@ -879,6 +994,7 @@ function construirRespostasEnquete(): RespostaEnquete[] {
           escalas,
           textos,
           enviadaEmISO: dias(120 + ((i + p) % 8)),
+          formularioVersaoId: "fv-enquete-v1",
         });
       }
     });
@@ -1351,6 +1467,7 @@ export function criarEstadoInicial(): EstadoApp {
     // encerramento; emissão de certificado está fora do MVP de dezembro.
     conclusoes: [],
     certificados: [],
+    formularioVersoes: formularioVersoesSeed,
     portfolios: [],
     midias: conteudo.midias,
     ofertas: conteudo.ofertas,

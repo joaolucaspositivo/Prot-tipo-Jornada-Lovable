@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calcularDimensoes } from "@/data/autoavaliacao";
 import { useStore } from "@/data/store";
 import type { Autoavaliacao, EstadoApp } from "@/data/types";
-import { novoId } from "@/lib/ciclo";
+import { formularioVersaoVigente, novoId } from "@/lib/ciclo";
 
 export const Route = createFileRoute("/autoavaliacao")({
   head: () => ({
@@ -68,11 +68,17 @@ function AutoavaliacaoPage() {
   function responder(afirmacaoId: string, valor: number) {
     const novas = { ...respostas, [afirmacaoId]: valor };
     // rascunho gravado a cada clique
-    salvarRegistro({ respostas: novas, dimensoes: calcularDimensoes(novas) });
+    salvarRegistro({
+      respostas: novas,
+      dimensoes: calcularDimensoes(novas, config.dimensoesAutoavaliacao),
+    });
   }
 
   function concluir() {
-    const dimensoes = calcularDimensoes(respostas);
+    const dimensoes = calcularDimensoes(
+      respostas,
+      config.dimensoesAutoavaliacao,
+    );
     const agora = new Date().toISOString();
 
     atualizar((anterior: EstadoApp) => {
@@ -88,6 +94,8 @@ function AutoavaliacaoPage() {
         respostas,
         dimensoes,
         concluidaEmISO: agora,
+        formularioVersaoId: formularioVersaoVigente(anterior, "autoavaliacao")
+          ?.id,
       };
 
       const autoavaliacoes = existente
@@ -178,6 +186,7 @@ function AutoavaliacaoPage() {
         <div className="space-y-5">
           <ResultadoAutoavaliacao
             dimensoes={registro?.dimensoes ?? {}}
+            todasDimensoes={config.dimensoesAutoavaliacao}
             concluidaEmISO={registro?.concluidaEmISO}
           />
           <div className="flex flex-wrap gap-3">
@@ -193,6 +202,7 @@ function AutoavaliacaoPage() {
       ) : (
         <FormularioAutoavaliacao
           respostas={respostas}
+          dimensoes={config.dimensoesAutoavaliacao}
           aoResponder={responder}
           aoConcluir={concluir}
         />

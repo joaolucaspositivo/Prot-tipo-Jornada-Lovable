@@ -9,23 +9,23 @@ import {
 } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DIMENSOES_AUTOAVALIACAO,
-  dimensaoMaisFragil,
-} from "@/data/autoavaliacao";
+import { dimensaoMaisFragil } from "@/data/autoavaliacao";
+import type { DimensaoAutoavaliacao } from "@/data/types";
 
 export function ResultadoAutoavaliacao({
   dimensoes,
+  todasDimensoes,
   concluidaEmISO,
 }: {
   dimensoes: Record<string, number>;
+  todasDimensoes: DimensaoAutoavaliacao[];
   concluidaEmISO?: string | undefined;
 }) {
-  const dados = DIMENSOES_AUTOAVALIACAO.map((d) => ({
+  const dados = todasDimensoes.map((d) => ({
     dimensao: d.nome.split(" e ")[0] ?? d.nome,
     valor: Number((dimensoes[d.id] ?? 0).toFixed(2)),
   }));
-  const fragil = dimensaoMaisFragil(dimensoes);
+  const fragil = dimensaoMaisFragil(dimensoes, todasDimensoes);
 
   return (
     <div className="space-y-6">

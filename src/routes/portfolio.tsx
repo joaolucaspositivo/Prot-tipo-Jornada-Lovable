@@ -22,6 +22,7 @@ import type { AnexoPortfolio, EstadoApp } from "@/data/types";
 import {
   coordenadorPrincipalDoDocente,
   formatarData,
+  formularioVersaoVigente,
   novoId,
   prazoDaEtapa,
   tipoParticipacaoDaPessoa,
@@ -123,6 +124,7 @@ function PortfolioPage() {
         status,
         atualizadoEmISO: agora,
         enviadoEmISO: status === "enviado" ? agora : salvo?.enviadoEmISO,
+        formularioVersaoId: formularioVersaoVigente(anterior, "portfolio")?.id,
       };
       const portfolios = salvo
         ? anterior.portfolios.map((p) => (p.id === salvo.id ? registro : p))

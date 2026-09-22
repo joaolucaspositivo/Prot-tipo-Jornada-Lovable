@@ -5,6 +5,7 @@ import type {
   CicloConfig,
   EstadoApp,
   Etapa,
+  FormularioVersao,
   Pessoa,
   TelaEtapa,
   Tema,
@@ -126,6 +127,20 @@ export function coordenadorPrincipalDoDocente(
     .sort((a, b) => b.criadaEmISO.localeCompare(a.criadaEmISO))[0];
   if (!alocacao) return undefined;
   return estado.pessoas.find((p) => p.id === alocacao.coordenadorId);
+}
+
+/**
+ * Snapshot vigente (o mais recente) do "formulário" de uma origem — Enquete,
+ * Portfólio ou Autoavaliação (D53). Sem tela que gere uma versão nova ainda:
+ * hoje sempre resolve para a única versão do seed.
+ */
+export function formularioVersaoVigente(
+  estado: EstadoApp,
+  origem: FormularioVersao["origem"],
+): FormularioVersao | undefined {
+  return [...estado.formularioVersoes]
+    .filter((f) => f.origem === origem)
+    .sort((a, b) => b.criadaEmISO.localeCompare(a.criadaEmISO))[0];
 }
 
 export function formatarData(data: Date): string {

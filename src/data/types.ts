@@ -140,6 +140,20 @@ export interface PerguntaReflexao {
   ordem: number;
 }
 
+/**
+ * Dimensão da autoavaliação — afirmações agrupadas por eixo de prática.
+ * Vem de `CicloConfig.dimensoesAutoavaliacao` (v3): antes era hardcoded em
+ * `src/data/autoavaliacao.ts`, o que violava a regra de ouro (nenhuma regra
+ * pedagógica presa em código). Corrigido nesta rodada — a lista em si
+ * continua a mesma, só a fonte muda.
+ */
+export interface DimensaoAutoavaliacao {
+  id: string;
+  nome: string;
+  resumo: string;
+  afirmacoes: { id: string; texto: string }[];
+}
+
 export type TipoPergunta = "escala" | "texto";
 
 /** Público que responde a Enquete 360° (docente, coordenador, estudante...). */
@@ -165,6 +179,40 @@ export interface ConfigEnquete {
   perguntas: PerguntaEnquete[];
 }
 
+/**
+ * Snapshot congelado do conjunto de perguntas de um "formulário" (Enquete,
+ * Portfólio ou Autoavaliação) num dado momento (D53) — gerado quando esse
+ * conjunto muda. `Resposta`/`RespostaEnquete`/`Portfolio`/`Autoavaliacao`
+ * referenciam o id da versão vigente, nunca a configuração ao vivo.
+ *
+ * As três telas de configuração (Enquete, Conteúdo do Portfólio,
+ * Autoavaliação) continuam como estão — nenhuma foi tocada nesta rodada;
+ * isto é só o schema do snapshot.
+ *
+ * TODO(Pacote 1): acrescentar `mesocicloId` quando `Mesociclo` existir — sem
+ * ele o snapshot não sabe a qual ciclo pertence. Omitido de propósito neste
+ * pacote (confirmado com o cliente), não esquecido.
+ */
+export type FormularioVersao =
+  | {
+      id: string;
+      origem: "enquete";
+      perguntas: PerguntaEnquete[];
+      criadaEmISO: string;
+    }
+  | {
+      id: string;
+      origem: "portfolio";
+      perguntas: PerguntaReflexao[];
+      criadaEmISO: string;
+    }
+  | {
+      id: string;
+      origem: "autoavaliacao";
+      perguntas: DimensaoAutoavaliacao[];
+      criadaEmISO: string;
+    };
+
 export interface CicloConfig {
   id: string;
   nome: string;
@@ -180,6 +228,8 @@ export interface CicloConfig {
   subtipos: Subtipo[];
   conquistas: Conquista[];
   reflexoesPortfolio: PerguntaReflexao[];
+  /** dimensões e afirmações da autoavaliação (v3) — antes hardcoded */
+  dimensoesAutoavaliacao: DimensaoAutoavaliacao[];
   enquete: ConfigEnquete;
 }
 
@@ -308,6 +358,8 @@ export interface Autoavaliacao {
   respostas: Record<string, number>;
   dimensoes: Record<string, number>;
   concluidaEmISO?: string | undefined;
+  /** snapshot de FormularioVersao vigente no momento da resposta (D53) */
+  formularioVersaoId?: string | undefined;
 }
 
 /**
@@ -504,6 +556,8 @@ export interface Portfolio {
   status: "rascunho" | "enviado";
   atualizadoEmISO: string;
   enviadoEmISO?: string | undefined;
+  /** snapshot de FormularioVersao vigente no momento do envio (D53) */
+  formularioVersaoId?: string | undefined;
 }
 
 /** Resposta da Enquete 360° sobre um docente, vinda de um público qualquer. */
@@ -515,6 +569,8 @@ export interface RespostaEnquete {
   escalas: Record<string, number>;
   textos: Record<string, string>;
   enviadaEmISO: string;
+  /** snapshot de FormularioVersao vigente no momento da resposta (D53) */
+  formularioVersaoId?: string | undefined;
 }
 
 export interface EstadoApp {
@@ -538,6 +594,7 @@ export interface EstadoApp {
   temaVersoes: TemaVersao[];
   conclusoes: Conclusao[];
   certificados: Certificado[];
+  formularioVersoes: FormularioVersao[];
   portfolios: Portfolio[];
   midias: Midia[];
   ofertas: OfertaConteudo[];
