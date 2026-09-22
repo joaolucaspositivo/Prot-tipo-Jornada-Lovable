@@ -31,6 +31,7 @@ export function AbaModalidades() {
         descricao: "",
         ativa: true,
         presencaAutomatica: false,
+        preveEncontroAoVivo: true,
       },
     ]);
 

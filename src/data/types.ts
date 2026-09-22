@@ -92,6 +92,15 @@ export interface Modalidade {
   ativa: boolean;
   /** o envio da tarefa registra presença automaticamente */
   presencaAutomatica: boolean;
+  /**
+   * A modalidade prevê encontro ao vivo (D51) — governa se existe presença
+   * para registrar. Campo próprio, independente de `presencaAutomatica`: uma
+   * modalidade pode não ter presença automática sem necessariamente ter
+   * encontro ao vivo. No seed, espelha o inverso de `presencaAutomatica`
+   * (síncrona = true, assíncrona = false), igual ao comportamento atual —
+   * sem tela nova nesta rodada, o Pacote 3 é quem consome isto de verdade.
+   */
+  preveEncontroAoVivo: boolean;
 }
 
 export interface AlertaPendencia {

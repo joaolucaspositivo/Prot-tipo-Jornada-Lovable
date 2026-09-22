@@ -109,6 +109,7 @@ const modalidadesSeed = [
     descricao: "Encontros ao vivo em data e horário definidos.",
     ativa: true,
     presencaAutomatica: false,
+    preveEncontroAoVivo: true,
   },
   {
     id: "mod-assincrona",
@@ -116,6 +117,7 @@ const modalidadesSeed = [
     descricao: "Percurso no próprio ritmo; a entrega registra a presença.",
     ativa: true,
     presencaAutomatica: true,
+    preveEncontroAoVivo: false,
   },
 ];
 
