@@ -2,6 +2,7 @@
 // da data informada pelo docente na entrega do planejamento.
 
 import type {
+  CicloConfig,
   Entrega,
   EstadoApp,
   Etapa,
@@ -11,7 +12,7 @@ import type {
   Turma,
 } from "@/data/types";
 import {
-  cicloConfigAtivo,
+  cicloDaTurma,
   coordenadoresDoDocente,
   etapasEmOrdem,
 } from "@/lib/ciclo";
@@ -55,14 +56,16 @@ export interface Compromisso {
   daEquipeCentral: boolean;
 }
 
-/** Etapa de observação configurada (tipo `encontro` seguinte à entrega). */
+/**
+ * Etapa de observação configurada (tipo `encontro` seguinte à entrega).
+ * Recebe a config já resolvida pelo chamador — precisa ser a mesma de onde
+ * `etapaEntrega` veio, nunca a vigente por conta própria.
+ */
 export function etapaDeObservacao(
-  estado: EstadoApp,
+  config: CicloConfig,
   etapaEntrega: Etapa | undefined,
 ): Etapa | undefined {
-  const etapas = etapasEmOrdem(cicloConfigAtivo(estado)).filter(
-    (e) => e.tipo === "encontro",
-  );
+  const etapas = etapasEmOrdem(config).filter((e) => e.tipo === "encontro");
   if (!etapaEntrega) return etapas[0];
   return (
     etapas.find((e) => e.ordem > etapaEntrega.ordem) ??
@@ -83,18 +86,20 @@ export function compromissosDeObservacao(
   filtro: { coordenadorId?: string; todos?: boolean } = {},
 ): Compromisso[] {
   const agora = new Date();
-  const config = cicloConfigAtivo(estado);
 
   return estado.entregas
     .filter((e) => Boolean(e.dataAulaISO))
     .map((entrega): Compromisso => {
       const docente = estado.pessoas.find((p) => p.id === entrega.pessoaId);
-      const etapaEntrega = config.etapas.find((e) => e.id === entrega.etapaId);
-      const etapaObservacao = etapaDeObservacao(estado, etapaEntrega);
       const inscricao = estado.inscricoes.find(
         (i) => i.pessoaId === entrega.pessoaId,
       );
       const turma = estado.turmas.find((t) => t.id === inscricao?.turmaId);
+      // Por item, pela turma do docente — a agenda atende docentes de
+      // ciclos diferentes ao mesmo tempo.
+      const { config } = cicloDaTurma(estado, turma);
+      const etapaEntrega = config.etapas.find((e) => e.id === entrega.etapaId);
+      const etapaObservacao = etapaDeObservacao(config, etapaEntrega);
       const tema = config.temas.find(
         (m) => m.id === (inscricao?.temaId ?? turma?.temaId),
       );

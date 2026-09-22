@@ -3,14 +3,15 @@
 
 import type { EstadoApp, Etapa, Modalidade, Pessoa, Turma } from "@/data/types";
 import {
-  cicloConfigAtivo,
+  cicloDaTurma,
+  cicloDoDocente,
   coordenadoresDoDocente,
   etapasEmOrdem,
 } from "@/lib/ciclo";
 
-/** Etapas de conteúdo, na ordem configurada. */
-export function etapasDeConteudo(estado: EstadoApp): Etapa[] {
-  return etapasEmOrdem(cicloConfigAtivo(estado)).filter(
+/** Etapas de conteúdo do docente, na ordem configurada. */
+export function etapasDeConteudo(estado: EstadoApp, pessoaId: string): Etapa[] {
+  return etapasEmOrdem(cicloDoDocente(estado, pessoaId).config).filter(
     (e) => e.tipo === "conteudo",
   );
 }
@@ -29,7 +30,7 @@ export function percursoDoDocente(
   estado: EstadoApp,
   pessoa: Pessoa,
 ): PercursoDoDocente {
-  const config = cicloConfigAtivo(estado);
+  const { config } = cicloDoDocente(estado, pessoa.id);
   const inscricao = estado.inscricoes.find((i) => i.pessoaId === pessoa.id);
   const turma = estado.turmas.find((t) => t.id === inscricao?.turmaId);
   const temaId = turma?.temaId ?? inscricao?.temaId;
@@ -105,7 +106,6 @@ export function presencasAutomaticas(
   estado: EstadoApp,
   filtro?: { coordenadorId?: string | undefined },
 ): RegistroPresenca[] {
-  const config = cicloConfigAtivo(estado);
   return estado.progressoEtapas
     .filter((p) => Boolean(p.presencaEmISO))
     .map((p) => {
@@ -114,6 +114,9 @@ export function presencasAutomaticas(
         (i) => i.pessoaId === p.pessoaId,
       );
       const turma = estado.turmas.find((t) => t.id === inscricao?.turmaId);
+      // Por item, pela turma de cada docente — a lista atende docentes de
+      // ciclos diferentes ao mesmo tempo.
+      const { config } = cicloDaTurma(estado, turma);
       return {
         pessoa,
         etapa: config.etapas.find((e) => e.id === p.etapaId),

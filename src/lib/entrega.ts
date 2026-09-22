@@ -9,8 +9,8 @@ import type {
   Pessoa,
 } from "@/data/types";
 import {
-  cicloAtivo,
-  cicloConfigAtivo,
+  cicloDaTurma,
+  cicloDoDocente,
   coordenadoresDoDocente,
   coordenadorPrincipalDoDocente,
   etapasEmOrdem,
@@ -20,9 +20,9 @@ import {
 
 export const DESTINO_EQUIPE_CENTRAL = "equipe-central";
 
-/** Etapas de entrega, na ordem configurada. */
-export function etapasDeEntrega(estado: EstadoApp): Etapa[] {
-  return etapasEmOrdem(cicloConfigAtivo(estado)).filter(
+/** Etapas de entrega do docente, na ordem configurada. */
+export function etapasDeEntrega(estado: EstadoApp, pessoaId: string): Etapa[] {
+  return etapasEmOrdem(cicloDoDocente(estado, pessoaId).config).filter(
     (e) => e.tipo === "entrega",
   );
 }
@@ -62,8 +62,12 @@ export function destinoDaEntrega(
 }
 
 /** Janela válida para a data da aula a ser observada. */
-export function janelaDaAula(estado: EstadoApp, etapa: Etapa) {
-  const { mesociclo, config } = cicloAtivo(estado);
+export function janelaDaAula(
+  estado: EstadoApp,
+  pessoaId: string,
+  etapa: Etapa,
+) {
+  const { mesociclo, config } = cicloDoDocente(estado, pessoaId);
   const seguintes = etapasEmOrdem(config).filter(
     (e) => e.ordem > etapa.ordem && e.tipo === "encontro",
   );
@@ -134,14 +138,24 @@ export function entregasRecebidas(
   estado: EstadoApp,
   filtro: { coordenadorId?: string; apenasEquipeCentral?: boolean } = {},
 ): EntregaRecebida[] {
-  const config = cicloConfigAtivo(estado);
   return estado.entregas
-    .map((entrega) => ({
-      entrega,
-      docente: estado.pessoas.find((p) => p.id === entrega.pessoaId),
-      etapa: config.etapas.find((e) => e.id === entrega.etapaId),
-      devolutiva: estado.devolutivas.find((d) => d.entregaId === entrega.id),
-    }))
+    .map((entrega) => {
+      // Por item, pela turma do docente da entrega — a lista atende
+      // docentes de ciclos diferentes ao mesmo tempo.
+      const inscricao = estado.inscricoes.find(
+        (i) => i.pessoaId === entrega.pessoaId,
+      );
+      const turma = inscricao
+        ? estado.turmas.find((t) => t.id === inscricao.turmaId)
+        : undefined;
+      const { config } = cicloDaTurma(estado, turma);
+      return {
+        entrega,
+        docente: estado.pessoas.find((p) => p.id === entrega.pessoaId),
+        etapa: config.etapas.find((e) => e.id === entrega.etapaId),
+        devolutiva: estado.devolutivas.find((d) => d.entregaId === entrega.id),
+      };
+    })
     .filter((item) => {
       if (filtro.apenasEquipeCentral)
         return item.entrega.destino === "equipe_central";

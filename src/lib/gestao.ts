@@ -3,7 +3,7 @@
 // tudo é derivado da configuração em runtime e do estado persistido.
 
 import type { EstadoApp, Etapa, Modalidade, Pessoa, Turma } from "@/data/types";
-import { cicloConfigAtivo, etapasEmOrdem } from "@/lib/ciclo";
+import { cicloConfigAtivo, cicloDaTurma, etapasEmOrdem } from "@/lib/ciclo";
 import type { LinhaEquipe } from "@/lib/equipe";
 
 export interface FiltroGestao {
@@ -134,7 +134,6 @@ export function conferencias(
   estado: EstadoApp,
   linhas: LinhaEquipe[],
 ): Conferencia[] {
-  const config = cicloConfigAtivo(estado);
   const semInscricao: ItemConferencia[] = [];
   const semTarefa: ItemConferencia[] = [];
   const semPresenca: ItemConferencia[] = [];
@@ -149,6 +148,13 @@ export function conferencias(
         detalhe: "Ainda não escolheu macrotema e turma",
       });
     }
+
+    // Por linha, pela turma do docente — a conferência atende docentes de
+    // ciclos diferentes ao mesmo tempo.
+    const turmaDoDocente = inscricao
+      ? estado.turmas.find((t) => t.id === inscricao.turmaId)
+      : undefined;
+    const { config } = cicloDaTurma(estado, turmaDoDocente);
 
     const entregas = estado.entregas.filter((e) => e.pessoaId === l.pessoa.id);
     const etapaEntrega = l.trilha.find((i) => i.etapa.tipo === "entrega");
