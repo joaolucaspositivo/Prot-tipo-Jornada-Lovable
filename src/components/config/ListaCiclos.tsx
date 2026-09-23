@@ -161,7 +161,6 @@ function LinhaCiclo({
     <TableRow
       className="cursor-pointer"
       onClick={aoAbrir}
-      role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Enter") aoAbrir();
