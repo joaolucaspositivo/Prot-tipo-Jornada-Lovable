@@ -170,6 +170,8 @@ interface ItemArrastavelProps {
   aoMover: (de: number, para: number) => void;
   children: ReactNode;
   rotulo: string;
+  /** false trava o arraste deste item (D43) — as setas continuam visíveis, mas `aoMover` é quem decide se o movimento é aceito */
+  arrastavel?: boolean;
 }
 
 /**
@@ -182,12 +184,13 @@ export function ItemArrastavel({
   aoMover,
   children,
   rotulo,
+  arrastavel = true,
 }: ItemArrastavelProps) {
   const [sobre, setSobre] = useState(false);
 
   return (
     <li
-      draggable
+      draggable={arrastavel}
       onDragStart={(e) => e.dataTransfer.setData("text/plain", String(indice))}
       onDragOver={(e) => {
         e.preventDefault();

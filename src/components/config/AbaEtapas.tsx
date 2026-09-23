@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Lock, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
-import { ItemArrastavel, useAvisoImpacto, useCicloConfig } from "./comum";
+import { BlocoCertificado } from "./BlocoCertificado";
+import { ItemArrastavel, useCicloConfig } from "./comum";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,6 +38,7 @@ import {
   ROTULO_TIPO_ETAPA,
   TELAS_ETAPA,
   TIPOS_ETAPA,
+  congelarPrazosComExecucao,
   docentesComProgressoNaEtapa,
   formatarData,
   moverItem,
@@ -54,33 +57,60 @@ const TIPOS_PARTICIPACAO: TipoParticipacao[] = ["regente", "corregente"];
 
 export function AbaEtapas() {
   const { estado, config, salvarConfig, mesociclo } = useCicloConfig();
-  const { confirmar, dialogo } = useAvisoImpacto();
   const [subtipoParaCriar, setSubtipoParaCriar] = useState<Etapa | null>(null);
 
   const etapas = [...config.etapas].sort((a, b) => a.ordem - b.ordem);
+  const bloqueios = etapas.map(
+    (e) => docentesComProgressoNaEtapa(estado, e.id) > 0,
+  );
 
+  /**
+   * Toda gravação passa primeiro por `congelarPrazosComExecucao`: se esta
+   * mudança é a primeira a acontecer depois que uma etapa passou a ter
+   * dado de execução, o prazo dela é fixado ANTES de aplicar a mudança —
+   * sem isso, inserir/mover/remover uma etapa anterior desloca em silêncio
+   * o prazo de quem já começou (D38 é cumulativo).
+   */
   const gravar = (lista: Etapa[]) =>
-    salvarConfig((c) => ({ ...c, etapas: reindexar(lista) }));
+    salvarConfig((c) => {
+      const congelado = congelarPrazosComExecucao(estado, mesociclo, c);
+      const prazoCongelado = new Map(
+        congelado.etapas.map((e) => [e.id, e.prazoCongeladoISO]),
+      );
+      const etapasFinal = lista.map((e) => ({
+        ...e,
+        prazoCongeladoISO: e.prazoCongeladoISO ?? prazoCongelado.get(e.id),
+      }));
+      return { ...c, etapas: reindexar(etapasFinal) };
+    });
 
   const editar = (id: string, mudanca: Partial<Etapa>) =>
     gravar(etapas.map((e) => (e.id === id ? { ...e, ...mudanca } : e)));
 
-  const editarComAviso = (
-    etapa: Etapa,
-    mudanca: Partial<Etapa>,
-    oQue: string,
-  ) => {
-    const afetados = docentesComProgressoNaEtapa(estado, etapa.id);
-    confirmar({
-      titulo: `Alterar ${oQue} de “${etapa.nome}”?`,
-      descricao:
-        "A mudança aparece na hora para docentes e coordenadores, sem recarregar.",
-      precisaAviso: afetados > 0,
-      impacto: `${afetados} docente(s) já têm progresso registrado nesta etapa.`,
-      rotuloAcao: "Alterar",
-      aoConfirmar: () => editar(etapa.id, mudanca),
-    });
-  };
+  /**
+   * Etapa travada (D43) não move, e nada pode passar à frente dela — o
+   * intervalo entre `de` e `para` não pode conter nenhuma outra travada
+   * além da própria (que já está bloqueada por não poder ser `de`).
+   */
+  function podeMover(de: number, para: number): boolean {
+    if (bloqueios[de]) return false;
+    const min = Math.min(de, para);
+    const max = Math.max(de, para);
+    for (let i = min; i <= max; i += 1) {
+      if (i !== de && bloqueios[i]) return false;
+    }
+    return true;
+  }
+
+  function mover(de: number, para: number) {
+    if (!podeMover(de, para)) {
+      toast.error(
+        "Etapa com progresso registrado não muda de posição, e nada passa à frente dela (D43).",
+      );
+      return;
+    }
+    gravar(moverItem(etapas, de, para));
+  }
 
   /**
    * Trocar o tipo genérico limpa o subtipo — os dois têm que ficar coerentes.
@@ -91,16 +121,12 @@ export function AbaEtapas() {
     const primeiroSubtipo = config.subtipos.find(
       (s) => s.tipoGenerico === tipo,
     );
-    editarComAviso(
-      etapa,
-      {
-        tipo,
-        faseCanonica: FASE_PADRAO_POR_TIPO[tipo],
-        subtipoId: primeiroSubtipo?.id,
-        tela: primeiroSubtipo?.tela ?? etapa.tela,
-      },
-      "o tipo",
-    );
+    editar(etapa.id, {
+      tipo,
+      faseCanonica: FASE_PADRAO_POR_TIPO[tipo],
+      subtipoId: primeiroSubtipo?.id,
+      tela: primeiroSubtipo?.tela ?? etapa.tela,
+    });
   }
 
   function escolherSubtipo(etapa: Etapa, subtipoId: string) {
@@ -110,24 +136,16 @@ export function AbaEtapas() {
     }
     const subtipo = config.subtipos.find((s) => s.id === subtipoId);
     if (!subtipo) return;
-    editarComAviso(
-      etapa,
-      { subtipoId: subtipo.id, tela: subtipo.tela },
-      "o subtipo",
-    );
+    editar(etapa.id, { subtipoId: subtipo.id, tela: subtipo.tela });
   }
 
   function alternarParticipacao(etapa: Etapa, tipo: TipoParticipacao) {
     const marcado = etapa.perfisParticipantes.includes(tipo);
-    editarComAviso(
-      etapa,
-      {
-        perfisParticipantes: marcado
-          ? etapa.perfisParticipantes.filter((p) => p !== tipo)
-          : [...etapa.perfisParticipantes, tipo],
-      },
-      "quem participa desta etapa",
-    );
+    editar(etapa.id, {
+      perfisParticipantes: marcado
+        ? etapa.perfisParticipantes.filter((p) => p !== tipo)
+        : [...etapa.perfisParticipantes, tipo],
+    });
   }
 
   function criarSubtipo(novo: Subtipo) {
@@ -161,17 +179,8 @@ export function AbaEtapas() {
       },
     ]);
 
-  const remover = (etapa: Etapa) => {
-    const afetados = docentesComProgressoNaEtapa(estado, etapa.id);
-    confirmar({
-      titulo: `Remover “${etapa.nome}”?`,
-      descricao: "A etapa some da trilha do docente imediatamente.",
-      precisaAviso: afetados > 0,
-      impacto: `${afetados} docente(s) já registraram progresso nesta etapa. O histórico deles fica órfão.`,
-      rotuloAcao: "Remover",
-      aoConfirmar: () => gravar(etapas.filter((e) => e.id !== etapa.id)),
-    });
-  };
+  const remover = (etapa: Etapa) =>
+    gravar(etapas.filter((e) => e.id !== etapa.id));
 
   return (
     <div className="space-y-4">
@@ -188,6 +197,7 @@ export function AbaEtapas() {
       <ul className="space-y-3">
         {etapas.map((etapa, i) => {
           const afetados = docentesComProgressoNaEtapa(estado, etapa.id);
+          const bloqueada = bloqueios[i]!;
           const subtiposDoTipo = config.subtipos.filter(
             (s) => s.tipoGenerico === etapa.tipo,
           );
@@ -196,20 +206,23 @@ export function AbaEtapas() {
               key={etapa.id}
               indice={i}
               total={etapas.length}
-              aoMover={(de, para) => gravar(moverItem(etapas, de, para))}
+              aoMover={mover}
               rotulo={etapa.nome}
+              arrastavel={!bloqueada}
             >
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <Input
                     value={etapa.nome}
                     aria-label="Nome da etapa"
+                    disabled={bloqueada}
                     onChange={(e) => editar(etapa.id, { nome: e.target.value })}
                     className="h-10 max-w-md flex-1 font-medium"
                   />
                   {afetados > 0 ? (
-                    <Badge variant="secondary">
-                      {afetados} docente(s) com progresso
+                    <Badge variant="secondary" className="gap-1">
+                      <Lock className="size-3" aria-hidden />
+                      {afetados} docente(s) com progresso — edição travada
                     </Badge>
                   ) : null}
                 </div>
@@ -219,6 +232,7 @@ export function AbaEtapas() {
                     <Label htmlFor={`tipo-${etapa.id}`}>Tipo da etapa</Label>
                     <Select
                       value={etapa.tipo}
+                      disabled={bloqueada}
                       onValueChange={(v) => trocarTipo(etapa, v as TipoEtapa)}
                     >
                       <SelectTrigger id={`tipo-${etapa.id}`} className="h-10">
@@ -241,6 +255,7 @@ export function AbaEtapas() {
                     </Label>
                     <Select
                       value={etapa.subtipoId ?? ""}
+                      disabled={bloqueada}
                       onValueChange={(v) => escolherSubtipo(etapa, v)}
                     >
                       <SelectTrigger
@@ -286,6 +301,7 @@ export function AbaEtapas() {
                       type="number"
                       min={0}
                       value={etapa.prazoDias}
+                      disabled={bloqueada}
                       onChange={(e) =>
                         editar(etapa.id, {
                           prazoDias: Math.max(0, Number(e.target.value) || 0),
@@ -294,10 +310,11 @@ export function AbaEtapas() {
                       className="h-10"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Vence em{" "}
-                      {formatarData(
-                        prazoDaEtapa(mesociclo.dataInicio, config, etapa),
-                      )}
+                      {etapa.prazoCongeladoISO
+                        ? `Congelado em ${formatarData(new Date(etapa.prazoCongeladoISO))}`
+                        : `Vence em ${formatarData(
+                            prazoDaEtapa(mesociclo.dataInicio, config, etapa),
+                          )}`}
                     </p>
                   </div>
                   <div className="space-y-1.5">
@@ -310,6 +327,7 @@ export function AbaEtapas() {
                       min={0}
                       placeholder="Sem carga horária declarada"
                       value={etapa.cargaHoraria ?? ""}
+                      disabled={bloqueada}
                       onChange={(e) => {
                         const bruto = e.target.value;
                         editar(etapa.id, {
@@ -328,6 +346,7 @@ export function AbaEtapas() {
                   value={etapa.descricao}
                   aria-label="Descrição exibida ao docente"
                   placeholder="Descrição curta exibida ao docente na trilha"
+                  disabled={bloqueada}
                   onChange={(e) =>
                     editar(etapa.id, { descricao: e.target.value })
                   }
@@ -344,6 +363,7 @@ export function AbaEtapas() {
                         <Checkbox
                           id={`part-${etapa.id}-${tipo}`}
                           checked={etapa.perfisParticipantes.includes(tipo)}
+                          disabled={bloqueada}
                           onCheckedChange={() =>
                             alternarParticipacao(etapa, tipo)
                           }
@@ -364,12 +384,9 @@ export function AbaEtapas() {
                     <Switch
                       id={`obr-${etapa.id}`}
                       checked={etapa.obrigatoria}
+                      disabled={bloqueada}
                       onCheckedChange={(v) =>
-                        editarComAviso(
-                          etapa,
-                          { obrigatoria: v },
-                          "a obrigatoriedade",
-                        )
+                        editar(etapa.id, { obrigatoria: v })
                       }
                     />
                     <Label htmlFor={`obr-${etapa.id}`}>
@@ -379,11 +396,14 @@ export function AbaEtapas() {
                   <Button
                     variant="ghost"
                     className="ml-auto text-atraso hover:bg-atraso-suave"
+                    disabled={bloqueada}
                     onClick={() => remover(etapa)}
                   >
                     <Trash2 className="size-4" /> Remover
                   </Button>
                 </div>
+
+                {etapa.tipo === "encerramento" && <BlocoCertificado />}
               </div>
             </ItemArrastavel>
           );
@@ -395,7 +415,6 @@ export function AbaEtapas() {
         aoFechar={() => setSubtipoParaCriar(null)}
         aoCriar={criarSubtipo}
       />
-      {dialogo}
     </div>
   );
 }

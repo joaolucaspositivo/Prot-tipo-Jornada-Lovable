@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Lock, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ItemArrastavel } from "./comum";
@@ -17,6 +17,7 @@ import {
   novoId,
   reindexar,
   temasDoMacrociclo,
+  temaTravadoPorCertificado,
   usoDoTema,
 } from "@/lib/ciclo";
 
@@ -107,6 +108,7 @@ export function AbaTemas() {
             indice={i}
             total={temas.length}
             uso={usoDoTema(estado, m.id)}
+            nomeTravado={temaTravadoPorCertificado(estado, m.id)}
             aoMover={mover}
             aoEditar={(mudanca) => editar(m.id, mudanca)}
             aoRenomear={(nomeAnterior) => renomear(m.id, nomeAnterior)}
@@ -123,6 +125,7 @@ function LinhaTema({
   indice,
   total,
   uso,
+  nomeTravado,
   aoMover,
   aoEditar,
   aoRenomear,
@@ -132,6 +135,8 @@ function LinhaTema({
   indice: number;
   total: number;
   uso: { turmas: number; inscricoes: number };
+  /** já existe certificado emitido para este tema (D42) — nome não edita mais */
+  nomeTravado: boolean;
   aoMover: (de: number, para: number) => void;
   aoEditar: (mudanca: Partial<Tema>) => void;
   aoRenomear: (nomeAnterior: string) => void;
@@ -153,6 +158,7 @@ function LinhaTema({
           <Input
             value={tema.nome}
             aria-label="Nome do tema"
+            disabled={nomeTravado}
             onFocus={() => setNomeAoFocar(tema.nome)}
             onChange={(e) => aoEditar({ nome: e.target.value })}
             onBlur={() => {
@@ -160,6 +166,12 @@ function LinhaTema({
             }}
             className="h-10 max-w-md flex-1 font-medium"
           />
+          {nomeTravado && (
+            <Badge variant="secondary" className="gap-1">
+              <Lock className="size-3" aria-hidden />
+              Certificado emitido — nome travado (D42)
+            </Badge>
+          )}
           <Badge variant="secondary">
             {uso.turmas} turma(s) · {uso.inscricoes} inscrição(ões)
           </Badge>
