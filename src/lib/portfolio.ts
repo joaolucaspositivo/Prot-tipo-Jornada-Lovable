@@ -9,13 +9,18 @@ import type {
 } from "@/data/types";
 import { cicloDoDocente, etapasEmOrdem } from "@/lib/ciclo";
 
-/** Etapa de portfólio do docente, resolvida em runtime (nunca fixa no código). */
-export function etapaDePortfolio(
+/**
+ * Etapas de portfólio do docente, resolvidas em runtime — plural (Pacote 2,
+ * D52): sem limite de ocorrências por tipo, a rota escolhe entre elas como
+ * já faz `/aulas` e `/entrega`.
+ */
+export function etapasDePortfolio(
   estado: EstadoApp,
   pessoaId: string,
-): Etapa | undefined {
-  const etapas = etapasEmOrdem(cicloDoDocente(estado, pessoaId).config);
-  return etapas.find((e) => e.tela === "portfolio");
+): Etapa[] {
+  return etapasEmOrdem(cicloDoDocente(estado, pessoaId).config).filter(
+    (e) => e.tela === "portfolio",
+  );
 }
 
 export function reflexoesConfiguradas(
@@ -27,11 +32,15 @@ export function reflexoesConfiguradas(
   );
 }
 
+/** Portfólio de UMA etapa específica — `Portfolio.etapaId` já distingue, mas o pedido nunca pode ficar implícito (Pacote 2). */
 export function portfolioDoDocente(
   estado: EstadoApp,
   pessoaId: string,
+  etapaId: string,
 ): Portfolio | undefined {
-  return estado.portfolios.find((p) => p.pessoaId === pessoaId);
+  return estado.portfolios.find(
+    (p) => p.pessoaId === pessoaId && p.etapaId === etapaId,
+  );
 }
 
 export interface ItemDoCiclo {

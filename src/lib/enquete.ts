@@ -11,16 +11,17 @@ import type {
 import { cicloConfigAtivo, cicloDoDocente, etapasEmOrdem } from "@/lib/ciclo";
 
 /**
- * Etapa da trilha que a Enquete 360° conclui, para UM docente específico —
- * quem está sendo avaliado, não quem responde. O formulário em si (perguntas
- * e públicos, abaixo) não é escopado por turma: qualquer um pode responder
- * sobre qualquer docente, a qualquer momento.
+ * Etapas da trilha que a Enquete 360° conclui, para UM docente específico —
+ * quem está sendo avaliado, não quem responde. Plural (Pacote 2, D52): sem
+ * limite de ocorrências por tipo. O formulário em si (perguntas e públicos,
+ * abaixo) não é escopado por turma: qualquer um pode responder sobre
+ * qualquer docente, a qualquer momento.
  */
-export function etapaDeEnquete(
+export function etapasDeEnquete(
   estado: EstadoApp,
   pessoaId: string,
-): Etapa | undefined {
-  return etapasEmOrdem(cicloDoDocente(estado, pessoaId).config).find(
+): Etapa[] {
+  return etapasEmOrdem(cicloDoDocente(estado, pessoaId).config).filter(
     (e) => e.tela === "enquete",
   );
 }

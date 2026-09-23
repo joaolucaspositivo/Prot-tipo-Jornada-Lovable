@@ -157,13 +157,19 @@ export function conferencias(
     const { config } = cicloDaTurma(estado, turmaDoDocente);
 
     const entregas = estado.entregas.filter((e) => e.pessoaId === l.pessoa.id);
-    const etapaEntrega = l.trilha.find((i) => i.etapa.tipo === "entrega");
-    if (entregas.length === 0 && etapaEntrega) {
-      semTarefa.push({
-        pessoa: l.pessoa,
-        detalhe: `Sem envio em "${etapaEntrega.etapa.nome}"`,
+    // Por etapa (Pacote 2, D52): com mais de uma etapa de entrega, verificar
+    // só a primeira escondia a pendência de uma segunda já enviada.
+    const idsEtapasComEnvio = new Set(entregas.map((e) => e.etapaId));
+    l.trilha
+      .filter((i) => i.etapa.tipo === "entrega")
+      .forEach((i) => {
+        if (!idsEtapasComEnvio.has(i.etapa.id)) {
+          semTarefa.push({
+            pessoa: l.pessoa,
+            detalhe: `Sem envio em "${i.etapa.nome}"`,
+          });
+        }
       });
-    }
 
     const temPresenca =
       estado.progressoEtapas.some(

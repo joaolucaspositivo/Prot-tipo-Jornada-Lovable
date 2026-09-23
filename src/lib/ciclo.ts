@@ -204,12 +204,18 @@ export function temasAtivos(temas: Tema[]): Tema[] {
  * Data limite de uma etapa. Encadeada (D38): cada etapa conta seus
  * `prazoDias` a partir do vencimento da etapa anterior, começando da
  * `dataInicio` do MESOCICLO (D39) — não mais de um ciclo único.
+ *
+ * Etapa com `prazoCongeladoISO` não recalcula: lê o valor congelado direto
+ * (Pacote 2) — protege quem já começou de ter o prazo deslocado por uma
+ * etapa anterior inserida ou removida depois.
  */
 export function prazoDaEtapa(
   dataInicio: string,
   config: CicloConfig,
   etapa: Etapa,
 ): Date {
+  if (etapa.prazoCongeladoISO) return new Date(etapa.prazoCongeladoISO);
+
   const ordenadas = etapasEmOrdem(config);
   let data = new Date(dataInicio);
   for (const e of ordenadas) {
@@ -284,17 +290,107 @@ export function formatarData(data: Date): string {
   });
 }
 
-/** Quantos docentes já têm progresso registrado em uma etapa. */
+/**
+ * Quantos docentes já têm QUALQUER dado de execução numa etapa (D43) — não
+ * só `ProgressoEtapa`. Varre toda entidade que referencia `etapaId`
+ * (entrega, aula assistida, leitura, presença, observação, portfólio,
+ * autoavaliação, resposta de enquete); sem isso, uma etapa com entrega
+ * enviada mas sem `ProgressoEtapa` gravado passaria como "sem uso" e a
+ * trava de edição (D43) deixaria editar algo que já tem histórico.
+ */
 export function docentesComProgressoNaEtapa(
   estado: EstadoApp,
   etapaId: string,
 ): number {
-  const pessoas = new Set(
-    estado.progressoEtapas
-      .filter((p) => p.etapaId === etapaId && p.status !== "nao_iniciada")
-      .map((p) => p.pessoaId),
-  );
+  const pessoas = new Set<string>();
+  estado.progressoEtapas
+    .filter((p) => p.etapaId === etapaId && p.status !== "nao_iniciada")
+    .forEach((p) => pessoas.add(p.pessoaId));
+  estado.entregas
+    .filter((e) => e.etapaId === etapaId)
+    .forEach((e) => pessoas.add(e.pessoaId));
+  estado.progressoAulas
+    .filter((p) => p.etapaId === etapaId)
+    .forEach((p) => pessoas.add(p.pessoaId));
+  estado.progressoLeituras
+    .filter((p) => p.etapaId === etapaId)
+    .forEach((p) => pessoas.add(p.pessoaId));
+  estado.presencas
+    .filter((p) => p.etapaId === etapaId)
+    .forEach((p) => pessoas.add(p.pessoaId));
+  estado.observacoes
+    .filter((o) => o.etapaId === etapaId)
+    .forEach((o) => pessoas.add(o.pessoaId));
+  estado.portfolios
+    .filter((p) => p.etapaId === etapaId)
+    .forEach((p) => pessoas.add(p.pessoaId));
+  estado.autoavaliacoes
+    .filter((a) => a.etapaId === etapaId)
+    .forEach((a) => pessoas.add(a.pessoaId));
+  estado.respostasEnquete
+    .filter((r) => r.etapaId === etapaId)
+    .forEach((r) => pessoas.add(r.docenteId));
   return pessoas.size;
+}
+
+/**
+ * Congela, ANTES de uma mudança estrutural na trilha (reordenar, inserir,
+ * remover), o prazo calculado de toda etapa que já tem dado de execução e
+ * ainda não tem `prazoCongeladoISO` (Pacote 2). O prazo é cumulativo (D38):
+ * sem isso, mudar a trilha em qualquer ponto anterior desloca em silêncio a
+ * data de quem já começou uma etapa mais adiante.
+ */
+export function congelarPrazosComExecucao(
+  estado: EstadoApp,
+  mesociclo: Mesociclo,
+  config: CicloConfig,
+): CicloConfig {
+  const etapas = config.etapas.map((etapa) => {
+    if (etapa.prazoCongeladoISO) return etapa;
+    if (docentesComProgressoNaEtapa(estado, etapa.id) === 0) return etapa;
+    const prazo = prazoDaEtapa(mesociclo.dataInicio, config, etapa);
+    return { ...etapa, prazoCongeladoISO: prazo.toISOString() };
+  });
+  return { ...config, etapas };
+}
+
+/**
+ * Versão vigente de um tema (D53/D54) — a mais recente entre as
+ * `TemaVersao` que apontam para este `Tema.id` especificamente, não para a
+ * linhagem inteira: uma reemissão deve refletir a versão do TEMA ativo
+ * quando o docente concluiu, não a versão mais nova de outro tema da mesma
+ * linhagem (isso só existiria depois de `versionarTema` entre macrociclos).
+ */
+export function temaVersaoVigente(
+  estado: EstadoApp,
+  temaId: string,
+): TemaVersao | undefined {
+  return [...estado.temaVersoes]
+    .filter((v) => v.temaId === temaId)
+    .sort((a, b) => b.numeroVersao - a.numeroVersao)[0];
+}
+
+/**
+ * Se o tema está travado por já ter certificado emitido (D42) — a
+ * confirmação de emissão avisa que os nomes travam a partir dali; esta
+ * função é o que torna esse aviso um bloqueio de fato, não só texto.
+ * Trava no CERTIFICADO emitido, não na `Conclusao` sozinha (D53/D54): a
+ * conclusão pode existir sem certificado (fora do MVP emitir de verdade
+ * antes do botão manual existir).
+ */
+export function temaTravadoPorCertificado(
+  estado: EstadoApp,
+  temaId: string,
+): boolean {
+  const idsVersao = new Set(
+    estado.temaVersoes.filter((v) => v.temaId === temaId).map((v) => v.id),
+  );
+  const idsConclusao = new Set(
+    estado.conclusoes
+      .filter((c) => idsVersao.has(c.temaVersaoId))
+      .map((c) => c.id),
+  );
+  return estado.certificados.some((cert) => idsConclusao.has(cert.conclusaoId));
 }
 
 /** Turmas e inscrições que dependem de um tema. */

@@ -26,6 +26,13 @@ export const ROTULO_SITUACAO: Record<SituacaoDocente, string> = {
   concluido: "Concluído",
 };
 
+/** Uma entrega do docente já resolvida com a etapa e a devolutiva dela, quando houver. */
+export interface EntregaDaLinha {
+  etapa: Etapa | undefined;
+  entrega: Entrega;
+  devolutiva: Devolutiva | undefined;
+}
+
 export interface LinhaEquipe {
   pessoa: Pessoa;
   trilha: ItemTrilha[];
@@ -44,8 +51,12 @@ export interface LinhaEquipe {
   turmaNome: string | undefined;
   /** regente ou corregente, resolvido pela inscrição (D34) */
   tipoParticipacao: TipoParticipacao;
-  entrega: Entrega | undefined;
-  devolutiva: Devolutiva | undefined;
+  /**
+   * TODAS as entregas do docente, mais antiga primeiro — plural (Pacote 2):
+   * com mais de uma etapa `entrega`/`portfolio` na trilha (D52), pegar só a
+   * mais recente escondia as demais do painel do coordenador.
+   */
+  entregasDoDocente: EntregaDaLinha[];
 }
 
 /** Docentes alocados a um coordenador (D35) — via `estado.alocacoes`, não mais um campo fixo na pessoa. */
@@ -121,12 +132,14 @@ export function linhaDoDocente(
   const tipoParticipacao: TipoParticipacao =
     inscricao?.tipoParticipacao ?? "regente";
 
-  const entrega = estado.entregas
+  const entregasDoDocente: EntregaDaLinha[] = estado.entregas
     .filter((e) => e.pessoaId === pessoa.id)
-    .sort((a, b) => b.enviadaEmISO.localeCompare(a.enviadaEmISO))[0];
-  const devolutiva = entrega
-    ? estado.devolutivas.find((d) => d.entregaId === entrega.id)
-    : undefined;
+    .sort((a, b) => a.enviadaEmISO.localeCompare(b.enviadaEmISO))
+    .map((entrega) => ({
+      etapa: configDoCiclo.etapas.find((e) => e.id === entrega.etapaId),
+      entrega,
+      devolutiva: estado.devolutivas.find((d) => d.entregaId === entrega.id),
+    }));
 
   return {
     pessoa,
@@ -151,8 +164,7 @@ export function linhaDoDocente(
     temaNome,
     turmaNome: turma?.nome,
     tipoParticipacao,
-    entrega,
-    devolutiva,
+    entregasDoDocente,
   };
 }
 
