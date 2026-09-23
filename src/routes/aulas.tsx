@@ -34,11 +34,13 @@ import {
   ofertaDoDocente,
 } from "@/lib/avanco";
 import {
-  ROTULO_DIA_SEMANA,
   cicloDoDocente,
+  encontrosDaTurma,
   formatarData,
+  nomeDoProfessor,
   novoId,
   prazoDaEtapa,
+  proximoEncontro,
   tipoParticipacaoDaPessoa,
 } from "@/lib/ciclo";
 import {
@@ -577,69 +579,105 @@ function AulasPage() {
 
           {itemWebconferencia && (
             <TabsContent value="webconferencia" className="mt-4">
-              {turma?.linkAcesso ? (
-                <Card>
-                  <CardHeader className="flex-row items-center gap-3 space-y-0">
-                    <Video className="size-5 text-primary" aria-hidden />
-                    <CardTitle className="text-base">
-                      {itemWebconferencia.titulo}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                      {turma.nome}
-                      {turma.professorNome
-                        ? ` · Professor: ${turma.professorNome}`
-                        : ""}
-                      {turma.horario ? ` · ${turma.horario}` : ""}
-                    </p>
-                    {turma.diasSemana.length > 0 ? (
+              {turma && encontrosDaTurma(estado, turma.id).length > 0 ? (
+                <div className="space-y-3">
+                  <Card>
+                    <CardHeader className="flex-row items-center gap-3 space-y-0">
+                      <Video className="size-5 text-primary" aria-hidden />
+                      <CardTitle className="text-base">
+                        {itemWebconferencia.titulo}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
                       <p className="text-sm text-muted-foreground">
-                        {turma.diasSemana
-                          .map((d) => ROTULO_DIA_SEMANA[d])
-                          .join(", ")}
+                        {turma.nome} · Professor:{" "}
+                        {nomeDoProfessor(estado, turma.professorId)}
                       </p>
-                    ) : null}
-                    <Button asChild className="gap-1.5">
-                      {/* Link é da turma em que o docente está inscrito, não
-                          da oferta — cada turma tem o seu (D13/reunião de
-                          lapidação): "a turma 1 vai usar esse link, a turma
-                          2 usa outro link". */}
-                      <a
-                        href={turma.linkAcesso}
-                        target="_blank"
-                        rel="noreferrer"
+                      {(() => {
+                        const proximo = proximoEncontro(estado, turma.id);
+                        if (!proximo) return null;
+                        return (
+                          <>
+                            <p className="text-sm text-muted-foreground">
+                              Próximo encontro:{" "}
+                              {formatarData(new Date(proximo.data))} ·{" "}
+                              {proximo.horario}
+                            </p>
+                            {proximo.link ? (
+                              // Link é do ENCONTRO, não da oferta — cada
+                              // encontro tem o seu (D44).
+                              <Button asChild className="gap-1.5">
+                                <a
+                                  href={proximo.link}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  Entrar no encontro
+                                  <ExternalLink
+                                    className="size-4"
+                                    aria-hidden
+                                  />
+                                </a>
+                              </Button>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">
+                                Link deste encontro ainda não cadastrado.
+                              </p>
+                            )}
+                          </>
+                        );
+                      })()}
+                      {midiaWebconferencia?.url ? (
+                        <p className="text-sm">
+                          <a
+                            href={midiaWebconferencia.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-accent-foreground underline underline-offset-2"
+                          >
+                            Material complementar do encontro
+                          </a>
+                        </p>
+                      ) : null}
+                      <p className="text-sm text-muted-foreground">
+                        {encontrosRegistrados(
+                          estado,
+                          pessoaAtiva.id,
+                          turma.id,
+                          etapa.id,
+                        )}{" "}
+                        de {encontrosDaTurma(estado, turma.id).length}{" "}
+                        encontro(s) registrados
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <ul className="space-y-1.5">
+                    {encontrosDaTurma(estado, turma.id).map((e) => (
+                      <li
+                        key={e.id}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground"
                       >
-                        Entrar no encontro
-                        <ExternalLink className="size-4" aria-hidden />
-                      </a>
-                    </Button>
-                    {midiaWebconferencia?.url ? (
-                      <p className="text-sm">
-                        <a
-                          href={midiaWebconferencia.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-accent-foreground underline underline-offset-2"
-                        >
-                          Material complementar do encontro
-                        </a>
-                      </p>
-                    ) : null}
-                    <p className="text-sm text-muted-foreground">
-                      {encontrosRegistrados(
-                        estado,
-                        pessoaAtiva.id,
-                        turma.id,
-                        etapa.id,
-                      )}{" "}
-                      de {turma.encontrosPrevistos} encontro(s) registrados
-                    </p>
-                  </CardContent>
-                </Card>
+                        <span>
+                          {formatarData(new Date(e.data))} · {e.horario}
+                        </span>
+                        {e.link && (
+                          <a
+                            href={e.link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-accent-foreground underline underline-offset-2"
+                          >
+                            Link
+                          </a>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ) : (
-                <AvisoConteudoIndisponivel titulo="O link do encontro não está disponível">
-                  Avise a equipe operadora para cadastrar o link de acesso desta
+                <AvisoConteudoIndisponivel titulo="Nenhum encontro cadastrado ainda">
+                  Avise a equipe operadora para cadastrar os encontros desta
                   turma na aba Turmas.
                 </AvisoConteudoIndisponivel>
               )}

@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   CalendarClock,
   CheckCircle2,
-  Clock,
   Lock,
   Repeat,
   Sparkles,
@@ -28,6 +27,7 @@ import type {
 import {
   cicloAtivo,
   cicloDaTurma,
+  encontrosDaTurma,
   novoId,
   temasAtivos,
   temasDoMesociclo,
@@ -237,7 +237,13 @@ function PercursoPage() {
               <Resumo rotulo="Modalidade" valor={modalidade?.nome ?? "—"} />
               <Resumo
                 rotulo="Encontros"
-                valor={`${turma?.periodo ?? "—"} · ${turma?.horario ?? ""}`}
+                valor={
+                  turma
+                    ? modalidade?.preveEncontroAoVivo
+                      ? `${encontrosDaTurma(estado, turma.id).length} encontro(s)`
+                      : "No seu ritmo"
+                    : "—"
+                }
               />
             </dl>
             <div className="flex flex-wrap gap-3 pt-1">
@@ -309,6 +315,7 @@ function PercursoPage() {
                   config.modalidades.find((m) => m.id === t.modalidadeId)
                     ?.nome ?? "Modalidade"
                 }
+                resumoAgenda={resumoAgendaDaTurma(estado, t, config)}
                 aoEscolher={() => inscrever(t, turmaAtual?.id)}
                 rotulo="Trocar para esta turma"
               />
@@ -357,6 +364,7 @@ function PercursoPage() {
                   config.modalidades.find((m) => m.id === t.modalidadeId)
                     ?.nome ?? "Modalidade"
                 }
+                resumoAgenda={resumoAgendaDaTurma(estado, t, config)}
                 aoEscolher={() => inscrever(t)}
                 rotulo="Inscrever-me nesta turma"
               />
@@ -494,14 +502,29 @@ function CardTema({
   );
 }
 
+/** "3 encontro(s)" na síncrona, "No seu ritmo" na assíncrona (D51). */
+function resumoAgendaDaTurma(
+  estado: EstadoApp,
+  turma: Turma,
+  config: CicloConfig,
+): string {
+  const modalidade = config.modalidades.find(
+    (m) => m.id === turma.modalidadeId,
+  );
+  if (!modalidade?.preveEncontroAoVivo) return "No seu ritmo";
+  return `${encontrosDaTurma(estado, turma.id).length} encontro(s)`;
+}
+
 function CardTurma({
   turma,
   modalidadeNome,
+  resumoAgenda,
   aoEscolher,
   rotulo,
 }: {
   turma: Turma;
   modalidadeNome: string;
+  resumoAgenda: string;
   aoEscolher: () => void;
   rotulo: string;
 }) {
@@ -520,11 +543,7 @@ function CardTurma({
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <CalendarClock className="size-4" aria-hidden />
-            {turma.periodo}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Clock className="size-4" aria-hidden />
-            {turma.horario}
+            {resumoAgenda}
           </span>
           <span
             className={cn(

@@ -347,9 +347,6 @@ function DetalheObservacao({
             {ROTULO_SITUACAO_COMPROMISSO[c.situacao]}
           </Badge>
           {c.daEquipeCentral && <Badge variant="outline">Equipe central</Badge>}
-          {c.turma?.horario && (
-            <Badge variant="outline">{c.turma.horario}</Badge>
-          )}
         </div>
       </SheetHeader>
 
