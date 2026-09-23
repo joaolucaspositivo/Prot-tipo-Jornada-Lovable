@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, MessageSquareQuote } from "lucide-react";
+import { Award, CheckCircle2, MessageSquareQuote } from "lucide-react";
 import { toast } from "sonner";
 
 import { EstadoBadge } from "@/components/EstadoBadge";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { useStore } from "@/data/store";
 import type { Observacao } from "@/data/types";
+import { certificadoDoDocente } from "@/lib/certificado";
 import {
   ROTULO_TIPO_ETAPA,
   coordenadoresDoDocente,
@@ -45,6 +46,7 @@ export function PainelEtapa({ item, aberto, aoFechar }: Props) {
             item={item}
             historico={historicoDaEtapa(estado, pessoaAtiva, item.etapa)}
             devolutiva={devolutivaDaEtapa(estado, pessoaAtiva, item.etapa)}
+            certificado={certificadoDoDocente(estado, pessoaAtiva.id)}
             observacao={estado.observacoes.find(
               (o) =>
                 o.pessoaId === pessoaAtiva.id &&
@@ -115,6 +117,7 @@ function Conteudo({
   historico,
   devolutiva,
   observacao,
+  certificado,
   aoDarCiencia,
   aoDarCienciaObservacao,
 }: {
@@ -122,6 +125,7 @@ function Conteudo({
   historico: ReturnType<typeof historicoDaEtapa>;
   devolutiva: ReturnType<typeof devolutivaDaEtapa>;
   observacao: Observacao | undefined;
+  certificado: ReturnType<typeof certificadoDoDocente>;
   aoDarCiencia: (devolutivaId: string) => void;
   aoDarCienciaObservacao: (observacaoId: string) => void;
 }) {
@@ -157,12 +161,41 @@ function Conteudo({
           </Button>
         )}
 
-        {status !== "bloqueada" && !acao.para && (
-          <p className="rounded-lg border border-dashed border-border p-3 text-sm text-muted-foreground">
-            O passo a passo desta etapa entra na próxima parte do protótipo.
-            Aqui você já acompanha prazo, situação e histórico.
-          </p>
-        )}
+        {status !== "bloqueada" &&
+          !acao.para &&
+          etapa.tipo === "encerramento" && (
+            <div className="rounded-xl border border-border bg-card p-3">
+              {certificado?.certificado ? (
+                <div className="space-y-2">
+                  <p className="flex items-center gap-2 text-sm text-sucesso">
+                    <Award className="size-4" aria-hidden />
+                    Certificado emitido em{" "}
+                    {formatarData(
+                      new Date(certificado.certificado.emitidoEmISO),
+                    )}
+                  </p>
+                  <p className="text-sm">
+                    {certificado.versao?.nome ?? "Tema"} ·{" "}
+                    {certificado.conclusao.cargaHorariaCongelada}h
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Certificado ainda não emitido. A equipe operadora emite
+                  manualmente quando a trilha estiver completa.
+                </p>
+              )}
+            </div>
+          )}
+
+        {status !== "bloqueada" &&
+          !acao.para &&
+          etapa.tipo !== "encerramento" && (
+            <p className="rounded-lg border border-dashed border-border p-3 text-sm text-muted-foreground">
+              O passo a passo desta etapa entra na próxima parte do protótipo.
+              Aqui você já acompanha prazo, situação e histórico.
+            </p>
+          )}
 
         <section>
           <h3 className="mb-2 text-base">Histórico desta etapa</h3>

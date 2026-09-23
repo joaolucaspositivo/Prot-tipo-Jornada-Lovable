@@ -82,6 +82,23 @@ export function elegibilidadeCertificadoDoCiclo(
 }
 
 /**
+ * Certificado do próprio docente, para a tela de encerramento da trilha —
+ * lê exclusivamente de `Conclusao`/`TemaVersao` (D53/D54): o nome e a carga
+ * mostrados são os CONGELADOS na conclusão, nunca os do tema vigente.
+ */
+export function certificadoDoDocente(estado: EstadoApp, docenteId: string) {
+  const conclusao = estado.conclusoes.find((c) => c.docenteId === docenteId);
+  if (!conclusao) return undefined;
+  const versao = estado.temaVersoes.find(
+    (v) => v.id === conclusao.temaVersaoId,
+  );
+  const certificado = estado.certificados.find(
+    (c) => c.conclusaoId === conclusao.id,
+  );
+  return { conclusao, versao, certificado };
+}
+
+/**
  * Emite Conclusao + Certificado para os docentes elegíveis selecionados.
  * A carga horária vai CONGELADA no registro de conclusão (D56) — lida de
  * `TemaNoMesociclo` no momento da emissão, nunca mais recalculada depois.
