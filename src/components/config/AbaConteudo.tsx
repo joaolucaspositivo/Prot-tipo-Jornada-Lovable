@@ -80,7 +80,7 @@ function criterioFazSentido(
     case "leitura_concluida":
       return temTexto;
     case "presenca":
-      return temWebconferencia || modalidade?.presencaAutomatica === false;
+      return temWebconferencia || modalidade?.preveEncontroAoVivo === true;
     case "tarefa_entregue":
     case "tarefa_validada":
     case "nota_minima":

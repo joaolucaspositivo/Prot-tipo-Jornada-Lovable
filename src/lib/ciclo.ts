@@ -4,6 +4,7 @@
 import type {
   Auditoria,
   CicloConfig,
+  Encontro,
   EstadoApp,
   Etapa,
   FaseCanonica,
@@ -426,6 +427,50 @@ export function docentesDaTurma(estado: EstadoApp, turmaId: string) {
       .map((i) => i.pessoaId),
   );
   return estado.pessoas.filter((p) => idsInscritos.has(p.id));
+}
+
+/**
+ * Encontros de uma turma, em ordem cronológica (Pacote 3) — vazio para
+ * turma assíncrona, já que ela nunca tem `Encontro` no seed nem na tela.
+ */
+export function encontrosDaTurma(
+  estado: EstadoApp,
+  turmaId: string,
+): Encontro[] {
+  return [...estado.encontros]
+    .filter((e) => e.turmaId === turmaId)
+    .sort((a, b) => a.data.localeCompare(b.data));
+}
+
+/**
+ * Próximo encontro ainda não realizado (ou o último, se todos já
+ * passaram) — usado para destacar "o encontro de agora" nas telas do
+ * docente, em vez de listar tudo sem hierarquia.
+ */
+export function proximoEncontro(
+  estado: EstadoApp,
+  turmaId: string,
+  agora: Date = new Date(),
+): Encontro | undefined {
+  const encontros = encontrosDaTurma(estado, turmaId);
+  return encontros.find((e) => new Date(e.data) >= agora) ?? encontros.at(-1);
+}
+
+/**
+ * Nome do professor responsável, resolvido pelo roster (Pacote 3) — nunca
+ * lido direto de `Turma`, que só guarda o id. Fallback explícito se o
+ * professor não existir mais no roster (não há UI de remoção nesta rodada,
+ * mas o dado pode desalinhar por edição manual do storage) — mesma
+ * convenção de "Tema removido"/"Modalidade removida" já usada em AbaTurmas.
+ */
+export function nomeDoProfessor(
+  estado: EstadoApp,
+  professorId: string,
+): string {
+  return (
+    estado.professores.find((p) => p.id === professorId)?.nome ??
+    "Professor removido"
+  );
 }
 
 /**

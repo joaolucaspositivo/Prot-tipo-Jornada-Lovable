@@ -14,6 +14,7 @@ import type {
   Pessoa,
   TipoCriterioAvanco,
 } from "@/data/types";
+import { encontrosDaTurma } from "@/lib/ciclo";
 import {
   aulasConcluidas,
   entregaDaEtapa,
@@ -83,7 +84,7 @@ export function encontrosRegistrados(
           p.etapaId === etapaId &&
           (p.presente || p.justificada),
       )
-      .map((p) => p.encontro),
+      .map((p) => p.encontroId),
   ).size;
 }
 
@@ -94,9 +95,10 @@ export function percentualPresenca(
   etapa: Etapa,
 ): number {
   const { turma } = percursoDoDocente(estado, pessoa);
-  if (!turma || !turma.encontrosPrevistos) return 0;
+  const previstos = turma ? encontrosDaTurma(estado, turma.id).length : 0;
+  if (!turma || !previstos) return 0;
   const feitos = encontrosRegistrados(estado, pessoa.id, turma.id, etapa.id);
-  return Math.min(100, Math.round((feitos / turma.encontrosPrevistos) * 100));
+  return Math.min(100, Math.round((feitos / previstos) * 100));
 }
 
 function statusDoCriterio(
@@ -150,7 +152,7 @@ function statusDoCriterio(
         };
       }
       const minimo = criterio.percentualMinimo ?? 0;
-      const previstos = turma?.encontrosPrevistos ?? 0;
+      const previstos = turma ? encontrosDaTurma(estado, turma.id).length : 0;
       const feitos = turma
         ? encontrosRegistrados(estado, pessoa.id, turma.id, etapa.id)
         : 0;
