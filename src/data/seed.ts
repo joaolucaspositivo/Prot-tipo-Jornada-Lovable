@@ -36,7 +36,7 @@ import type {
   Turma,
 } from "./types";
 
-export const VERSAO_ESTADO = 11;
+export const VERSAO_ESTADO = 12;
 export const CHAVE_STORAGE = "jornada-prototipo-v1";
 
 const ABERTURA = "2027-02-08T00:00:00.000Z";
@@ -237,6 +237,12 @@ const subtiposSeed: Subtipo[] = [
     tipoGenerico: "enquete",
     tela: "enquete",
   },
+  {
+    id: "sub-encerramento",
+    nome: "Encerramento do ciclo",
+    tipoGenerico: "encerramento",
+    tela: "painel",
+  },
 ];
 
 const etapasSeed: Etapa[] = [
@@ -371,6 +377,20 @@ const etapasSeed: Etapa[] = [
     },
     tela: "enquete",
     subtipoId: "sub-enquete",
+  },
+  {
+    id: "et-9",
+    nome: "Encerramento do ciclo",
+    descricao: "Conclusão do ciclo e emissão do certificado.",
+    tipo: "encerramento",
+    faseCanonica: "encerramento",
+    ordem: 9,
+    obrigatoria: true,
+    prazoDias: 10,
+    perfisParticipantes: [],
+    alerta: alertaPadrao,
+    tela: "painel",
+    subtipoId: "sub-encerramento",
   },
 ];
 
@@ -913,6 +933,7 @@ function construirProgresso() {
       autoavaliacoes.push({
         id: `aa-${doc.id}`,
         pessoaId: doc.id,
+        etapaId: "et-1",
         respostas: {},
         dimensoes: Object.fromEntries(
           dimensoesBase.map((d, k) => [d, 2 + ((i + k) % 4) * 0.7]),
@@ -1081,6 +1102,7 @@ function construirRespostasEnquete(): RespostaEnquete[] {
         respostas.push({
           id: `enq-${doc.id}-${publico.id}-${n}`,
           docenteId: doc.id,
+          etapaId: "et-8",
           respondenteTipoId: publico.id,
           respondenteNome:
             publico.id === "resp-docente"

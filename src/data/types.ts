@@ -180,6 +180,16 @@ export interface Etapa {
   /** carga horária declarada da etapa (D10) — não confundir com `TemaNoMesociclo.cargaHoraria` (D56), que é por tema × mesociclo */
   cargaHoraria?: number | undefined;
   /**
+   * Data-limite congelada no momento em que o primeiro docente inicia a
+   * etapa (Pacote 2). `prazoDaEtapa` lê este valor quando presente, em vez
+   * de recalcular pela soma de `prazoDias` — sem isso, inserir ou remover
+   * uma etapa ANTERIOR desloca o prazo de quem já começou, mesmo que a
+   * etapa dele não tenha sido tocada (o encadeamento de D38 é cumulativo).
+   * Mesmo regime de `Conclusao.cargaHorariaCongelada` (D56): congela o dado
+   * quando ele passa a valer para alguém, não recalcula depois disso.
+   */
+  prazoCongeladoISO?: string | undefined;
+  /**
    * Subtipo escolhido para preencher `tipo`/`tela` (D30). Guardado para a
    * tela de configuração conseguir reabrir mostrando o que foi selecionado
    * — `tipo`/`tela` continuam sendo a fonte real lida pelo resto do app.
@@ -457,6 +467,13 @@ export interface Notificacao {
 export interface Autoavaliacao {
   id: string;
   pessoaId: string;
+  /**
+   * Etapa à qual esta resposta pertence (Pacote 2) — sem D52 não haveria
+   * ambiguidade, mas com mais de uma etapa `tipo: "autoavaliacao"` no mesmo
+   * ciclo, `pessoaId` sozinho não distingue a qual delas a resposta se
+   * refere. Uma combinação (pessoaId, etapaId) por registro.
+   */
+  etapaId: string;
   respostas: Record<string, number>;
   dimensoes: Record<string, number>;
   concluidaEmISO?: string | undefined;
@@ -685,6 +702,8 @@ export interface Portfolio {
 export interface RespostaEnquete {
   id: string;
   docenteId: string;
+  /** Etapa `tipo: "enquete"` à qual esta resposta pertence (Pacote 2) — mesmo motivo de `Autoavaliacao.etapaId`. */
+  etapaId: string;
   respondenteTipoId: string;
   respondenteNome: string;
   escalas: Record<string, number>;
