@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Check, Plus, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { AbaAlertas } from "@/components/config/AbaAlertas";
 import { AbaConteudo } from "@/components/config/AbaConteudo";
-import { AbaEncerramento } from "@/components/config/AbaEncerramento";
+import { AbaEnqueteConfig } from "@/components/config/AbaEnqueteConfig";
 import { AbaEtapas } from "@/components/config/AbaEtapas";
 import { AbaGeral } from "@/components/config/AbaGeral";
 import { AbaModalidades } from "@/components/config/AbaModalidades";
+import { AbaPortfolioConfig } from "@/components/config/AbaPortfolioConfig";
 import { AbaTemas } from "@/components/config/AbaTemas";
 import { AbaTurmas } from "@/components/config/AbaTurmas";
 import { MesocicloEmEdicaoProvider } from "@/components/config/comum";
@@ -38,6 +38,14 @@ import {
   passoGuiadoTravado,
   temasDoMacrociclo,
 } from "@/lib/ciclo";
+
+/**
+ * Abas da tela — o afunilamento (PassoGuiado) mais "Configurações"
+ * (Portfólio, Enquete), que fica fora da sequência de dependência e por
+ * isso fora do modo guiado (D57 §5: são bancos de pergunta do ciclo, sem
+ * ordem a respeitar entre si nem com o resto).
+ */
+type AbaConfiguracao = PassoGuiado | "portfolio" | "enquete";
 
 export const Route = createFileRoute("/configuracao")({
   head: () => ({
@@ -78,13 +86,13 @@ function ConfiguracaoPage() {
   const temas = temasDoMacrociclo(estado, macrociclo.id);
 
   const [guiado, setGuiado] = useState(false);
-  const [aba, setAba] = useState<PassoGuiado>("temas");
+  const [aba, setAba] = useState<AbaConfiguracao>("geral");
   const [passosConcluidos, setPassosConcluidos] = useState<Set<PassoGuiado>>(
     new Set(),
   );
   const [dialogoNovoCiclo, setDialogoNovoCiclo] = useState(false);
 
-  function passoTravado(p: PassoGuiado): boolean {
+  function passoTravado(p: AbaConfiguracao): boolean {
     return (
       guiado && p !== "conferencia" && passoGuiadoTravado(config, temas, p)
     );
@@ -115,7 +123,7 @@ function ConfiguracaoPage() {
 
   function alternarGuiado(v: boolean) {
     setGuiado(v);
-    if (!v && aba === "conferencia") setAba("encerramento");
+    if (!v && aba === "conferencia") setAba("conteudo");
   }
 
   function irParaPasso(p: PassoGuiado) {
@@ -124,15 +132,17 @@ function ConfiguracaoPage() {
   }
 
   function avancar() {
-    const indice = PASSOS_GUIADOS.indexOf(aba);
+    const indice = (PASSOS_GUIADOS as readonly string[]).indexOf(aba);
     const proximo = PASSOS_GUIADOS[indice + 1];
     if (!proximo || passoTravado(proximo)) return;
-    setPassosConcluidos((anterior) => new Set(anterior).add(aba));
+    setPassosConcluidos((anterior) =>
+      new Set(anterior).add(aba as PassoGuiado),
+    );
     setAba(proximo);
   }
 
   function voltar() {
-    const indice = PASSOS_GUIADOS.indexOf(aba);
+    const indice = (PASSOS_GUIADOS as readonly string[]).indexOf(aba);
     const anterior = PASSOS_GUIADOS[indice - 1];
     if (anterior) setAba(anterior);
   }
@@ -226,7 +236,7 @@ function ConfiguracaoPage() {
             <CabecalhoModoGuiado
               guiado={guiado}
               aoAlternarGuiado={alternarGuiado}
-              passoAtual={aba}
+              passoAtual={aba as PassoGuiado}
               passosConcluidos={passosConcluidos}
               passoTravado={passoTravado}
               aoIrParaPasso={irParaPasso}
@@ -237,13 +247,16 @@ function ConfiguracaoPage() {
             {aba === "conferencia" ? (
               <ResumoConferencia />
             ) : (
-              <Tabs value={aba} onValueChange={(v) => setAba(v as PassoGuiado)}>
+              <Tabs
+                value={aba}
+                onValueChange={(v) => setAba(v as AbaConfiguracao)}
+              >
                 <TabsList className="flex h-auto flex-wrap justify-start gap-1">
-                  <TabsTrigger value="temas" disabled={passoTravado("temas")}>
-                    Temas
-                  </TabsTrigger>
                   <TabsTrigger value="geral" disabled={passoTravado("geral")}>
                     Geral
+                  </TabsTrigger>
+                  <TabsTrigger value="temas" disabled={passoTravado("temas")}>
+                    Temas
                   </TabsTrigger>
                   <TabsTrigger
                     value="modalidades"
@@ -263,25 +276,29 @@ function ConfiguracaoPage() {
                   >
                     Conteúdo
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="alertas"
-                    disabled={passoTravado("alertas")}
-                  >
-                    Alertas de pendência
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="encerramento"
-                    disabled={passoTravado("encerramento")}
-                  >
-                    Encerramento
-                  </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="temas" className="mt-4">
-                  <AbaTemas />
-                </TabsContent>
+                {/* Fora do afunilamento (D57 §5) — só aparece fora do modo
+                    guiado, que existe para percorrer a sequência com dependência. */}
+                {!guiado && (
+                  <div className="mt-3">
+                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Configurações
+                    </p>
+                    <TabsList className="flex h-auto flex-wrap justify-start gap-1">
+                      <TabsTrigger value="portfolio">
+                        Campos do portfólio
+                      </TabsTrigger>
+                      <TabsTrigger value="enquete">Enquete 360°</TabsTrigger>
+                    </TabsList>
+                  </div>
+                )}
+
                 <TabsContent value="geral" className="mt-4">
                   <AbaGeral />
+                </TabsContent>
+                <TabsContent value="temas" className="mt-4">
+                  <AbaTemas />
                 </TabsContent>
                 <TabsContent value="modalidades" className="mt-4">
                   <AbaModalidades />
@@ -295,11 +312,11 @@ function ConfiguracaoPage() {
                 <TabsContent value="conteudo" className="mt-4">
                   <AbaConteudo />
                 </TabsContent>
-                <TabsContent value="alertas" className="mt-4">
-                  <AbaAlertas />
+                <TabsContent value="portfolio" className="mt-4">
+                  <AbaPortfolioConfig />
                 </TabsContent>
-                <TabsContent value="encerramento" className="mt-4">
-                  <AbaEncerramento />
+                <TabsContent value="enquete" className="mt-4">
+                  <AbaEnqueteConfig />
                 </TabsContent>
               </Tabs>
             )}

@@ -11,9 +11,13 @@ import { Button } from "@/components/ui/button";
 import { resumoConferenciaCiclo } from "@/lib/ciclo";
 
 /**
- * As 8 abas, na ordem de dependência (3.3), mais o passo de síntese final.
- * "temas" vem primeiro: é a peça do macrociclo, definida antes de configurar
- * qualquer ciclo específico — a ordem real de trabalho da operadora.
+ * O afunilamento (Pacote 2), na ordem de dependência, mais o passo de
+ * síntese final. "temas" vem primeiro: é a peça do macrociclo, definida
+ * antes de configurar qualquer ciclo específico — a ordem real de trabalho
+ * da operadora. Notificações (ex-"alertas") virou seção de Geral, e
+ * Encerramento virou etapa da trilha — nenhum dos dois é passo próprio
+ * aqui. "Configurações" (Portfólio, Enquete) fica fora do guiado de
+ * propósito: não tem dependência de ordem com o resto.
  */
 export const PASSOS_GUIADOS = [
   "temas",
@@ -22,8 +26,6 @@ export const PASSOS_GUIADOS = [
   "turmas",
   "etapas",
   "conteudo",
-  "alertas",
-  "encerramento",
   "conferencia",
 ] as const;
 
@@ -36,8 +38,6 @@ export const TITULO_PASSO_GUIADO: Record<PassoGuiado, string> = {
   turmas: "Turmas",
   etapas: "Etapas da trilha",
   conteudo: "Conteúdo",
-  alertas: "Alertas de pendência",
-  encerramento: "Encerramento",
   conferencia: "Conferência",
 };
 
