@@ -9,6 +9,7 @@ import type {
   CriterioAvanco,
   Devolutiva,
   DimensaoAutoavaliacao,
+  Encontro,
   Entrega,
   EstadoApp,
   Etapa,
@@ -24,6 +25,7 @@ import type {
   OfertaConteudo,
   Pessoa,
   Presenca,
+  Professor,
   ProgressoAula,
   ProgressoEtapa,
   ProgressoLeitura,
@@ -36,7 +38,7 @@ import type {
   Turma,
 } from "./types";
 
-export const VERSAO_ESTADO = 12;
+export const VERSAO_ESTADO = 13;
 export const CHAVE_STORAGE = "jornada-prototipo-v1";
 
 const ABERTURA = "2027-02-08T00:00:00.000Z";
@@ -803,76 +805,109 @@ alocacoesSeed.push({
 // mantendo a mesma modalidade.
 interface HorarioTurma {
   sufixo: string;
-  periodo: string;
+  /** só usado para gerar os Encontro da turma síncrona — turma em si não guarda mais horário (Pacote 3) */
   horario: string;
+  /** dia da semana dos encontros, só na síncrona — vira a base do cálculo de data de cada Encontro */
   dia: number | undefined;
 }
 
 const horariosSincronos: HorarioTurma[] = [
-  {
-    sufixo: "Turma A",
-    periodo: "Manhã",
-    horario: "Terças, 8h30 às 10h30",
-    dia: 2,
-  },
-  {
-    sufixo: "Turma B",
-    periodo: "Tarde",
-    horario: "Quintas, 14h às 16h",
-    dia: 4,
-  },
+  { sufixo: "Turma A", horario: "Terças, 8h30 às 10h30", dia: 2 },
+  { sufixo: "Turma B", horario: "Quintas, 14h às 16h", dia: 4 },
 ];
 const horariosAssincronos: HorarioTurma[] = [
-  {
-    sufixo: "Turma A",
-    periodo: "Livre",
-    horario: "No seu ritmo",
-    dia: undefined,
-  },
+  { sufixo: "Turma A", horario: "No seu ritmo", dia: undefined },
   {
     sufixo: "Turma B",
-    periodo: "Livre",
     horario: "No seu ritmo, com tutoria quinzenal",
     dia: undefined,
   },
 ];
 
-const nomesProfessores = [
-  "Prof. Marcos Vinícius Teles",
-  "Profa. Renata Aguiar Bittencourt",
-  "Prof. Eduardo Salgado Nunes",
-  "Profa. Camila Rezende Xavier",
-  "Prof. Otávio Barreto Lima",
-  "Profa. Juliana Prado Castilho",
+/**
+ * Roster de professores responsáveis (Pacote 3) — entidade própria, fora
+ * de `Pessoa` (ver comentário de `Professor` em types.ts). Substitui o que
+ * antes era `professorNome` digitado livremente em cada turma.
+ */
+const professoresSeed: Professor[] = [
+  { id: "prof-1", nome: "Prof. Marcos Vinícius Teles" },
+  { id: "prof-2", nome: "Profa. Renata Aguiar Bittencourt" },
+  { id: "prof-3", nome: "Prof. Eduardo Salgado Nunes" },
+  { id: "prof-4", nome: "Profa. Camila Rezende Xavier" },
+  { id: "prof-5", nome: "Prof. Otávio Barreto Lima" },
+  { id: "prof-6", nome: "Profa. Juliana Prado Castilho" },
 ];
 
-export const turmasSeed: Turma[] = temasSeed.flatMap((tema, i) =>
+/**
+ * Data do N-ésimo encontro (índice 0 = primeiro) de uma turma síncrona:
+ * a primeira ocorrência do dia da semana configurado, a partir da abertura
+ * do mesociclo, mais 7 dias por encontro. Só serve para o seed nascer com
+ * datas plausíveis — a operadora edita cada encontro individualmente
+ * depois (D44, sem recorrência automática na tela).
+ */
+function dataDoEncontro(diaSemana: number, indice: number): string {
+  const abertura = new Date(ABERTURA);
+  const deslocamento = (diaSemana - abertura.getUTCDay() + 7) % 7;
+  const primeiro = abertura.getTime() + deslocamento * 86400000;
+  return new Date(primeiro + indice * 7 * 86400000).toISOString();
+}
+
+const turmasEEncontros = temasSeed.flatMap((tema, i) =>
   modalidadesSeed.flatMap((mod, j) => {
     // A condição é sempre `!mod.presencaAutomatica`, nunca a posição `j` no
     // array — reordenar ou acrescentar modalidade não pode trocar quem
-    // ganha link e dias da semana.
+    // ganha encontros.
     const sincrona = !mod.presencaAutomatica;
     const horarios = sincrona ? horariosSincronos : horariosAssincronos;
-    return horarios.map((h, k) => ({
-      id: `turma-${i + 1}-${j + 1}-${k + 1}`,
-      mesocicloId: MESOCICLO_2027_ID,
-      nome: `${tema.nome.split("—")[0]!.trim()} · ${mod.nome} · ${h.sufixo}`,
-      temaId: tema.id,
-      modalidadeId: mod.id,
-      periodo: h.periodo,
-      horario: h.horario,
-      vagas: k === 0 ? 20 : 12,
-      // uma turma já nasce esgotada para a demonstração
-      vagasOcupadas: i === 1 && j === 0 && k === 1 ? 12 : 0,
-      professorNome: nomesProfessores[(i + j + k) % nomesProfessores.length]!,
-      linkAcesso: sincrona
-        ? `https://encontro.rede.edu.br/jornada/turma-${i + 1}-${j + 1}-${k + 1}`
-        : undefined,
-      diasSemana: h.dia !== undefined ? [h.dia] : [],
-      encontrosPrevistos: sincrona ? 4 : 0,
-    }));
+    return horarios.map((h, k) => {
+      const turmaId = `turma-${i + 1}-${j + 1}-${k + 1}`;
+      const turma: Turma = {
+        id: turmaId,
+        mesocicloId: MESOCICLO_2027_ID,
+        nome: `${tema.nome.split("—")[0]!.trim()} · ${mod.nome} · ${h.sufixo}`,
+        temaId: tema.id,
+        modalidadeId: mod.id,
+        vagas: k === 0 ? 20 : 12,
+        // uma turma já nasce esgotada para a demonstração
+        vagasOcupadas: i === 1 && j === 0 && k === 1 ? 12 : 0,
+        professorId: professoresSeed[(i + j + k) % professoresSeed.length]!.id,
+      };
+      // Quatro encontros por turma síncrona — número redondo para o seed
+      // nascer coerente; o critério de aceite do Pacote 3 é a operadora
+      // conseguir mudar isso pela tela, não o valor em si.
+      const encontros: Encontro[] = sincrona
+        ? Array.from({ length: 4 }, (_, idx) => ({
+            id: `enc-${turmaId}-${idx + 1}`,
+            turmaId,
+            data: dataDoEncontro(h.dia!, idx),
+            horario: h.horario,
+            link: `https://encontro.rede.edu.br/jornada/${turmaId}-${idx + 1}`,
+          }))
+        : [];
+      return { turma, encontros };
+    });
   }),
 );
+
+export const turmasSeed: Turma[] = turmasEEncontros.map((x) => x.turma);
+const encontrosSeed: Encontro[] = turmasEEncontros.flatMap((x) => x.encontros);
+
+/**
+ * O N-ésimo encontro (1-based) de uma turma, ou erro se não existir.
+ * Usado só para migrar as `Presenca` seedadas, que antes guardavam o
+ * encontro como número solto — falha alto de propósito: um mapeamento
+ * posicional errado silencioso seria pior do que travar o app na inicialização.
+ */
+function encontroPorPosicao(turmaId: string, posicao: number): Encontro {
+  const id = `enc-${turmaId}-${posicao}`;
+  const encontro = encontrosSeed.find((e) => e.id === id);
+  if (!encontro) {
+    throw new Error(
+      `Seed inconsistente: presença esperava o ${posicao}º encontro da turma ${turmaId} (id ${id}), mas ele não existe em encontrosSeed.`,
+    );
+  }
+  return encontro;
+}
 
 function dias(n: number): string {
   const base = new Date(ABERTURA).getTime();
@@ -1400,26 +1435,28 @@ function construirConteudoDemonstravel() {
 
   // doc-1 (turma-1-1-1): 2 de 4 encontros lançados — nem zerado, nem
   // completo, exatamente o roteiro pedido para a demonstração de presença.
-  const presencas: Presenca[] = [1, 2].map((encontro) => ({
-    id: `pres-doc-1-${encontro}`,
+  // encontroPorPosicao resolve o Encontro de verdade (Pacote 3) — antes a
+  // presença guardava só o número solto.
+  const presencas: Presenca[] = [1, 2].map((posicao) => ({
+    id: `pres-doc-1-${posicao}`,
     pessoaId: "doc-1",
     turmaId: "turma-1-1-1",
     etapaId: "et-3",
-    encontro,
+    encontroId: encontroPorPosicao("turma-1-1-1", posicao).id,
     presente: true,
-    lancadaEmISO: dias(35 + encontro),
+    lancadaEmISO: dias(35 + posicao),
     lancadaPorId: "oper-1",
   }));
   // doc-2 (turma-1-1-2): os 4 encontros completos.
   presencas.push(
-    ...[1, 2, 3, 4].map((encontro) => ({
-      id: `pres-doc-2-${encontro}`,
+    ...[1, 2, 3, 4].map((posicao) => ({
+      id: `pres-doc-2-${posicao}`,
       pessoaId: "doc-2",
       turmaId: "turma-1-1-2",
       etapaId: "et-3",
-      encontro,
+      encontroId: encontroPorPosicao("turma-1-1-2", posicao).id,
       presente: true,
-      lancadaEmISO: dias(35 + encontro),
+      lancadaEmISO: dias(35 + posicao),
       lancadaPorId: "oper-1",
     })),
   );
@@ -1571,6 +1608,8 @@ export function criarEstadoInicial(): EstadoApp {
     cicloConfigs: cicloConfigsSeed,
     pessoas: pessoasSeed,
     turmas: derivado.turmas,
+    professores: professoresSeed,
+    encontros: encontrosSeed,
     inscricoes: derivado.inscricoes,
     alocacoes: alocacoesSeed,
     progressoEtapas: derivado.progressoEtapas,

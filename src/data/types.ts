@@ -116,9 +116,9 @@ export interface Modalidade {
    * A modalidade prevê encontro ao vivo (D51) — governa se existe presença
    * para registrar. Campo próprio, independente de `presencaAutomatica`: uma
    * modalidade pode não ter presença automática sem necessariamente ter
-   * encontro ao vivo. No seed, espelha o inverso de `presencaAutomatica`
-   * (síncrona = true, assíncrona = false), igual ao comportamento atual —
-   * sem tela nova nesta rodada, o Pacote 3 é quem consome isto de verdade.
+   * encontro ao vivo. Consumido de verdade a partir do Pacote 3: é esta
+   * flag, não mais a inversão de `presencaAutomatica`, que decide se uma
+   * turma tem bloco de encontros e se existe presença para lançar.
    */
   preveEncontroAoVivo: boolean;
 }
@@ -361,18 +361,43 @@ export interface Turma {
   nome: string;
   temaId: string;
   modalidadeId: string;
-  periodo: string;
-  horario: string;
   vagas: number;
   vagasOcupadas: number;
-  /** professor responsável — o docente não escolhe e não precisa ver */
-  professorNome: string;
-  /** link de acesso; só faz sentido na modalidade síncrona */
-  linkAcesso?: string | undefined;
-  /** dias da semana, 0 = domingo ... 6 = sábado. Vazio na assíncrona */
-  diasSemana: number[];
-  /** total de encontros previstos — base do cálculo de presença */
-  encontrosPrevistos: number;
+  /**
+   * Professor responsável — referência ao roster `EstadoApp.professores`
+   * (Pacote 3), nunca mais texto digitado. O docente não escolhe e não
+   * precisa ver.
+   */
+  professorId: string;
+}
+
+/**
+ * Roster de professores responsáveis por turma (Pacote 3) — só leitura
+ * pela tela de Turmas, sem UI de cadastro (mesmo espírito de D36: base por
+ * importação). Entidade própria, fora de `Pessoa`: um professor conduzindo
+ * uma turma não é um docente cursando a jornada nem um coordenador, e os
+ * dois perfis fechados carregam efeito colateral em outras telas
+ * (apareceria em painéis de acompanhamento ou pendência de alocação) se
+ * fosse forçado num deles.
+ */
+export interface Professor {
+  id: string;
+  nome: string;
+}
+
+/**
+ * Um encontro concreto de uma turma síncrona (D44/D51) — cada um com data,
+ * horário e link próprios. Existe só quando a modalidade da turma tem
+ * `preveEncontroAoVivo`; turma assíncrona não tem nenhum. Recorrência por
+ * frequência fixa fica FORA (D44) — a operadora cadastra cada encontro,
+ * em lote (informando a quantidade) ou um a um.
+ */
+export interface Encontro {
+  id: string;
+  turmaId: string;
+  data: string;
+  horario: string;
+  link?: string | undefined;
 }
 
 export interface Inscricao {
@@ -665,8 +690,8 @@ export interface Presenca {
   pessoaId: string;
   turmaId: string;
   etapaId: string;
-  /** número do encontro, de 1 até `Turma.encontrosPrevistos` */
-  encontro: number;
+  /** encontro específico (Pacote 3) — nunca mais um número solto, o encontro é entidade própria */
+  encontroId: string;
   presente: boolean;
   lancadaEmISO: string;
   lancadaPorId: string;
@@ -727,6 +752,10 @@ export interface EstadoApp {
   cicloConfigs: CicloConfig[];
   pessoas: Pessoa[];
   turmas: Turma[];
+  /** roster de professores responsáveis (Pacote 3) — só leitura pela tela de Turmas */
+  professores: Professor[];
+  /** encontros das turmas síncronas (Pacote 3/D44) — vazio para turma assíncrona */
+  encontros: Encontro[];
   inscricoes: Inscricao[];
   alocacoes: Alocacao[];
   progressoEtapas: ProgressoEtapa[];
