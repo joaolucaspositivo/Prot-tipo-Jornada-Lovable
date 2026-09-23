@@ -24,12 +24,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useStore } from "@/data/store";
 import type { Etapa } from "@/data/types";
-import {
-  ROTULO_TIPO_ETAPA,
-  cicloDoDocente,
-  formatarData,
-  novoId,
-} from "@/lib/ciclo";
+import { ROTULO_TIPO_ETAPA, formatarData, novoId } from "@/lib/ciclo";
 import { formatarDataHora } from "@/lib/conteudo";
 import { ROTULO_STATUS_ENTREGA, formatarTamanho } from "@/lib/entrega";
 import type { LinhaEquipe } from "@/lib/equipe";
@@ -68,20 +63,31 @@ export function DetalheDocente({
   const { estado, pessoaAtiva, atualizar } = useStore();
   const [texto, setTexto] = useState("");
   const [parecer, setParecer] = useState("");
+  const [entregaId, setEntregaId] = useState("");
 
   useEffect(() => {
     setTexto("");
     setParecer("");
+    // Ao abrir outro docente, seleciona a entrega mais recente ainda sem
+    // devolutiva — havendo mais de uma etapa de entrega/portfólio (D52),
+    // não dá para assumir que existe só uma pendente.
+    const pendente = [...(linha?.entregasDoDocente ?? [])]
+      .reverse()
+      .find((e) => !e.devolutiva);
+    const ultima = linha?.entregasDoDocente.at(-1);
+    setEntregaId((pendente ?? ultima)?.entrega.id ?? "");
+    // Só reagimos à troca de docente — recalcular a cada nova entrega
+    // sobrescreveria a seleção do coordenador no meio da revisão.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linha?.pessoa.id]);
 
   if (!linha) return <Sheet open={false} onOpenChange={() => aoFechar()} />;
 
-  const entrega = linha.entrega;
-  const etapaEntrega = entrega
-    ? cicloDoDocente(estado, linha.pessoa.id).config.etapas.find(
-        (e) => e.id === entrega.etapaId,
-      )
-    : undefined;
+  const entregas = linha.entregasDoDocente;
+  const selecionada =
+    entregas.find((e) => e.entrega.id === entregaId) ?? entregas.at(-1);
+  const entrega = selecionada?.entrega;
+  const etapaEntrega = selecionada?.etapa;
   const opcoes = pareceresDaEtapa(etapaEntrega);
   const historico = etapaEntrega
     ? historicoDaEtapa(estado, linha.pessoa, etapaEntrega)
@@ -166,6 +172,31 @@ export function DetalheDocente({
         <div className="space-y-6 px-4 pb-8">
           <section>
             <h3 className="mb-2 text-base">Entrega do docente</h3>
+            {entregas.length > 1 && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {entregas.map((e) => (
+                  <Button
+                    key={e.entrega.id}
+                    size="sm"
+                    variant={
+                      e.entrega.id === entrega?.id ? "default" : "outline"
+                    }
+                    onClick={() => {
+                      setEntregaId(e.entrega.id);
+                      setTexto("");
+                      setParecer("");
+                    }}
+                  >
+                    {e.etapa?.nome ?? "Entrega"}
+                    {!e.devolutiva && (
+                      <Badge variant="secondary" className="ml-1.5">
+                        Pendente
+                      </Badge>
+                    )}
+                  </Button>
+                ))}
+              </div>
+            )}
             {!entrega ? (
               <p className="text-sm text-muted-foreground">
                 Este docente ainda não enviou nenhuma entrega.
@@ -208,30 +239,31 @@ export function DetalheDocente({
           {entrega && (
             <section>
               <h3 className="mb-2 text-base">Devolutiva</h3>
-              {linha.devolutiva ? (
+              {selecionada?.devolutiva ? (
                 <div className="space-y-2 rounded-xl border border-border p-3">
                   <p className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MessageSquareQuote className="size-4" aria-hidden />
                     {estado.pessoas.find(
-                      (p) => p.id === linha.devolutiva!.autorId,
+                      (p) => p.id === selecionada.devolutiva!.autorId,
                     )?.nome ?? "Equipe central"}{" "}
-                    · {formatarData(new Date(linha.devolutiva.criadaEmISO))}
+                    ·{" "}
+                    {formatarData(new Date(selecionada.devolutiva.criadaEmISO))}
                   </p>
-                  <p className="text-sm">{linha.devolutiva.texto}</p>
-                  {linha.devolutiva.parecer && (
-                    <Badge>Parecer: {linha.devolutiva.parecer}</Badge>
+                  <p className="text-sm">{selecionada.devolutiva.texto}</p>
+                  {selecionada.devolutiva.parecer && (
+                    <Badge>Parecer: {selecionada.devolutiva.parecer}</Badge>
                   )}
                   <p className="flex items-center gap-2 text-sm">
                     <CheckCircle2
                       className={
-                        linha.devolutiva.cienciaEmISO
+                        selecionada.devolutiva.cienciaEmISO
                           ? "size-4 text-sucesso"
                           : "size-4 text-muted-foreground"
                       }
                       aria-hidden
                     />
-                    {linha.devolutiva.cienciaEmISO
-                      ? `Ciência registrada em ${formatarDataHora(linha.devolutiva.cienciaEmISO)}`
+                    {selecionada.devolutiva.cienciaEmISO
+                      ? `Ciência registrada em ${formatarDataHora(selecionada.devolutiva.cienciaEmISO)}`
                       : "Docente ainda não deu ciência"}
                   </p>
                 </div>

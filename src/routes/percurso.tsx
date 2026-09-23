@@ -85,10 +85,22 @@ function PercursoPage() {
   const cumprido = (temaId: string) =>
     historico.find((h) => h.temaId === temaId);
 
-  // Sugestão vinda da autoavaliação: nunca bloqueia nem obriga.
-  const autoavaliacao = estado.autoavaliacoes.find(
-    (a) => a.pessoaId === pessoaAtiva.id && a.concluidaEmISO,
+  const etapasOrdenadas = [...config.etapas].sort((a, b) => a.ordem - b.ordem);
+
+  // Sugestão vinda da autoavaliação de ABERTURA (a primeira etapa
+  // `tipo: "autoavaliacao"` da trilha) — com mais de uma etapa desse tipo
+  // (D52), uma autoavaliação posterior não deveria reabrir esta sugestão.
+  const etapaAutoavaliacaoAbertura = etapasOrdenadas.find(
+    (e) => e.tipo === "autoavaliacao",
   );
+  const autoavaliacao = etapaAutoavaliacaoAbertura
+    ? estado.autoavaliacoes.find(
+        (a) =>
+          a.pessoaId === pessoaAtiva.id &&
+          a.etapaId === etapaAutoavaliacaoAbertura.id &&
+          a.concluidaEmISO,
+      )
+    : undefined;
   const fragil = autoavaliacao
     ? dimensaoMaisFragil(autoavaliacao.dimensoes, config.dimensoesAutoavaliacao)
     : null;
@@ -98,18 +110,20 @@ function PercursoPage() {
       )?.id ?? null)
     : null;
 
-  const etapaConteudo = config.etapas.find((e) => e.tipo === "conteudo");
-  const conteudoIniciado = etapaConteudo
-    ? estado.progressoEtapas.some(
-        (p) =>
-          p.pessoaId === pessoaAtiva.id &&
-          p.etapaId === etapaConteudo.id &&
-          p.status !== "nao_iniciada",
-      )
-    : false;
+  // Qualquer etapa de conteúdo iniciada trava a troca de turma (D52: pode
+  // haver mais de uma) — checar só a primeira deixaria passar quem já
+  // começou uma segunda.
+  const etapasConteudo = config.etapas.filter((e) => e.tipo === "conteudo");
+  const conteudoIniciado = etapasConteudo.some((etapaConteudo) =>
+    estado.progressoEtapas.some(
+      (p) =>
+        p.pessoaId === pessoaAtiva.id &&
+        p.etapaId === etapaConteudo.id &&
+        p.status !== "nao_iniciada",
+    ),
+  );
 
   // Etapa da trilha que representa a escolha do percurso, vinda da configuração.
-  const etapasOrdenadas = [...config.etapas].sort((a, b) => a.ordem - b.ordem);
   const etapaEscolha =
     etapasOrdenadas.find((e) => e.tela === "percurso") ?? null;
 

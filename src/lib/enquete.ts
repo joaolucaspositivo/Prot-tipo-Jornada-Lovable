@@ -17,10 +17,7 @@ import { cicloConfigAtivo, cicloDoDocente, etapasEmOrdem } from "@/lib/ciclo";
  * abaixo) não é escopado por turma: qualquer um pode responder sobre
  * qualquer docente, a qualquer momento.
  */
-export function etapasDeEnquete(
-  estado: EstadoApp,
-  pessoaId: string,
-): Etapa[] {
+export function etapasDeEnquete(estado: EstadoApp, pessoaId: string): Etapa[] {
   return etapasEmOrdem(cicloDoDocente(estado, pessoaId).config).filter(
     (e) => e.tela === "enquete",
   );

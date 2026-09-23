@@ -4,17 +4,12 @@
 
 import type {
   Certificado,
-  CicloConfig,
   Conclusao,
   EstadoApp,
   Mesociclo,
   Pessoa,
 } from "@/data/types";
-import {
-  cargaHorariaDoTema,
-  novoId,
-  temaVersaoVigente,
-} from "@/lib/ciclo";
+import { cargaHorariaDoTema, novoId, temaVersaoVigente } from "@/lib/ciclo";
 import { progressoDaTrilha, trilhaDoDocente } from "@/lib/jornada";
 
 export interface ElegibilidadeCertificado {
@@ -38,10 +33,11 @@ export interface ElegibilidadeCertificado {
 export function elegibilidadeCertificadoDoCiclo(
   estado: EstadoApp,
   mesociclo: Mesociclo,
-  config: CicloConfig,
 ): ElegibilidadeCertificado[] {
   const idsTurmasDoCiclo = new Set(
-    estado.turmas.filter((t) => t.mesocicloId === mesociclo.id).map((t) => t.id),
+    estado.turmas
+      .filter((t) => t.mesocicloId === mesociclo.id)
+      .map((t) => t.id),
   );
   const inscricoesDoCiclo = estado.inscricoes.filter((i) =>
     idsTurmasDoCiclo.has(i.turmaId),

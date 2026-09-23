@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { RotateCcw } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { FormularioAutoavaliacao } from "@/components/autoavaliacao/FormularioAutoavaliacao";
@@ -9,7 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calcularDimensoes } from "@/data/autoavaliacao";
 import { useStore } from "@/data/store";
 import type { Autoavaliacao, EstadoApp } from "@/data/types";
-import { cicloConfigAtivo, formularioVersaoVigente, novoId } from "@/lib/ciclo";
+import {
+  cicloDoDocente,
+  etapasEmOrdem,
+  formularioVersaoVigente,
+  novoId,
+} from "@/lib/ciclo";
 
 export const Route = createFileRoute("/autoavaliacao")({
   head: () => ({
@@ -31,25 +37,33 @@ export const Route = createFileRoute("/autoavaliacao")({
 
 function AutoavaliacaoPage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  const config = cicloConfigAtivo(estado);
+  // D61: a configuração vem do mesociclo da turma do docente, nunca do
+  // vigente — sem inscrição ainda, cicloDoDocente cai no vigente sozinho.
+  const { config } = cicloDoDocente(estado, pessoaAtiva.id);
 
-  const etapa = [...config.etapas]
-    .sort((a, b) => a.ordem - b.ordem)
-    .find((e) => e.tipo === "autoavaliacao");
-
-  const registro = estado.autoavaliacoes.find(
-    (a) => a.pessoaId === pessoaAtiva.id,
+  const etapas = etapasEmOrdem(config).filter(
+    (e) => e.tipo === "autoavaliacao",
   );
+  const [etapaId, setEtapaId] = useState<string>(etapas[0]?.id ?? "");
+  const etapa = etapas.find((e) => e.id === etapaId) ?? etapas[0];
+
+  const registro = etapa
+    ? estado.autoavaliacoes.find(
+        (a) => a.pessoaId === pessoaAtiva.id && a.etapaId === etapa.id,
+      )
+    : undefined;
   const respostas = registro?.respostas ?? {};
 
   function salvarRegistro(mudanca: Partial<Autoavaliacao>) {
+    if (!etapa) return;
     atualizar((anterior: EstadoApp) => {
       const existente = anterior.autoavaliacoes.find(
-        (a) => a.pessoaId === pessoaAtiva.id,
+        (a) => a.pessoaId === pessoaAtiva.id && a.etapaId === etapa.id,
       );
       const base: Autoavaliacao = existente ?? {
         id: novoId("aa"),
         pessoaId: pessoaAtiva.id,
+        etapaId: etapa.id,
         respostas: {},
         dimensoes: {},
       };
@@ -58,7 +72,9 @@ function AutoavaliacaoPage() {
         ...anterior,
         autoavaliacoes: existente
           ? anterior.autoavaliacoes.map((a) =>
-              a.pessoaId === pessoaAtiva.id ? atualizado : a,
+              a.pessoaId === pessoaAtiva.id && a.etapaId === etapa.id
+                ? atualizado
+                : a,
             )
           : [...anterior.autoavaliacoes, atualizado],
       };
@@ -75,6 +91,7 @@ function AutoavaliacaoPage() {
   }
 
   function concluir() {
+    if (!etapa) return;
     const dimensoes = calcularDimensoes(
       respostas,
       config.dimensoesAutoavaliacao,
@@ -83,12 +100,13 @@ function AutoavaliacaoPage() {
 
     atualizar((anterior: EstadoApp) => {
       const existente = anterior.autoavaliacoes.find(
-        (a) => a.pessoaId === pessoaAtiva.id,
+        (a) => a.pessoaId === pessoaAtiva.id && a.etapaId === etapa.id,
       );
       const registroFinal: Autoavaliacao = {
         ...(existente ?? {
           id: novoId("aa"),
           pessoaId: pessoaAtiva.id,
+          etapaId: etapa.id,
           respostas,
         }),
         respostas,
@@ -100,7 +118,9 @@ function AutoavaliacaoPage() {
 
       const autoavaliacoes = existente
         ? anterior.autoavaliacoes.map((a) =>
-            a.pessoaId === pessoaAtiva.id ? registroFinal : a,
+            a.pessoaId === pessoaAtiva.id && a.etapaId === etapa.id
+              ? registroFinal
+              : a,
           )
         : [...anterior.autoavaliacoes, registroFinal];
 
@@ -181,6 +201,21 @@ function AutoavaliacaoPage() {
         <h1 className="text-3xl">{etapa.nome}</h1>
         <p className="text-muted-foreground">{etapa.descricao}</p>
       </header>
+
+      {etapas.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {etapas.map((e) => (
+            <Button
+              key={e.id}
+              size="sm"
+              variant={e.id === etapa.id ? "default" : "outline"}
+              onClick={() => setEtapaId(e.id)}
+            >
+              {e.nome}
+            </Button>
+          ))}
+        </div>
+      )}
 
       {concluida ? (
         <div className="space-y-5">

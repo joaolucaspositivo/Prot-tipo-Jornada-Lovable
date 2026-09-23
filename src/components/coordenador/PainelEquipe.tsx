@@ -309,11 +309,15 @@ export function PainelEquipe({
                   </Badge>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {!l.devolutiva
-                    ? "—"
-                    : l.devolutiva.cienciaEmISO
-                      ? "Deu ciência"
-                      : "Aguardando"}
+                  {(() => {
+                    const devolutivas = l.entregasDoDocente
+                      .map((e) => e.devolutiva)
+                      .filter((d): d is NonNullable<typeof d> => Boolean(d));
+                    if (devolutivas.length === 0) return "—";
+                    return devolutivas.some((d) => !d.cienciaEmISO)
+                      ? "Aguardando"
+                      : "Deu ciência";
+                  })()}
                 </TableCell>
               </TableRow>
             ))}

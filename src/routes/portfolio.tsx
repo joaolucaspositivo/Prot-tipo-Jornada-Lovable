@@ -32,7 +32,7 @@ import { formatarDataHora } from "@/lib/conteudo";
 import { formatarTamanho } from "@/lib/entrega";
 import {
   conquistasDoDocente,
-  etapaDePortfolio,
+  etapasDePortfolio,
   itensDoCiclo,
   portfolioDoDocente,
   reflexoesConfiguradas,
@@ -65,9 +65,13 @@ export const Route = createFileRoute("/portfolio")({
 function PortfolioPage() {
   const { estado, pessoaAtiva, atualizar } = useStore();
   const { mesociclo, config } = cicloDoDocente(estado, pessoaAtiva.id);
-  const etapa = etapaDePortfolio(estado, pessoaAtiva.id);
+  const etapas = etapasDePortfolio(estado, pessoaAtiva.id);
+  const [etapaId, setEtapaId] = useState<string>(etapas[0]?.id ?? "");
+  const etapa = etapas.find((e) => e.id === etapaId) ?? etapas[0];
   const campos = reflexoesConfiguradas(estado, pessoaAtiva.id);
-  const salvo = portfolioDoDocente(estado, pessoaAtiva.id);
+  const salvo = etapa
+    ? portfolioDoDocente(estado, pessoaAtiva.id, etapa.id)
+    : undefined;
   const itens = itensDoCiclo(estado, pessoaAtiva.id);
   const conquistas = conquistasDoDocente(estado, pessoaAtiva.id);
 
@@ -235,6 +239,32 @@ function PortfolioPage() {
           </Badge>
         )}
       </header>
+
+      {etapas.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {etapas.map((e) => {
+            const salvoDaEtapa = portfolioDoDocente(
+              estado,
+              pessoaAtiva.id,
+              e.id,
+            );
+            return (
+              <Button
+                key={e.id}
+                size="sm"
+                variant={e.id === etapa.id ? "default" : "outline"}
+                onClick={() => {
+                  setEtapaId(e.id);
+                  setReflexoes(salvoDaEtapa?.reflexoes ?? {});
+                  setAnexos(salvoDaEtapa?.anexos ?? []);
+                }}
+              >
+                {e.nome}
+              </Button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-6">

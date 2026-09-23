@@ -21,7 +21,7 @@ import { useStore } from "@/data/store";
 import type { EstadoApp } from "@/data/types";
 import { cicloConfigAtivo, formularioVersaoVigente, novoId } from "@/lib/ciclo";
 import {
-  etapaDeEnquete,
+  etapasDeEnquete,
   perguntasDoPublico,
   publicosDaEnquete,
   respostasDoDocente,
@@ -83,9 +83,27 @@ function EnquetePage() {
     const publico = publicos.find((p) => p.id === publicoId);
 
     atualizar((anterior: EstadoApp): EstadoApp => {
+      // Quando o próprio docente responde, a etapa configurada é concluída
+      // — a etapa é do CICLO DO DOCENTE avaliado, não da vigente. Com mais
+      // de uma etapa de enquete (D52), a resposta conta para a primeira
+      // ainda não concluída — sem seletor de rodada nesta tela, que a
+      // Enquete não tem por estar em stand-by (D47).
+      const etapasDocente = etapasDeEnquete(anterior, docenteId);
+      const etapa =
+        etapasDocente.find(
+          (e) =>
+            !anterior.progressoEtapas.some(
+              (p) =>
+                p.pessoaId === docenteId &&
+                p.etapaId === e.id &&
+                p.status === "concluida",
+            ),
+        ) ?? etapasDocente[0];
+
       const resposta = {
         id: novoId("enq"),
         docenteId,
+        etapaId: etapa?.id ?? "",
         respondenteTipoId: publicoId,
         respondenteNome:
           nome.trim() || `${publico?.nome ?? "Respondente"} (anônimo)`,
@@ -95,9 +113,6 @@ function EnquetePage() {
         formularioVersaoId: formularioVersaoVigente(anterior, "enquete")?.id,
       };
 
-      // Quando o próprio docente responde, a etapa configurada é concluída
-      // — a etapa é do CICLO DO DOCENTE avaliado, não da vigente.
-      const etapa = etapaDeEnquete(anterior, docenteId);
       const concluiEtapa = etapa && publicoId === publicos[0]?.id && docenteId;
       const progressoEtapas =
         concluiEtapa && etapa
