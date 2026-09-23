@@ -24,7 +24,14 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useStore } from "@/data/store";
 import type { Presenca, Turma } from "@/data/types";
-import { cicloConfigAtivo, docentesDaTurma, novoId } from "@/lib/ciclo";
+import {
+  cicloConfigAtivo,
+  docentesDaTurma,
+  encontrosDaTurma,
+  formatarData,
+  nomeDoProfessor,
+  novoId,
+} from "@/lib/ciclo";
 import { ocupacaoDasTurmas } from "@/lib/gestao";
 
 export function OcupacaoTurmas() {
@@ -59,7 +66,10 @@ export function OcupacaoTurmas() {
         <CardContent>
           <ul className="grid gap-3 sm:grid-cols-2">
             {turmas.map((t) => {
-              const sincrona = t.modalidade?.presencaAutomatica === false;
+              const sincrona = t.modalidade?.preveEncontroAoVivo === true;
+              const totalEncontros = sincrona
+                ? encontrosDaTurma(estado, t.turma.id).length
+                : 0;
               return (
                 <li
                   key={t.turma.id}
@@ -72,8 +82,8 @@ export function OcupacaoTurmas() {
                         {t.temaNome}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {t.modalidadeNome} · {t.turma.periodo} ·{" "}
-                        {t.turma.horario}
+                        {t.modalidadeNome}
+                        {sincrona ? ` · ${totalEncontros} encontro(s)` : ""}
                       </p>
                     </div>
                     {t.alerta === "esgotada" && (
@@ -140,7 +150,12 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
     : (ofertasDaTurma[0]?.etapaId ?? "");
   const etapa = config.etapas.find((e) => e.id === etapaId);
 
-  const [encontro, setEncontro] = useState(1);
+  const encontros = encontrosDaTurma(estado, turma.id);
+  const [encontroIdBruto, setEncontroIdBruto] = useState("");
+  const encontroId = encontros.some((e) => e.id === encontroIdBruto)
+    ? encontroIdBruto
+    : (encontros[0]?.id ?? "");
+  const encontro = encontros.find((e) => e.id === encontroId);
   const [justificandoId, setJustificandoId] = useState<string | null>(null);
   const [observacao, setObservacao] = useState("");
 
@@ -161,13 +176,27 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
     );
   }
 
+  if (encontros.length === 0) {
+    return (
+      <div className="p-6">
+        <SheetHeader>
+          <SheetTitle>Lançar presença — {turma.nome}</SheetTitle>
+          <SheetDescription>
+            Nenhum encontro cadastrado ainda para esta turma. Cadastre os
+            encontros na aba Turmas antes de lançar presença.
+          </SheetDescription>
+        </SheetHeader>
+      </div>
+    );
+  }
+
   function presencaDoDocente(pessoaId: string): Presenca | undefined {
     return estado.presencas.find(
       (p) =>
         p.pessoaId === pessoaId &&
         p.turmaId === turma.id &&
         p.etapaId === etapaId &&
-        p.encontro === encontro,
+        p.encontroId === encontroId,
     );
   }
 
@@ -179,7 +208,7 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
           p.pessoaId === pessoaId &&
           p.turmaId === turma.id &&
           p.etapaId === etapaId &&
-          p.encontro === encontro,
+          p.encontroId === encontroId,
       );
       const registro: Presenca = existente
         ? {
@@ -193,7 +222,7 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
             pessoaId,
             turmaId: turma.id,
             etapaId,
-            encontro,
+            encontroId,
             presente: false,
             lancadaEmISO: agora,
             lancadaPorId: pessoaAtiva.id,
@@ -210,7 +239,7 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
             id: novoId("not"),
             pessoaId,
             titulo: "Presença lançada",
-            descricao: `Encontro ${encontro} de "${etapa?.nome ?? turma.nome}" registrado pela equipe operadora.`,
+            descricao: `Encontro de ${formatarData(new Date(encontro!.data))} de "${etapa?.nome ?? turma.nome}" registrado pela equipe operadora.`,
             criadaEmISO: agora,
             lida: false,
             tipo: "mudanca_etapa" as const,
@@ -226,7 +255,7 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
       <SheetHeader>
         <SheetTitle>Lançar presença — {turma.nome}</SheetTitle>
         <SheetDescription>
-          {turma.professorNome ? `Professor: ${turma.professorNome}. ` : ""}
+          Professor: {nomeDoProfessor(estado, turma.professorId)}.{" "}
           {docentes.length} docente(s) inscrito(s).
         </SheetDescription>
       </SheetHeader>
@@ -254,20 +283,18 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
         ) : null}
         <div className="space-y-1.5">
           <Label htmlFor="presenca-encontro">Encontro</Label>
-          <Select
-            value={String(encontro)}
-            onValueChange={(v) => setEncontro(Number(v))}
-          >
-            <SelectTrigger id="presenca-encontro" className="h-10 w-40">
-              <SelectValue>{`Encontro ${encontro}`}</SelectValue>
+          <Select value={encontroId} onValueChange={setEncontroIdBruto}>
+            <SelectTrigger id="presenca-encontro" className="h-10 w-56">
+              <SelectValue>
+                {encontro
+                  ? `${formatarData(new Date(encontro.data))} · ${encontro.horario}`
+                  : ""}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {Array.from(
-                { length: Math.max(1, turma.encontrosPrevistos) },
-                (_, i) => i + 1,
-              ).map((n) => (
-                <SelectItem key={n} value={String(n)}>
-                  {`Encontro ${n}`}
+              {encontros.map((e) => (
+                <SelectItem key={e.id} value={e.id}>
+                  {formatarData(new Date(e.data))} · {e.horario}
                 </SelectItem>
               ))}
             </SelectContent>

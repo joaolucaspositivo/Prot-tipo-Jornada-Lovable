@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useStore } from "@/data/store";
+import { encontrosDaTurma } from "@/lib/ciclo";
 import { ocupacaoDasTurmas } from "@/lib/gestao";
 
 /**
@@ -46,7 +47,10 @@ export function PainelModeracao() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {turmas.map((t) => {
-            const sincrona = t.modalidade?.presencaAutomatica === false;
+            const sincrona = t.modalidade?.preveEncontroAoVivo === true;
+            const totalEncontros = sincrona
+              ? encontrosDaTurma(estado, t.turma.id).length
+              : 0;
             return (
               <Card key={t.turma.id}>
                 <CardHeader className="flex-row items-start justify-between gap-2 space-y-0">
@@ -59,9 +63,11 @@ export function PainelModeracao() {
                   <Badge variant="secondary">{t.modalidadeNome}</Badge>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-xs text-muted-foreground">
-                    {t.turma.horario || "Sem horário definido"}
-                  </p>
+                  {sincrona && (
+                    <p className="text-xs text-muted-foreground">
+                      {totalEncontros} encontro(s)
+                    </p>
+                  )}
                   <Progress value={t.percentual} className="h-2" />
                   <p className="text-xs text-muted-foreground">
                     {t.turma.vagasOcupadas} de {t.turma.vagas} vagas ocupadas
