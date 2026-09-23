@@ -8,9 +8,27 @@ import type {
   EstadoApp,
   Mesociclo,
   Pessoa,
+  ProgressoEtapa,
 } from "@/data/types";
 import { cargaHorariaDoTema, novoId, temaVersaoVigente } from "@/lib/ciclo";
-import { progressoDaTrilha, trilhaDoDocente } from "@/lib/jornada";
+import { trilhaDoDocente } from "@/lib/jornada";
+
+/**
+ * Percentual da trilha, para fins de elegibilidade, SEM contar a própria
+ * etapa de encerramento — concluí-la é justamente o efeito da emissão do
+ * certificado (Pacote 2). Contá-la no denominador tornaria a emissão
+ * impossível: 100% exigiria a etapa que só o botão de emissão completa.
+ */
+function percentualSemEncerramento(
+  trilha: ReturnType<typeof trilhaDoDocente>,
+): number {
+  const semEncerramento = trilha.filter((i) => i.etapa.tipo !== "encerramento");
+  if (semEncerramento.length === 0) return 100;
+  const concluidas = semEncerramento.filter(
+    (i) => i.status === "concluida",
+  ).length;
+  return Math.round((concluidas / semEncerramento.length) * 100);
+}
 
 export interface ElegibilidadeCertificado {
   pessoa: Pessoa;
@@ -26,9 +44,10 @@ export interface ElegibilidadeCertificado {
 
 /**
  * Elegibilidade de cada docente inscrito no mesociclo para o certificado
- * deste ciclo — trilha 100% concluída e carga horária declarada para o
- * tema (D56). Não esconde quem falha um critério: aparece com o motivo,
- * para a operadora não precisar adivinhar por que alguém não está na lista.
+ * deste ciclo — trilha 100% concluída (fora a própria etapa de
+ * encerramento) e carga horária declarada para o tema (D56). Não esconde
+ * quem falha um critério: aparece com o motivo, para a operadora não
+ * precisar adivinhar por que alguém não está na lista.
  */
 export function elegibilidadeCertificadoDoCiclo(
   estado: EstadoApp,
@@ -47,7 +66,7 @@ export function elegibilidadeCertificadoDoCiclo(
     const pessoa = estado.pessoas.find((p) => p.id === inscricao.pessoaId)!;
     const tema = estado.temas.find((t) => t.id === inscricao.temaId);
     const trilha = trilhaDoDocente(estado, pessoa);
-    const { percentual } = progressoDaTrilha(trilha);
+    const percentual = percentualSemEncerramento(trilha);
     const cargaHoraria = tema
       ? cargaHorariaDoTema(estado, mesociclo.id, tema.id)
       : undefined;
@@ -104,16 +123,26 @@ export function certificadoDoDocente(estado: EstadoApp, docenteId: string) {
  * `TemaNoMesociclo` no momento da emissão, nunca mais recalculada depois.
  * Ignora silenciosamente quem não constar como elegível na lista recebida
  * — o chamador já filtrou antes de montar a seleção.
+ *
+ * Também conclui a(s) etapa(s) `tipo: "encerramento"` do docente — é a
+ * própria emissão que fecha essa etapa na trilha dele, não uma ação
+ * separada do docente (ver `percentualSemEncerramento` acima).
  */
 export function emitirCertificados(
   elegiveis: ElegibilidadeCertificado[],
   pessoaIds: string[],
   estado: EstadoApp,
   autorId: string,
-): { conclusoes: Conclusao[]; certificados: Certificado[] } {
+): {
+  conclusoes: Conclusao[];
+  certificados: Certificado[];
+  /** array final de progressoEtapas — substitui `estado.progressoEtapas`, não concatena */
+  progressoEtapas: ProgressoEtapa[];
+} {
   const agora = new Date().toISOString();
   const conclusoes: Conclusao[] = [];
   const certificados: Certificado[] = [];
+  let progressoEtapas = estado.progressoEtapas;
   const idsSelecionados = new Set(pessoaIds);
 
   elegiveis
@@ -142,7 +171,36 @@ export function emitirCertificados(
         emitidoEmISO: agora,
         emitidoPorId: autorId,
       });
+
+      const trilha = trilhaDoDocente(estado, e.pessoa);
+      trilha
+        .filter((i) => i.etapa.tipo === "encerramento")
+        .forEach((i) => {
+          const existente = progressoEtapas.find(
+            (p) => p.pessoaId === e.pessoa.id && p.etapaId === i.etapa.id,
+          );
+          progressoEtapas = existente
+            ? progressoEtapas.map((p) =>
+                p.id === existente.id
+                  ? {
+                      ...p,
+                      status: "concluida" as const,
+                      atualizadoEmISO: agora,
+                    }
+                  : p,
+              )
+            : [
+                ...progressoEtapas,
+                {
+                  id: novoId("prog"),
+                  pessoaId: e.pessoa.id,
+                  etapaId: i.etapa.id,
+                  status: "concluida" as const,
+                  atualizadoEmISO: agora,
+                },
+              ];
+        });
     });
 
-  return { conclusoes, certificados };
+  return { conclusoes, certificados, progressoEtapas };
 }

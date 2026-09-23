@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Award, TriangleAlert } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   AlertDialog,
@@ -54,7 +55,7 @@ export function BlocoCertificado() {
   }
 
   function emitir() {
-    const { conclusoes, certificados } = emitirCertificados(
+    const { conclusoes, certificados, progressoEtapas } = emitirCertificados(
       elegiveis,
       [...selecionados],
       estado,
@@ -64,8 +65,12 @@ export function BlocoCertificado() {
       ...anterior,
       conclusoes: [...anterior.conclusoes, ...conclusoes],
       certificados: [...anterior.certificados, ...certificados],
+      progressoEtapas,
     }));
     setSelecionados(new Set());
+    toast.success(
+      `${certificados.length} certificado(s) emitido(s). Nomes de tema travados a partir de agora.`,
+    );
   }
 
   return (
