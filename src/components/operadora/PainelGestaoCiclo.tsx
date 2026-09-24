@@ -45,13 +45,15 @@ export function PainelGestaoCiclo() {
   const [unidade, setUnidade] = useState(TODOS);
   const [tema, setTema] = useState(TODOS);
   const [etapa, setEtapa] = useState(TODOS);
+  const [comLider, setComLider] = useState(TODOS);
 
   const unidades = [...new Set(linhas.map((l) => l.pessoa.unidade))].sort();
 
-  const filtradas = aplicarFiltro(linhas, {
+  const filtradas = aplicarFiltro(estado, linhas, {
     unidade: unidade === TODOS ? undefined : unidade,
     temaNome: tema === TODOS ? undefined : tema,
     etapaId: etapa === TODOS ? undefined : etapa,
+    comLider: comLider === TODOS ? undefined : comLider === "sim",
   });
 
   const c = contadores(filtradas);
@@ -97,6 +99,15 @@ export function PainelGestaoCiclo() {
             opcoes={[...config.etapas]
               .sort((a, b) => a.ordem - b.ordem)
               .map((e) => ({ valor: e.id, rotulo: e.nome }))}
+          />
+          <Campo
+            rotulo="Liderado"
+            valor={comLider}
+            aoMudar={setComLider}
+            opcoes={[
+              { valor: "sim", rotulo: "Com líder" },
+              { valor: "nao", rotulo: "Sem líder" },
+            ]}
           />
           <Button variant="outline" onClick={exportar} className="ml-auto">
             <Download className="size-4" aria-hidden />
