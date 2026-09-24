@@ -203,6 +203,51 @@ export function linhasDaEquipe(
   return pessoas.map((p) => linhaDoDocente(estado, p));
 }
 
+export interface DocenteAlocavel {
+  pessoa: Pessoa;
+  alocado: boolean;
+}
+
+export interface FiltroAlocacao {
+  busca?: string | undefined;
+  unidade?: string | undefined;
+  /** true = só liderados; false = só não-liderados; ausente = todos */
+  liderado?: boolean | undefined;
+}
+
+/**
+ * Base completa de docentes (D36, só leitura) enriquecida com se já é
+ * liderado do coordenador informado — alimenta a tela de Alocações (D48).
+ */
+export function docentesParaAlocacao(
+  estado: EstadoApp,
+  coordenadorId: string,
+  filtro: FiltroAlocacao = {},
+): DocenteAlocavel[] {
+  const meusLideradosIds = new Set(
+    estado.alocacoes
+      .filter((a) => a.coordenadorId === coordenadorId)
+      .map((a) => a.docenteId),
+  );
+  const busca = filtro.busca?.trim().toLowerCase();
+  return estado.pessoas
+    .filter((p) => p.perfil === "docente")
+    .filter(
+      (p) =>
+        !busca ||
+        p.nome.toLowerCase().includes(busca) ||
+        p.matricula.toLowerCase().includes(busca),
+    )
+    .filter((p) => !filtro.unidade || p.unidade === filtro.unidade)
+    .filter(
+      (p) =>
+        filtro.liderado === undefined ||
+        meusLideradosIds.has(p.id) === filtro.liderado,
+    )
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+    .map((p) => ({ pessoa: p, alocado: meusLideradosIds.has(p.id) }));
+}
+
 export function contadores(linhas: LinhaEquipe[]) {
   return {
     emDia: linhas.filter((l) => l.situacao === "em_dia").length,

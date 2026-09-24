@@ -10,17 +10,29 @@ export interface FiltroGestao {
   unidade?: string | undefined;
   temaNome?: string | undefined;
   etapaId?: string | undefined;
+  /** D48: true = só docentes com líder; false = só sem líder; ausente = todos */
+  comLider?: boolean | undefined;
 }
 
+/**
+ * Recebe `estado` (não só `linhas`) porque "com líder/sem líder" (D48) é
+ * lido de `estado.alocacoes`, informação que `LinhaEquipe` não carrega —
+ * mesmo padrão de `pendenciasDeAlocacao`, que já lê alocações direto do
+ * estado.
+ */
 export function aplicarFiltro(
+  estado: EstadoApp,
   linhas: LinhaEquipe[],
   f: FiltroGestao,
 ): LinhaEquipe[] {
+  const docentesComLider = new Set(estado.alocacoes.map((a) => a.docenteId));
   return linhas.filter(
     (l) =>
       (!f.unidade || l.pessoa.unidade === f.unidade) &&
       (!f.temaNome || l.temaNome === f.temaNome) &&
-      (!f.etapaId || l.etapaAtual?.id === f.etapaId),
+      (!f.etapaId || l.etapaAtual?.id === f.etapaId) &&
+      (f.comLider === undefined ||
+        docentesComLider.has(l.pessoa.id) === f.comLider),
   );
 }
 
