@@ -1,21 +1,39 @@
-import { BadgeCheck, Search, UserCheck, Users } from "lucide-react";
+import { useState } from "react";
+import {
+  BadgeCheck,
+  Search,
+  UserCheck,
+  UserMinus,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useStore } from "@/data/store";
 import type { TipoParticipacao } from "@/data/types";
 import { coordenadoresDoDocente, novoId } from "@/lib/ciclo";
+import { docentesParaAlocacao } from "@/lib/equipe";
 
 /**
  * Área "Perfil" (D35), acessível a todo usuário: confirma dados fixos (vindos
@@ -149,20 +167,34 @@ function SecaoDocente() {
   );
 }
 
-/** Coordenador: busca na base completa de docentes e marca liderados (D35). */
+const TODOS = "todos";
+
+/** Coordenador: busca na base completa de docentes e marca liderados (D35/D48). */
 function SecaoAlocacoes() {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  const docentes = [...estado.pessoas]
-    .filter((p) => p.perfil === "docente")
-    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
-  const meusLideradosIds = new Set(
-    estado.alocacoes
-      .filter((a) => a.coordenadorId === pessoaAtiva.id)
-      .map((a) => a.docenteId),
-  );
+  const [busca, setBusca] = useState("");
+  const [unidade, setUnidade] = useState(TODOS);
+  const [liderado, setLiderado] = useState(TODOS);
 
-  function alternar(docenteId: string, nome: string) {
+  const unidades = [
+    ...new Set(
+      estado.pessoas
+        .filter((p) => p.perfil === "docente")
+        .map((p) => p.unidade),
+    ),
+  ].sort();
+
+  const linhas = docentesParaAlocacao(estado, pessoaAtiva.id, {
+    busca,
+    unidade: unidade === TODOS ? undefined : unidade,
+    liderado: liderado === TODOS ? undefined : liderado === "sim",
+  });
+  const totalLiderados = docentesParaAlocacao(estado, pessoaAtiva.id).filter(
+    (l) => l.alocado,
+  ).length;
+
+  function alternar(docenteId: string, nome: string, alocadoAntes: boolean) {
     atualizar((anterior) => {
       const existente = anterior.alocacoes.find(
         (a) => a.coordenadorId === pessoaAtiva.id && a.docenteId === docenteId,
@@ -187,7 +219,7 @@ function SecaoAlocacoes() {
       };
     });
     toast.success(
-      meusLideradosIds.has(docenteId)
+      alocadoAntes
         ? `${nome} removido(a) dos seus liderados.`
         : `${nome} alocado(a) como seu(sua) liderado(a).`,
     );
@@ -205,37 +237,96 @@ function SecaoAlocacoes() {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Command className="rounded-lg border border-border">
-          <CommandInput placeholder="Buscar docente por nome ou matrícula" />
-          <CommandList>
-            <CommandEmpty>Nenhum docente encontrado.</CommandEmpty>
-            <CommandGroup>
-              {docentes.map((d) => {
-                const alocado = meusLideradosIds.has(d.id);
-                return (
-                  <CommandItem
-                    key={d.id}
-                    value={`${d.nome} ${d.matricula}`}
-                    onSelect={() => alternar(d.id, d.nome)}
-                    className="justify-between"
-                  >
-                    <span>
-                      {d.nome}{" "}
-                      <span className="text-muted-foreground">
-                        · {d.matricula} · {d.unidade}
-                      </span>
-                    </span>
-                    {alocado ? (
-                      <Badge variant="secondary">Liderado</Badge>
-                    ) : null}
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          </CommandList>
-        </Command>
+        <div className="flex flex-wrap gap-2">
+          <Input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar por nome ou matrícula"
+            aria-label="Buscar docente por nome ou matrícula"
+            className="min-w-48 flex-1"
+          />
+          <Select value={unidade} onValueChange={setUnidade}>
+            <SelectTrigger aria-label="Unidade" className="w-full sm:w-44">
+              <SelectValue placeholder="Unidade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TODOS}>Unidade: todas</SelectItem>
+              {unidades.map((u) => (
+                <SelectItem key={u} value={u}>
+                  {u}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={liderado} onValueChange={setLiderado}>
+            <SelectTrigger aria-label="Liderado" className="w-full sm:w-40">
+              <SelectValue placeholder="Liderado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TODOS}>Liderado: todos</SelectItem>
+              <SelectItem value="sim">Liderado: sim</SelectItem>
+              <SelectItem value="nao">Liderado: não</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Docente</TableHead>
+                <TableHead>Matrícula</TableHead>
+                <TableHead>Unidade</TableHead>
+                <TableHead>Liderado</TableHead>
+                <TableHead className="text-right">Ação</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {linhas.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-muted-foreground">
+                    Nenhum docente com esses filtros.
+                  </TableCell>
+                </TableRow>
+              )}
+              {linhas.map(({ pessoa, alocado }) => (
+                <TableRow key={pessoa.id}>
+                  <TableCell className="font-medium">{pessoa.nome}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {pessoa.matricula}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {pessoa.unidade}
+                  </TableCell>
+                  <TableCell>
+                    {alocado ? <Badge variant="secondary">Sim</Badge> : "—"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant={alocado ? "outline" : "default"}
+                      onClick={() => alternar(pessoa.id, pessoa.nome, alocado)}
+                    >
+                      {alocado ? (
+                        <>
+                          <UserMinus className="size-4" aria-hidden />
+                          Remover
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="size-4" aria-hidden />
+                          Alocar
+                        </>
+                      )}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
         <p className="text-sm text-muted-foreground">
-          {meusLideradosIds.size} docente(s) alocado(s) como seus liderados.
+          {totalLiderados} docente(s) alocado(s) como seus liderados.
         </p>
       </CardContent>
     </Card>
