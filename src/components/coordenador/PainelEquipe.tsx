@@ -39,7 +39,7 @@ const TODOS = "todos";
 export function PainelEquipe({
   escopo,
 }: {
-  escopo: "coordenador" | "operadora" | "diretor" | "moderador";
+  escopo: "coordenador" | "operadora" | "diretor";
 }) {
   const { estado, pessoaAtiva, atualizar } = useStore();
   const config = cicloConfigAtivo(estado);
@@ -52,11 +52,9 @@ export function PainelEquipe({
           ? { coordenadorId: pessoaAtiva.id }
           : escopo === "diretor"
             ? { unidade: pessoaAtiva.unidade }
-            : escopo === "moderador"
-              ? { turmaIds: pessoaAtiva.turmaIds ?? [] }
-              : {},
+            : {},
       ),
-    [estado, escopo, pessoaAtiva.id, pessoaAtiva.unidade, pessoaAtiva.turmaIds],
+    [estado, escopo, pessoaAtiva.id, pessoaAtiva.unidade],
   );
 
   const [fEtapa, setFEtapa] = useState(TODOS);

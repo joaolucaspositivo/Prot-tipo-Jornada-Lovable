@@ -168,27 +168,16 @@ export function linhaDoDocente(
   };
 }
 
-/** Docentes inscritos em qualquer uma das turmas informadas — escopo do moderador (D33). */
-function docentesDasTurmas(estado: EstadoApp, turmaIds: string[]): Pessoa[] {
-  const turmas = new Set(turmaIds);
-  const ids = new Set(
-    estado.inscricoes
-      .filter((i) => turmas.has(i.turmaId))
-      .map((i) => i.pessoaId),
-  );
-  return estado.pessoas.filter((p) => p.perfil === "docente" && ids.has(p.id));
-}
-
 /**
- * Linhas da equipe do coordenador, da unidade do diretor, das turmas do
- * moderador, ou de todos (operadora).
+ * Linhas da equipe do coordenador, da unidade do diretor, ou de todos
+ * (operadora). O moderador não usa mais isto (D49/D50) — a tela dele lê de
+ * `lib/moderacao.ts`, escopada por turma+etapa, não pela trilha inteira.
  */
 export function linhasDaEquipe(
   estado: EstadoApp,
   filtro: {
     coordenadorId?: string;
     unidade?: string;
-    turmaIds?: string[];
   } = {},
 ): LinhaEquipe[] {
   const pessoas = filtro.coordenadorId
@@ -197,9 +186,7 @@ export function linhasDaEquipe(
       ? estado.pessoas.filter(
           (p) => p.perfil === "docente" && p.unidade === filtro.unidade,
         )
-      : filtro.turmaIds
-        ? docentesDasTurmas(estado, filtro.turmaIds)
-        : estado.pessoas.filter((p) => p.perfil === "docente");
+      : estado.pessoas.filter((p) => p.perfil === "docente");
   return pessoas.map((p) => linhaDoDocente(estado, p));
 }
 
