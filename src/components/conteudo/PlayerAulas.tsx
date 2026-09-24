@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { Check, CirclePlay, Pause, Play, Video } from "lucide-react";
+import { useState } from "react";
+import { Check, CirclePlay, Play, Video } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import type { AulaConteudo } from "@/data/conteudos";
 import { cn } from "@/lib/utils";
 
@@ -13,8 +12,12 @@ interface Props {
 }
 
 /**
- * Player simulado: o vídeo está hospedado no Drive institucional e roda dentro
- * do próprio sistema, sem pedir login e sem abrir outra ferramenta.
+ * Vídeo considerado assistido NO CLIQUE do play (D58) — não existe
+ * rastreamento de tempo assistido, e isso não é lacuna a preencher, é
+ * decisão. No MVP, este clique carrega o iframe real do vídeo hospedado no
+ * Drive institucional; o protótipo não tem um vídeo de verdade para
+ * apontar, então simula só esse passo — revela esta mesma área com outra
+ * aparência, sem fingir ser um embed do Drive que não é.
  */
 export function PlayerAulas({ aulas, concluidas, aoConcluir }: Props) {
   const [aulaId, setAulaId] = useState<string>(
@@ -22,37 +25,9 @@ export function PlayerAulas({ aulas, concluidas, aoConcluir }: Props) {
   );
   const aula = aulas.find((a) => a.id === aulaId) ?? aulas[0];
 
-  const [tocando, setTocando] = useState(false);
-  const [posicao, setPosicao] = useState(0);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    setPosicao(concluidas.has(aulaId) ? 100 : 0);
-    setTocando(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aulaId]);
-
-  useEffect(() => {
-    if (!tocando) return;
-    timer.current = setInterval(() => {
-      setPosicao((p) => Math.min(100, p + 2));
-    }, 120);
-    return () => {
-      if (timer.current) clearInterval(timer.current);
-    };
-  }, [tocando]);
-
-  useEffect(() => {
-    if (posicao >= 100 && aula && !concluidas.has(aula.id)) {
-      setTocando(false);
-      aoConcluir(aula.id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [posicao]);
-
   if (!aula) return null;
 
-  const minutoAtual = Math.round((posicao / 100) * aula.duracaoMin);
+  const assistida = concluidas.has(aula.id);
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
@@ -60,60 +35,41 @@ export function PlayerAulas({ aulas, concluidas, aoConcluir }: Props) {
         <div className="relative overflow-hidden rounded-2xl border border-border bg-foreground/90">
           <div className="flex aspect-video flex-col items-center justify-center gap-3 p-6 text-center">
             <Video className="size-10 text-background/70" aria-hidden />
-            <p className="text-background text-lg leading-snug">
+            <p className="text-lg leading-snug text-background">
               {aula.titulo}
             </p>
-            <p className="max-w-sm text-sm text-background/70">
-              Vídeo hospedado no Drive institucional da rede. Reprodução dentro
-              do sistema, sem login e sem sair desta tela.
-            </p>
-            <Button
-              variant="secondary"
-              className="mt-1 gap-1.5"
-              onClick={() => setTocando((t) => !t)}
-              disabled={posicao >= 100}
-            >
-              {tocando ? (
-                <Pause className="size-4" aria-hidden />
-              ) : (
-                <Play className="size-4" aria-hidden />
-              )}
-              {posicao >= 100
-                ? "Aula assistida"
-                : tocando
-                  ? "Pausar"
-                  : posicao > 0
-                    ? "Continuar"
-                    : "Reproduzir aula"}
-            </Button>
+            {assistida ? (
+              <p className="max-w-sm text-sm text-background/70">
+                Vídeo carregado do Drive institucional da rede —{" "}
+                {aula.duracaoMin} min.
+              </p>
+            ) : (
+              <>
+                <p className="max-w-sm text-sm text-background/70">
+                  Vídeo hospedado no Drive institucional da rede,{" "}
+                  {aula.duracaoMin} min. Reprodução dentro do sistema, sem login
+                  e sem sair desta tela.
+                </p>
+                <Button
+                  variant="secondary"
+                  className="mt-1 gap-1.5"
+                  onClick={() => aoConcluir(aula.id)}
+                >
+                  <Play className="size-4" aria-hidden />
+                  Assistir aula
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
-        <div className="mt-3">
-          <Progress
-            value={posicao}
-            aria-label={`Progresso da aula ${aula.titulo}`}
-          />
-          <div className="mt-1.5 flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              {minutoAtual} min de {aula.duracaoMin} min
-            </span>
-            <span className="truncate pl-3 text-xs">{aula.arquivoDrive}</span>
-          </div>
-        </div>
+        <p className="mt-3 flex items-center gap-1.5 text-sm text-muted-foreground">
+          {assistida && <Check className="size-4 text-sucesso" aria-hidden />}
+          {assistida ? "Aula assistida" : "Ainda não assistida"} ·{" "}
+          {aula.arquivoDrive}
+        </p>
 
         <p className="mt-3 text-sm text-muted-foreground">{aula.resumo}</p>
-
-        {!concluidas.has(aula.id) && (
-          <Button
-            variant="outline"
-            className="mt-3 gap-1.5"
-            onClick={() => aoConcluir(aula.id)}
-          >
-            <Check className="size-4" aria-hidden />
-            Marcar aula como assistida
-          </Button>
-        )}
       </div>
 
       <ol className="space-y-2">
