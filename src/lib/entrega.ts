@@ -122,6 +122,29 @@ export const ROTULO_STATUS_ENTREGA: Record<Entrega["status"], string> = {
   devolutiva_disponivel: "Devolutiva disponível",
 };
 
+/**
+ * Opções de parecer conforme o tipo da etapa configurada. Compartilhada
+ * entre `DetalheDocente` (coordenador/operadora/diretor) e o detalhe de
+ * entrega do moderador — mesma escala, dois lugares que dão devolutiva.
+ *
+ * `portfolio` ao lado de `entrega` de propósito: antes do rename de D30/v3,
+ * o Portfólio de Inovação Docente usava `tipo: "entrega"` por engano, e
+ * quem dá devolutiva já usa esta escala pra ele — corrigir a mistipagem
+ * sem manter este case tiraria uma função em uso, não uma mistipagem.
+ */
+export function pareceresDaEtapa(etapa: Etapa | undefined): string[] {
+  if (!etapa) return [];
+  switch (etapa.tipo) {
+    case "entrega":
+    case "portfolio":
+      return ["Atende", "Atende parcialmente", "Não atende"];
+    case "encontro":
+      return ["Destaque", "Adequado", "A desenvolver"];
+    default:
+      return [];
+  }
+}
+
 export interface EntregaRecebida {
   entrega: Entrega;
   docente: Pessoa | undefined;
