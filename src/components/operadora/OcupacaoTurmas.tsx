@@ -1,4 +1,4 @@
-import { AlertTriangle, CalendarCheck, Users } from "lucide-react";
+import { AlertTriangle, CalendarCheck, FileText, Users } from "lucide-react";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -14,18 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { useStore } from "@/data/store";
 import type { Presenca, Turma } from "@/data/types";
 import {
-  cicloConfigAtivo,
+  cicloDaTurma,
   docentesDaTurma,
   encontrosDaTurma,
   formatarData,
@@ -132,14 +126,31 @@ export function OcupacaoTurmas() {
   );
 }
 
-/** Exportado: o moderador (D33) reaproveita o mesmo lançamento de presença. */
+/** Sheet lateral (operadora, OcupacaoTurmas) em cima do mesmo conteúdo que o
+ * moderador usa inline em `/moderacao` (D49/D50) — um só lançamento de
+ * presença, duas molduras. */
 export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
+  return (
+    <div className="flex h-full flex-col">
+      <ConteudoLancamentoPresenca turma={turma} />
+    </div>
+  );
+}
+
+/**
+ * Miolo do lançamento de presença — sem moldura de Sheet, para poder ser
+ * reaproveitado como conteúdo central pelo moderador (D49/D50), que não
+ * abre mais isso num drawer lateral. `SheetHeader`/`SheetTitle` aqui
+ * dependeriam de um `Sheet` ao redor (são primitivas de Radix Dialog),
+ * então o cabeçalho vira `header`/`h2` simples, reaproveitável nos dois
+ * lugares.
+ */
+export function ConteudoLancamentoPresenca({ turma }: { turma: Turma }) {
   const { estado, pessoaAtiva, atualizar } = useStore();
-  // Config do PRÓPRIO mesociclo da turma — quem chama esta tela (moderador,
-  // gestão) pode estar olhando uma turma de qualquer ciclo, não só o vigente.
-  const config =
-    estado.cicloConfigs.find((c) => c.mesocicloId === turma.mesocicloId) ??
-    cicloConfigAtivo(estado);
+  // Config do PRÓPRIO mesociclo da turma (D61) — quem chama esta tela
+  // (moderador, gestão) pode estar olhando uma turma de qualquer ciclo,
+  // não só o vigente.
+  const { config } = cicloDaTurma(estado, turma);
   const ofertasDaTurma = estado.ofertas.filter(
     (o) => o.temaId === turma.temaId && o.modalidadeId === turma.modalidadeId,
   );
@@ -163,29 +174,29 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
 
   if (ofertasDaTurma.length === 0) {
     return (
-      <div className="p-6">
-        <SheetHeader>
-          <SheetTitle>Lançar presença — {turma.nome}</SheetTitle>
-          <SheetDescription>
-            Nenhuma oferta de conteúdo configurada para este tema e modalidade
-            ainda. Cadastre o conteúdo da etapa na aba Conteúdo antes de lançar
-            presença.
-          </SheetDescription>
-        </SheetHeader>
+      <div className="space-y-1.5 p-6">
+        <h2 className="text-lg font-semibold">
+          Lançar presença — {turma.nome}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Nenhuma oferta de conteúdo configurada para este tema e modalidade
+          ainda. Cadastre o conteúdo da etapa na aba Conteúdo antes de lançar
+          presença.
+        </p>
       </div>
     );
   }
 
   if (encontros.length === 0) {
     return (
-      <div className="p-6">
-        <SheetHeader>
-          <SheetTitle>Lançar presença — {turma.nome}</SheetTitle>
-          <SheetDescription>
-            Nenhum encontro cadastrado ainda para esta turma. Cadastre os
-            encontros na aba Turmas antes de lançar presença.
-          </SheetDescription>
-        </SheetHeader>
+      <div className="space-y-1.5 p-6">
+        <h2 className="text-lg font-semibold">
+          Lançar presença — {turma.nome}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Nenhum encontro cadastrado ainda para esta turma. Cadastre os
+          encontros na aba Turmas antes de lançar presença.
+        </p>
       </div>
     );
   }
@@ -239,7 +250,7 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
             id: novoId("not"),
             pessoaId,
             titulo: "Presença lançada",
-            descricao: `Encontro de ${formatarData(new Date(encontro!.data))} de "${etapa?.nome ?? turma.nome}" registrado pela equipe operadora.`,
+            descricao: `Encontro de ${formatarData(new Date(encontro!.data))} de "${etapa?.nome ?? turma.nome}" registrado por ${pessoaAtiva.nome}.`,
             criadaEmISO: agora,
             lida: false,
             tipo: "mudanca_etapa" as const,
@@ -252,13 +263,15 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
 
   return (
     <div className="flex h-full flex-col">
-      <SheetHeader>
-        <SheetTitle>Lançar presença — {turma.nome}</SheetTitle>
-        <SheetDescription>
+      <header className="space-y-1.5">
+        <h2 className="text-lg font-semibold">
+          Lançar presença — {turma.nome}
+        </h2>
+        <p className="text-sm text-muted-foreground">
           Professor: {nomeDoProfessor(estado, turma.professorId)}.{" "}
           {docentes.length} docente(s) inscrito(s).
-        </SheetDescription>
-      </SheetHeader>
+        </p>
+      </header>
 
       <div className="space-y-3 border-b border-border p-4">
         {ofertasDaTurma.length > 1 ? (
@@ -345,13 +358,16 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
 
               {!presente ? (
                 justificandoId === pessoa.id ? (
-                  <div className="space-y-2 rounded-lg border border-border p-2">
+                  <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+                    <Label htmlFor={`justificativa-${pessoa.id}`}>
+                      Motivo da ausência
+                    </Label>
                     <Input
+                      id={`justificativa-${pessoa.id}`}
                       value={observacao}
                       onChange={(e) => setObservacao(e.target.value)}
                       placeholder="Ex.: atestado médico"
                       className="h-9"
-                      aria-label="Observação da liberação manual"
                     />
                     <div className="flex gap-2">
                       <Button
@@ -374,13 +390,15 @@ export function PainelLancamentoPresenca({ turma }: { turma: Turma }) {
                     </div>
                   </div>
                 ) : (
-                  <button
-                    type="button"
-                    className="text-xs text-accent-foreground underline underline-offset-2"
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
                     onClick={() => setJustificandoId(pessoa.id)}
                   >
-                    Liberação manual (atestado etc.)
-                  </button>
+                    <FileText className="size-3.5" aria-hidden />
+                    Justificar ausência
+                  </Button>
                 )
               ) : null}
             </li>
