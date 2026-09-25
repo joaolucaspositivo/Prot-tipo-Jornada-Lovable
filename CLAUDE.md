@@ -308,9 +308,9 @@ Auditoria                entidade, campo, valorAnterior, autor, data
 
 **Duas cargas horárias com o mesmo nome.** `Etapa.cargaHoraria` (por etapa, anterior a esta rodada) e `TemaNoMesociclo.cargaHoraria` (D56, por tema × mesociclo) são coisas diferentes. Não unifique.
 
-**Documentos históricos na raiz — não são instruções vigentes.** Quatro
-arquivos descrevem rodadas anteriores e estão superados:
+**Documentos históricos em `docs/historico/` — não são instruções vigentes.**
+Quatro arquivos descrevem rodadas anteriores e estão superados:
 `instrucoes-lapidacao-prototipo-D22-D38.md`, `especificacao-lapidacao-p1-p2.md`,
 `especificacao-p3-acompanhamento.md` e `correcoes-validacao-D22-D38.md`.
 Um deles instrui explicitamente a lê-los antes de começar — ignore.
-Valem apenas `CLAUDE.md` e `ESPECIFICACAO-LAPIDACAO-V3.md`.
+Valem apenas `CLAUDE.md` e `ESPECIFICACAO-LAPIDACAO-V3.md`, na raiz.
