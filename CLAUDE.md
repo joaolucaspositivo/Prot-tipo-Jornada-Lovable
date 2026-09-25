@@ -1,287 +1,298 @@
-# CLAUDE.md — Jornada Pedagógica de Desenvolvimento (protótipo)
+# CLAUDE.md — Jornada Pedagógica de Desenvolvimento
 
-Contexto permanente do repositório. Leia este arquivo inteiro antes de tocar em qualquer código.
-Criado para atender a decisão **D06** (desenvolvimento solo com Claude Code, apoiado em documentação estruturada, sem harness).
+> Arquivo de contexto para o Claude Code. Leia antes de qualquer alteração.
+> Fonte de verdade das decisões: Notion → Tecnologia Educacional → Galeria de Projetos → Jornada → Menu do Projeto → Reuniões, Decisões e Aprovações → **Registro de Decisões — D01 a D62**.
+> Onde aparecer `<preencher>`, complete com o dado do repositório. Se você já preencheu numa versão anterior, mantenha o seu valor.
 
 ---
 
 ## 1. O que é este projeto
 
-Sistema que substitui o processo manual da **Jornada Pedagógica de Desenvolvimento** — a trilha de formação docente de 4 anos do Colégio Positivo, com ~1.000 professores e ~12 turmas por ciclo.
+Sistema de trilha formativa para ~1.000 docentes do Grupo Positivo, percorrendo uma jornada de quatro anos (2027–2030). Substitui um processo hoje manual, espalhado entre TEIA, Google Sites, planilhas e formulários.
 
-O desenho pedagógico já funciona e tem engajamento alto (98,3%). **O problema é inteiramente operacional:** o fluxo atravessa seis ferramentas desconectadas (Google Forms, Google Sites, TEIA, Smart Leader, planilhas e e-mail), com toda transição de dados feita à mão.
+O ativo central do sistema é o **histórico do percurso do docente**. Toda decisão de modelagem que colidir com a preservação desse histórico está errada, por mais conveniente que pareça.
 
-As quatro dores que o sistema existe para eliminar, em ordem de impacto:
+**Estado atual:** protótipo navegável, sem back-end, com persistência em `localStorage` (D03).
 
-1. Matrícula digitada errada — a identidade passa a vir da base institucional.
-2. Cadastro manual de ~1.000 docentes em 12 turmas — passa a ser autoinscrição.
-3. ~1.000 links de tarefa colados à mão — o líder acessa a entrega direto.
-4. ~64 uploads de vídeo por ciclo abrindo o Drive — o upload acontece de dentro do sistema.
+**Restrições duras:**
+- Um único desenvolvedor, com apoio do Claude Code, sem harness (D06)
+- Feature freeze em 1º/12/2026; entrega em 20/12/2026 (D07)
+- Ciclo real começa entre fevereiro e março de 2027 (D05)
 
-**Critério para qualquer decisão de produto:** se a mudança faz um bloco inteiro de trabalho manual deixar de existir, ela é valiosa. Se apenas acelera o trabalho manual, não é.
-
----
-
-## 2. O que este repositório é — e o que não é
-
-Este repositório é o **protótipo navegável**, não o MVP.
-
-| É | Não é |
-|---|---|
-| Interface funcional, fidelidade média-alta | Sistema em produção |
-| Estado no `localStorage` do navegador | Back-end, banco de dados, API |
-| Perfis alternáveis por um seletor | Login, autenticação, permissões reais |
-| Dados fictícios de demonstração | Dados institucionais |
-| Fluxo completo da Jornada, ponta a ponta | Escopo do MVP de dezembro |
-
-O protótipo cobre o **fluxo completo** (D03). O MVP de dezembro entrega apenas o que abre o ciclo em fevereiro (D05). Não confunda os dois escopos ao decidir o que construir.
-
-**Público atual do protótipo:** alinhamento interno entre João (guardião do projeto) e Lucas (Coordenador de TE, cliente inicial). Por **D12**, o protótipo **não será apresentado ao setor responsável** — a área verá o MVP 1.
+**Stack:** `<preencher: framework, build, roteamento, gerenciador de pacotes, comando de testes>`
+Renderização com SSR. Estado em `store.tsx`, com `VERSAO_ESTADO` — ver §7.
 
 ---
 
-## 3. A regra de ouro
+## 2. Estado do desenvolvimento
 
-> **Nenhuma regra pedagógica no código.** Macrotemas, modalidades, turmas, etapas, tipos de etapa, subtipos, prazos, conquistas, perguntas do portfólio e da enquete vêm **sempre** de `estado.cicloConfig`, editável em tempo de execução pela tela da equipe operadora.
-
-Isso não é preferência de arquitetura — é a restrição **R06**: o desenho do Ciclo 2 ainda tem decisões pedagógicas abertas (6 ou 4 macrotemas; textos-base; questões da enquete). A interface não pode fixar nenhuma dessas escolhas.
-
-Teste prático, que precisa passar sempre: **trocar 6 macrotemas por 4, reordenar etapas ou renomear uma etapa não pode quebrar nenhuma tela.**
-
-**Segmentos foram removidos do modelo (D26, rodada D22-D38)** — não existe mais `Segmento`, `cenarioSegmentacao` nem trilhas diferentes por segmento. Se essa ideia voltar um dia, é uma reintrodução de conceito, não uma correção.
-
-Corolários:
-
-- Nunca conte elementos assumindo um número (`macrotemas[5]`, "as 8 etapas").
-- Nunca infira comportamento a partir do **nome** de um item configurável. Se uma etapa precisa abrir uma tela específica, isso é um **campo** da etapa, não um `nome.includes(...)`.
-- Nunca escreva um rótulo pedagógico direto no JSX se ele existe na configuração.
+| Pacote | Escopo | Situação |
+|---|---|---|
+| 0 | Schema de versionamento e correção de acesso | Concluído (D60) |
+| 1 | Macrociclo, mesociclo e temas | Concluído (D61, D62) |
+| 2 | Menu, trilha e composição | Próximo |
+| 3 | Turmas e encontros | Pendente |
+| 4 | Alocações | Pendente |
+| 5 | Moderador | Pendente |
+| 6 | Painéis agregados | Bloqueado até validação de D59 |
 
 ---
 
-## 4. Decisões que restringem o código
+## 3. Vocabulário — use exatamente estes termos
 
-Referência completa: Notion → Jornada → Reuniões, Decisões e Aprovações → *Registro de Decisões — D01 a D20*.
+| Termo interno | Significado | Aparece na interface? |
+|---|---|---|
+| **Macrociclo** | A jornada inteira, 2027–2030 | Não |
+| **Mesociclo** | Cada ano dentro do macrociclo | Não |
+| **Microciclo** | Cada etapa da trilha | Não |
+| **Tema** | Antigo "macrotema" | Sim |
+| **Jornada** | Como o docente chama o percurso | Sim |
 
-| ID | O que amarra no código |
-|---|---|
-| **D01** | Jornada é independente do TEIA. A etapa de tipo curso, se existir, guarda status próprio e referência externa. |
-| **D03** | Sem back-end, sem banco. Persistência em `localStorage`. Protótipo cobre o fluxo completo. |
-| **D05** | O MVP é faseado pelo calendário de uso. Não antecipe o que só é usado no fim do ciclo. |
-| **D08** | O sistema roda **apenas o Ciclo 2 (2027–2030)**. Não modele o Ciclo 1. |
-| **D10** | O curso acontece **dentro** do sistema, pela etapa de tipo `conteudo`. Fronteira: **módulo de conteúdo, não LMS** — sem player próprio, sem rastreio de tempo assistido, sem gestor de notas. `cargaHoraria` é configuração da etapa. |
-| **D11** | Vídeo mora no Drive institucional; o upload acontece de dentro do sistema (simulado no protótipo). **Separe `Midia` de item de conteúdo** — a biblioteca é reutilizável entre turmas e ciclos. O operador nunca copia URL. |
-| **D13** | **Turmas são criadas dentro do sistema**, na configuração do ciclo. |
-| **D14** | Conteúdo é vinculado a **etapa × macrotema × modalidade**, com quatro tipos de item: vídeo, texto-base, link de webconferência e tarefa. |
-| **D15** | **Critérios de avanço de fase são configuráveis.** A regra sequencial fixa deixa de valer para a etapa de conteúdo. |
-| **D16** | Presença: **automática na assíncrona** (pelo envio da tarefa, RF15); **lançada pelo professor na síncrona**, com liberação manual de exceção. |
-| **D17** | Certificação sai **ao final da jornada**, não por curso. Fora do MVP de dezembro. |
-| **D18** | O diretor de unidade é perfil real, com acompanhamento por etapa da sua unidade. |
-| **D19** | Arquitetura prevê múltiplos ciclos. Mas **um ciclo só** continua sendo o caso de uso demonstrado. |
-| **D20** | Enquete 360°: escala Likert de **5 pontos**; recorte Grupo → unidade → segmento → ano de ensino; notas de docentes e coordenadores separadas. |
+Regras (D39, D40, D27):
 
-**Risco nº 1 registrado, que exige vigilância ativa:** *escopo silencioso do módulo de curso*. "Curso no sistema" começa como conteúdo embarcado e termina como gestor de turmas, notas, fóruns e relatórios. Com um desenvolvedor e prazo em 20/12/2026, qualquer ampliação precisa ser recusada por padrão.
-
-Rodada de lapidação D22-D38 (reunião com Lucas, Sinclair, Alana e Douglas — ver `instrucoes-lapidacao-prototipo-D22-D38.md`):
-
-| ID | O que amarra no código |
-|---|---|
-| **D26** | Segmentos saem do modelo por completo — sem `Segmento`, sem `cenarioSegmentacao`, sem trilha por segmento. |
-| **D27** | Nas telas do docente, o termo é **"jornada"**, não "ciclo". `estado.cicloConfig` continua sendo o nome interno — a troca é só no texto voltado ao usuário. |
-| **D28** | **"Painel" não é mais um conceito compartilhado entre perfis.** `/` virou um redirecionamento (client-side, perfilAtivo só existe depois da hidratação) para a tela de referência de cada perfil. O resumo do docente mora dentro de Minha Jornada. |
-| **D29** | "Acesso à jornada" (era "Acesso ao ciclo") só aparece no menu da **operadora**, como ferramenta de suporte — não no menu do docente. O seletor "Demonstração" (troca ampla de perfil) é outra coisa e não mudou. |
-| **D30** | Etapa escolhe um **subtipo** já cadastrado (nome + tipo genérico + tela) em vez de configurar tipo/tela soltos. `Etapa.tipo`/`Etapa.tela` continuam sendo a fonte real lida pelo app — `subtipoId` só referencia o que foi selecionado, para a tela de configuração reabrir mostrando a escolha. |
-| **D31** | `ItemConteudo` tipo `questionario` (perguntas de múltipla escolha, sem resposta aberta) é distinto de `tarefa`. Tarefa e texto-base ganham `linkApoio` opcional. |
-| **D32** | 6º critério de avanço: `nota_minima` — mesma mecânica de `tarefa_validada` (nota da devolutiva ≥ corte), mas como gate independente. |
-| **D33** | Perfil **`moderador`**: acesso restrito às turmas em `Pessoa.turmaIds`, só para lançar presença. Rótulo "moderador" é provisório (trocar para "mediador" é só mudar `ROTULO_PERFIL`). |
-| **D34** | `Pessoa.cargo` sai; **`Inscricao.tipoParticipacao`** (regente/corregente) entra — escolhido pelo docente, não mais fixo na pessoa. `Etapa.perfisParticipantes` controla quem passa por cada etapa (vazio = todos). |
-| **D35** | `Pessoa.coordenadorId` sai; **`Alocacao`** (coordenadorId, docenteId) entra — criada pelo próprio coordenador na área "Perfil". Um docente pode ter mais de um líder. |
-| **D36** | Base de docentes é **somente leitura** no protótipo — sem tela de cadastro de novo docente. |
-| **D37** | "Gestão do ciclo" ganha dois indicadores: coordenadores sem liderados e docentes sem líder. |
-| **D38** | `Etapa.prazoDias` conta a partir do **vencimento da etapa anterior**, não mais da abertura do ciclo. `CicloConfig.dataInicioCiclo` (era `aberturaISO`) é o ponto de partida da cadeia. |
+- "Macrotema" **não existe mais** — nem no código nem em string visível. O rename foi concluído nos Pacotes 0 e 1.
+- "Macrociclo", "mesociclo" e "microciclo" são vocabulário de equipe. **Nunca** vão para a tela. A operadora vê "Ciclo 2027", "Ciclo 2028".
+- Na interface do docente, o percurso se chama **jornada**, nunca "ciclo".
+- O menu da operadora usa **"Configuração de ciclos"**, no plural.
 
 ---
 
-## 5. Stack e convenções
+## 4. Regras invioláveis
 
-**Stack:** TanStack Start · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui · lucide-react · recharts · sonner.
+Estas regras existem para proteger o histórico. Não as contorne por conveniência de implementação; se uma delas parecer impedir algo necessário, pare e pergunte.
 
-- **O roteador é o TanStack Router e não pode ser trocado.** Roteamento por arquivo em `src/routes/`. `src/routeTree.gen.ts` é **gerado** — nunca edite à mão.
-- Sem biblioteca de estado global. O estado é um contexto React sobre `localStorage`.
-- `npm run dev` · `npm run build` · `npm run lint` · `npm run format`.
+### 4.1 Precedência de resolução de configuração (D61)
 
-**Convenções obrigatórias:**
+> **Havendo turma em mãos, a configuração vem sempre do mesociclo da turma — nunca do ciclo vigente.** `cicloConfigAtivo()` só vale onde não existe turma nem inscrição: a escolha inicial, antes de a inscrição existir.
 
-- **Todo o código é em português do Brasil** — nomes de arquivos, tipos, funções, variáveis, comentários e texto de interface. Siga o que já existe (`cicloConfig`, `trilhaDoDocente`, `etapasEmOrdem`).
-- **Cores só por token semântico** de `src/styles.css`: `sucesso`, `sucesso-suave`, `andamento`, `andamento-suave`, `atraso`, `atraso-suave`, `bloqueado`, `bloqueado-suave`, além dos tokens do shadcn. **Nenhuma cor literal em componente.**
-- **Estado nunca é comunicado só por cor**: sempre cor + ícone + texto. Use `EstadoBadge`.
-- `localStorage` só é lido **depois da hidratação** (`useEffect`), nunca durante a renderização — o app roda em SSR e quebra se essa regra for violada.
-- Toda rota define seu próprio `head()` com título e descrição em português.
-- Tudo precisa funcionar em **375px de largura**.
+Resolvedores centrais em `lib/ciclo.ts`:
+- `cicloDaTurma(estado, turmaId)`
+- `cicloDoDocente(estado, pessoaId)` — percorre inscrição → turma → mesociclo, com fallback para o vigente quando não há turma
+- `cicloAtivo(estado)` / `cicloConfigAtivo(estado)` — lêem `Macrociclo.mesocicloVigenteId`, sem calcular nada
 
-**Armadilha conhecida — `vite.config.ts`:** o export do Lovable **não traz** este arquivo. Sem ele, `npm run dev`/`build` nem sobem — o projeto depende de `@lovable.dev/vite-tanstack-config` (já listado em `devDependencies`) para existir. Se o protótipo for reexportado do Lovable, recrie o arquivo na raiz com:
-  ```ts
-  import { defineConfig } from "@lovable.dev/vite-tanstack-config";
-  export default defineConfig();
-  ```
-  Isso é infraestrutura de build, não faz parte do desenho do protótipo — não é uma mudança a "preservar" na lógica do app, é um arquivo que sempre falta e sempre precisa voltar.
+Funções que atendem vários docentes de uma vez (`entregasRecebidas`, `conferencias`, `compromissosDeObservacao`, `presencasAutomaticas`) resolvem **por item, dentro do laço** — docentes de ciclos distintos podem aparecer na mesma lista.
 
-**Armadilha conhecida — deploy fora do Lovable/Cloudflare:** `vite.config.ts` fixa `nitro.defaultPreset: "cloudflare-module"` — é o alvo do build quando nenhuma plataforma é detectada (ex.: `npm run build` local, ou `.output/` com `wrangler.json`). O Nitro detecta a plataforma sozinho por variável de ambiente: quando `NETLIFY=true` está presente (a Netlify seta isso automaticamente durante o build), o preset vira `netlify` e a saída vai para `.netlify/functions-internal/` + `dist/`, sem precisar mexer em código. `netlify.toml` (raiz do repo) só torna isso explícito — comando de build, diretório de publicação (`dist`) e a versão do Node (`nitro`/`vite` exigem `^20.19` ou `>=22.12`; sem fixar, a Netlify pode usar uma imagem mais antiga). Testado localmente com `NETLIFY=true npm run build`: preset `netlify`, build limpo.
+Fora da regra, deliberadamente: filtros e agregados de página, cabeçalho geral, tela de identificação e `funilDeEtapas` — agregado de vários docentes não tem "uma turma" a seguir.
 
-**Armadilha conhecida — `eslint.config.js`:** o export do Lovable também **não traz** este arquivo, apesar de `tsconfig.json` já listá-lo em `include` e o `package.json` já ter o script `"lint": "eslint ."`. Sem ele, `npm run lint` falha com "ESLint couldn't find an eslint.config.(js|mjs|cjs) file" — não por causa de código, por ausência do arquivo. O projeto já tem todas as devDependencies certas para reconstruí-lo (`@eslint/js`, `typescript-eslint`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`, `eslint-plugin-prettier`/`eslint-config-prettier`, `globals`) — é só faltar o arquivo de configuração flat (ESLint 9) que os une.
+### 4.2 Versionamento (D53, D54, D56, D62)
+
+**Três referências que nunca apontam para o objeto, sempre para a versão:**
+
+1. Conclusão e certificado referenciam `TemaVersao` — nunca `Tema`.
+2. Resposta de formulário referencia `FormularioVersao` — nunca `Formulario`.
+3. A carga horária é **congelada no registro de conclusão**, não lida do tema no momento da emissão.
+
+Editar um tema entre macrociclos **cria uma versão nova**; não sobrescreve. Editar as perguntas de um formulário entre mesociclos **cria uma versão nova**; não sobrescreve.
+
+Consequência prática: um docente que concluiu em 2027 e reemite o certificado em 2031 recebe o nome, a carga e o conteúdo **de 2027**. É a lógica de universidade — o certificado é do curso daquele ano.
+
+**Exceção que não é exceção:** a **carga horária de configuração** é chaveada por `temaId`, não por `temaVersaoId` (D62). Ela muda de ano para ano sem que o tema mude; chavear por versão obrigaria a criar versão só para alterar carga, poluindo a linhagem. A carga do certificado continua sendo a congelada na conclusão.
+
+### 4.3 Imutabilidade (D41, D42, D43)
+
+- Tema com participante vinculado **não pode ser excluído** — bloqueio de fato, não aviso.
+- Dentro do macrociclo, o tema é imutável. Edição de nome é permitida apenas por erro de cadastro, **com auditoria**, e fica travada após a primeira emissão de certificado.
+- Uma etapa é editável **enquanto nenhum participante a tiver iniciado**. Havendo qualquer dado de execução, trava.
+- **Nenhum registro com dado de execução pode ser excluído.** Em nenhuma tela, por nenhum perfil.
+
+### 4.4 Integridade estrutural (D57, nível 3)
+
+Hierarquia macro/meso/micro. Ordem crescente da trilha. Base de docentes só por importação — sem cadastro manual (D36). Alocação líder-liderado feita pelo próprio coordenador (D35). Auditoria de alterações em tudo que afeta histórico.
 
 ---
 
-## 6. Mapa do código
+## 5. Fronteira de configurabilidade (D57)
+
+O princípio: **a área compõe livremente, com um vocabulário que ela não inventa.**
+
+O custo não está na quantidade de coisas criadas — está na variedade de tipos que o sistema precisa tratar. A décima turma custa zero. O décimo tipo de etapa custa uma tela, um modelo de progresso, uma regra de conclusão e um tratamento em cada painel.
+
+**Nível 1 — a área configura sozinha:** macrociclo, temas, carga horária por tema × mesociclo, modalidades, turmas e encontros, etapas da trilha (quantas, ordem, tipo, rótulo, prazo), conteúdo, critérios de avanço, formulários, notificações, encerramento.
+
+**Nível 2 — fixo no código, com abertura prevista:** tipos de etapa, tipos de item de conteúdo, perfis de acesso, motor de progresso, modelo do certificado, escala da Enquete 360°, trilha específica por tema (existe no modelo, sem interface no MVP).
+
+**Nível 3 — não abre:** tudo da seção 4.
+
+### Teste de fronteira
+
+Diante de qualquer pedido novo: **é uma combinação nova das peças existentes, ou uma peça nova?**
+
+Combinação → configuração, implementa. Peça nova (tela nova, progresso novo, visibilidade nova) → **pare e sinalize**; entra na fila e disputa prazo com o resto.
+
+Não crie tipos de etapa, tipos de item de conteúdo ou perfis novos por iniciativa própria. Não invente funcionalidade que não foi pedida — na rodada anterior, um botão de cobrança apareceu numa tela sem ter sido solicitado por ninguém.
+
+---
+
+## 6. Modelo de dados
+
+> Reflete o que foi implementado nos Pacotes 0 e 1. Preserve as relações — especialmente as referências a versão.
+
+### Estrutura de ciclos
 
 ```
-src/
-  data/
-    types.ts        Modelo de dados inteiro. Comece por aqui.
-    seed.ts         SEED de demonstração. Nada aqui é regra do sistema.
-    store.tsx       Contexto React + localStorage. useStore(), atualizar(), resetarDemonstracao().
-    conteudos.ts    Material mock — só usado quando a etapa de conteúdo NÃO tem oferta configurada.
-  lib/              Leituras derivadas. Sem JSX, sem estado.
-    ciclo.ts        etapasEmOrdem, macrotemasAtivos, prazoDaEtapa (encadeado, D38), moverItem,
-                     reindexar, novoId, usoDaTurma, docentesDaTurma, passoGuiadoTravado,
-                     resumoConferenciaCiclo, tipoParticipacaoDaPessoa, coordenadoresDoDocente,
-                     coordenadorPrincipalDoDocente (D34/D35)
-    avanco.ts       Critérios de avanço da etapa de conteúdo (D15/D32): ofertaDoDocente,
-                     itensDaOferta, criteriosDoDocente, etapaConcluidaPorCriterios,
-                     percentualPresenca. NÃO importa de jornada.ts (evita ciclo — é o inverso).
-    jornada.ts      trilhaDoDocente — status de cada etapa do docente, OR'd com avanco.ts para
-                     etapa de conteúdo com oferta, filtrado por perfisParticipantes (D34)
-    conteudo.ts     percursoDoDocente, aulasConcluidas, leituraDaEtapa, presencasAutomaticas
-                     (só a automática — a lançada à mão está em estado.presencas)
-    entrega.ts      destino da entrega — regente vai ao coordenador, corregente à equipe central
-    equipe.ts       linhasDaEquipe — base compartilhada do painel do coordenador, do diretor
-                     (filtro por unidade), da operadora e do moderador (filtro por turmaIds,
-                     correção pós-D33)
-    gestao.ts       conferências, alertas disparados (lê estado.notificacoes, não recalcula prazo
-                     — ver seção 7), ocupação de turmas, docentesDaTurma, pendenciasDeAlocacao (D37)
-    observacao.ts   agenda e parecer de observação de aula
-    notificacoes.ts central de notificações
-  components/
-    ui/             shadcn. NÃO EDITE estes arquivos.
-    config/         abas da Configuração do Ciclo (operadora): AbaGeral (nome/descrição/data de
-                     início, D27/D38), AbaMacrotemas, AbaModalidades, AbaTurmas (lista única em
-                     tabela + modal, D23/D24; card "Moderadores por turma" atribui turmaIds a quem
-                     já é moderador, correção pós-D33), AbaEtapas (cascata tipo→subtipo, D30),
-                     AbaConteudo (tarefa/questionário distintos, D31), AbaAlertas, AbaEncerramento,
-                     ModoGuiado (cabeçalho de passos + Conferência — "geral" é o 1º passo, não
-                     "segmentos")
-    jornada/        trilha, conquistas, painel de etapa (docente)
-    conteudo/       player de aulas, leitura do texto-base, presenças automáticas,
-                     AvisoConteudoIndisponivel (D11)
-    acompanhamento/ FunilEtapas — funil de etapas com detalhamento clicável e "avisar todos"
-                     (RF32), compartilhado por operadora, coordenador e diretor
-    coordenador/    painel da equipe (PainelEquipe, escopo coordenador/operadora/diretor/
-                     moderador), detalhe do docente (valida entrega e registra devolutiva —
-                     reaproveitado pelo moderador), agenda de observações
-    operadora/      gestão do ciclo (com indicadores de pendência de alocação, D37), conferências,
-                     ocupação/lançamento de presença (PainelLancamentoPresenca, exportado — o
-                     moderador reaproveita), alertas
-    diretor/        PainelUnidade — acompanhamento da unidade por coordenador (D18)
-    moderador/      PainelModeracao — turmas do moderador (D33): lançamento de presença +
-                     "Entregas para validar" (PainelEquipe escopo="moderador", correção pós-D33)
-    perfil/         PainelPerfil — dados da base, tipo de participação, Líder(es) (docente),
-                     Alocações (coordenador, busca por Command/cmdk) (D35)
-    layout/         AppShell, navegação por perfil (todo perfil tem "/perfil" no menu), central
-                     de notificações
-  routes/           uma rota por arquivo (conteudo.tsx só redireciona para /configuracao;
-                     index.tsx não é mais uma tela — redireciona por perfil, D28)
+Macrociclo
+  id, nome, descricao
+  mesocicloVigenteId        // explícito, declarado pela área (D61)
+
+Mesociclo
+  id, macrocicloId
+  nome, dataInicio          // fonte única da data; base dos prazos relativos
+  fasesObrigatorias: FaseCanonica[]   // schema pronto, sem consumidor (D59)
+
+EstadoApp.cicloConfigs: CicloConfig[]   // uma por mesociclo
+CicloConfig
+  id, mesocicloId, nome, descricao, periodo
+  modalidades, etapas, subtipos, conquistas
+  reflexoesPortfolio, dimensoesAutoavaliacao, enquete
+  // NÃO tem mais: temas (subiram para o macrociclo), dataInicioCiclo
 ```
 
-**Padrão de trabalho:** leitura de dados vai para `src/lib/` como função pura sobre `EstadoApp`; componente só renderiza e chama `atualizar()`. Não coloque regra de negócio dentro de JSX.
+### Temas
+
+```
+EstadoApp.temas: Tema[]     // array único, no macrociclo
+Tema
+  id, macrocicloId, linhagemId, nome, descricao, ativo, ordem
+
+TemaVersao
+  id, temaId, linhagemId, numeroVersao
+  nome, descricao, criadaEmISO, criadaPorId
+
+TemaNoMesociclo
+  id, mesocicloId, temaId, cargaHoraria    // chave é temaId, não a versão
+```
+
+`versionarTema()` existe e está correta, mas **não tem acionador** — não há tela de criar macrociclo. Não é código morto.
+
+### Trilha
+
+```
+Etapa   (nome mantido; "EtapaTrilha" era descritivo, não prescritivo)
+  id, mesocicloId
+  temaId?                 // null = trilha padrão; preenchido = específica (D59)
+  ordem                   // crescente; nova etapa entra ao final (D45)
+  rotulo                  // legível na trilha do docente (D52 + D45)
+  tipo: TipoEtapa
+  faseCanonica            // eixo do acompanhamento agregado (D59)
+  subtipoId?
+  prazoDias               // relativo, contado da dataInicio do MESOCICLO
+  perfisParticipantes[]
+  cargaHoraria?           // carga por etapa, anterior a esta rodada.
+                          // NÃO confundir com TemaNoMesociclo.cargaHoraria
+```
+
+Sem limite de ocorrências por tipo dentro de um mesociclo (D52). Duas autoavaliações, três blocos de conteúdo, duas entregas — tudo válido. O que as distingue é o `rotulo` e a `ordem`.
+
+**`TipoEtapa`** (fechado): `escolha` · `autoavaliacao` · `conteudo` · `encontro` · `entrega` · `enquete` · `portfolio` · `encerramento`
+
+O antigo `"avaliacao"` foi removido — estava sobrecarregado, servindo à escolha de tema e à Enquete 360° sob o mesmo valor.
+
+**`FaseCanonica`** (fechado, **provisório** até validação de D59): `inscricao` · `autoavaliacao` · `formacao` · `entrega` · `encerramento`
+
+São dois enums separados de propósito. `TipoEtapa` governa tela e motor de progresso (código); `FaseCanonica` governa o eixo do funil (relatório). Colapsá-los faria uma categoria nova de relatório exigir uma tela nova.
+
+### Conteúdo e critérios
+
+```
+ItemConteudo
+  id, etapaId, temaId, modalidadeId          // vínculo tema × modalidade (D14)
+  tipo: video | textoBase | linkWebconferencia | tarefa | questionario
+  midiaId?, linkApoio?
+
+Midia
+  id, driveFileId, metadados                 // biblioteca reutilizável (D11)
+
+CriterioAvanco
+  id, etapaId, modalidadeId                  // padrão (D55)
+  turmaId?                                   // override da exceção (D55)
+  regras: { videosAssistidos, leituraConcluida,
+            presencaMinima, tarefaEntregue,
+            tarefaValidada, notaDeCorte }
+```
+
+### Turmas e encontros
+
+```
+Turma
+  id, mesocicloId, temaId, modalidadeId
+  nome                    // livre, sem prefixo automático (D24)
+  professorResponsavelId  // vem da base, nunca digitado (D44)
+  vagas
+  encontros: Encontro[]   // Pacote 3
+
+Modalidade
+  id, mesocicloId, nome, ativa
+  preveEncontroAoVivo     // governa a presença (D51)
+  presencaAutomatica
+
+Inscricao
+  pessoaId, turmaId, temaId, tipoParticipacao
+  // sem mesocicloId: deriva pela turma, não duplica (D61)
+```
+
+### Formulários, execução e certificação
+
+```
+FormularioVersao          // snapshot por origem, não unificação (D60)
+  id, origem: "enquete" | "portfolio" | "autoavaliacao"
+  perguntas               // cópia congelada
+  criadaEmISO
+  // TODO: mesocicloId — o Mesociclo já existe desde o Pacote 1, avaliar
+
+RespostaEnquete / Portfolio / Autoavaliacao
+  → formularioVersaoId
+
+ProgressoEtapa
+  docenteId, etapaId, itensConcluidos[], iniciadoEm
+
+Conclusao
+  id, docenteId, temaVersaoId, cargaHorariaCongelada, concluidoEmISO
+
+Certificado
+  id, conclusaoId, emitidoEmISO, emitidoPorId
+
+HistoricoTema            // entidade SEPARADA de Conclusao:
+                         // dado importado de ciclos anteriores (D27)
+
+Alocacao                 lider, liderado, mesocicloId       (D35)
+Auditoria                entidade, campo, valorAnterior, autor, data
+```
 
 ---
 
-## 7. Estado e persistência
+## 7. Convenções
 
-- Chave: `jornada-prototipo-v1` (`CHAVE_STORAGE` em `src/data/seed.ts`).
-- Versão: `VERSAO_ESTADO`. Se a versão salva difere da atual, `carregar()` devolve `null` e o seed é recriado do zero.
-- **Toda mudança no formato de `EstadoApp` exige incrementar `VERSAO_ESTADO`.** Não existe migração — o protótipo simplesmente recria o seed. Isso é aceitável e intencional.
-- Escrita sempre por `atualizar()`, de forma imutável. Nunca mute o estado no lugar.
-- O botão de reiniciar demonstração chama `resetarDemonstracao()`.
+- Commits pequenos e frequentes, **por camada** (núcleo → bibliotecas → rotas → componentes).
+- Persistência em `localStorage`. Esquema: `<preencher>`
+- Comando de testes: `<preencher>`
+- Nada de dado mockado apresentado como real numa tela de demonstração.
 
-**O seed é o roteiro da demonstração.** Ele precisa deixar visível, no primeiro carregamento, cada coisa que a reunião vai mostrar — inclusive os dois caminhos (síncrono e assíncrono) e docentes em estágios diferentes do ciclo. Um recurso que só aparece depois de o usuário cadastrar algo não existe na demonstração.
-
-Desde a rodada P1+P2, `EstadoApp` também guarda `midias`, `ofertas`, `itensConteudo` e `presencas` (biblioteca de mídia, oferta de conteúdo por etapa×macrotema×modalidade, itens da oferta e presença lançada à mão na síncrona — D11/D14/D16). `arquivosConteudo`/`ArquivoConteudo` foram removidos.
-
-Desde a rodada D22-D38 (`VERSAO_ESTADO = 8`):
-
-- `EstadoApp` ganha `alocacoes: Alocacao[]` (D35).
-- `CicloConfig` ganha `descricao` e `subtipos: Subtipo[]`; `aberturaISO` foi renomeado para `dataInicioCiclo` (D38); `cenarioSegmentacao`/`segmentos` foram **removidos** (D26).
-- `Etapa` ganha `subtipoId?` e `perfisParticipantes: TipoParticipacao[]`; perdeu `segmentos: string[]`.
-- `Pessoa` perdeu `cargo` (virou `Inscricao.tipoParticipacao`) e `coordenadorId` (virou a entidade `Alocacao`); perdeu `segmentoId`; ganhou `turmaIds?` (só para `moderador`) e o perfil `"moderador"` na união.
-- `Inscricao` ganha `tipoParticipacao: TipoParticipacao`.
-- `ItemConteudo` ganha o tipo `"questionario"` (+ `perguntas: PerguntaOpcaoMultipla[]`) e `linkApoio?` (tarefa e texto-base).
-- `CriterioAvanco`/`TipoCriterioAvanco` ganha `"nota_minima"`.
-
-Como sempre: sem migração. Qualquer estado salvo de uma versão anterior é descartado e o seed é recriado.
+**Migração de estado.** Hoje o carregamento **descarta o estado salvo por inteiro** quando `VERSAO_ESTADO` não bate, recriando tudo a partir do seed. Correto no protótipo, onde o estado é descartável. **Deixa de valer no MVP** — dado de docente não pode ser jogado fora, e a partir daí toda mudança de schema exige migração real, com preenchimento retroativo das referências de versão.
 
 ---
 
-## 8. Perfis
+## 8. Pontos em aberto — pergunte antes de decidir sozinho
 
-| Perfil | Papel |
-|---|---|
-| `docente-regente` | Usuário principal; percorre a trilha |
-| `docente-corregente` | Professor auxiliar. **Entrega e devolutiva vão para a equipe central, não para o coordenador da unidade** (RF22) |
-| `coordenador` | Líder principal do acompanhamento; corrige tarefas, observa aulas |
-| `operadora` | Configura o ciclo e opera; equipe da Marilda |
-| `diretor` | Acompanha os docentes da sua unidade, por etapa (D18) |
-| `moderador` | Acesso restrito às turmas em `Pessoa.turmaIds`; só lança presença (D33) |
-
-A troca de perfil é do seletor de demonstração. **Não implemente permissões reais** — está explicitamente fora do escopo do protótipo (RNF05 fica para o MVP). O acesso restrito do `moderador` e do `diretor` (só a própria unidade) são filtros de tela por `pessoaAtiva`, não controle de acesso de verdade — mesmo princípio.
+1. `FaseCanonica` ainda não validada pelo cliente (D59). Os painéis agregados dependem disso — Pacote 6 bloqueado.
+2. Texto-base: tempo de permanência na tela vira informação para o moderador ou nada (D58).
+3. Refinamento de D43: separar campo cosmético (editável com auditoria) de campo que altera significado ou pontuação (trava). Hoje é bloqueio duro.
+4. Enquete 360° em stand-by até as perguntas chegarem (D47).
+5. Unificação das três fontes de pergunta (enquete, portfólio, autoavaliação) num modelo único — pacote futuro, peça nova pelo teste de fronteira.
 
 ---
 
-## 9. O que está pendente e conhecido
+## 9. Notas de implementação que já custaram discussão
 
-- **Regras de conclusão das demais etapas** (autoavaliação, encontro, avaliação) seguem provisórias — a regra sequencial. Resolvido apenas para a etapa de conteúdo, por D15.
-- **Tipo de etapa `curso` com `referenciaExterna`**, previsto em D01/D10 como caminho secundário, ainda não existe. Fica para o MVP.
+**`usoDoTema` está correta porque o modelo mudou, não porque a função mudou (D62).** Ela varre turmas e inscrições **globalmente por `temaId`**, sem filtrar mesociclo. Antes da migração isso funcionava por acidente — os ids colidiam entre as cópias. Com array único no macrociclo, passou a ser correto por desenho: o id de um tema é único no macrociclo, logo qualquer uso em qualquer mesociclo impede a exclusão. **Não "corrija" acrescentando filtro por mesociclo** — seria regressão de D41.
 
-**Da rodada P1+P2 (lapidação da etapa de conteúdo e configuração do ciclo):**
+**Ciclo vigente é declarado, não calculado (D61).** `mesocicloVigenteId` é campo explícito. Derivar da menor data de início devolveria 2027 para sempre: em 2028 todo docente continuaria vendo a configuração do ano anterior, sem erro e sem aviso.
 
-- **Quem lança a presença da turma síncrona — resolvido nesta rodada (D33):** além da equipe operadora (aba Turmas da Gestão do Ciclo), agora existe o perfil `moderador`, restrito às turmas em `Pessoa.turmaIds`, que também lança presença nelas. Os dois caminhos coexistem — nada foi removido da operadora.
-- **`Midia.corpo`** (texto-base escrito direto no sistema) é campo aditivo, fora do texto literal da especificação original — sem ele não havia onde guardar o texto digitado. Confirmar com o cliente.
-- **A regra "primeira turma esgota antes de ofertar a próxima"** (autoinscrição) **não foi implementada** — `percurso.tsx` continua deixando o docente escolher livremente entre as turmas com vaga da modalidade escolhida. Fica para uma próxima rodada se for necessária para a demonstração.
-- **Link do encontro ao vivo — resolvido:** o botão "Entrar no encontro" usa `Turma.linkAcesso`, da turma em que o docente está inscrito. `ItemConteudo` tipo `webconferencia` / `Midia.url` são complementares (ex.: gravação anexada depois), não a fonte do link principal.
-- **`ItemConteudo.ordem`** nasce 0-based ao criar um item pela aba Conteúdo, mas vira 1-based depois de qualquer reordenação (arrasta-e-solta), porque usa `reindexar()` de `ciclo.ts`. Não tem efeito funcional, só é uma inconsistência cosmética.
-- **`src/data/conteudos.ts`** (mock de aulas/texto) continua existindo como fallback: quando a etapa de conteúdo não tem oferta configurada, a tela do docente usa o mock.
+**Trilha vazia não é trilha concluída (D61).** `proximaEtapa()` devolvia `undefined` por duas razões diferentes. Com dois ciclos coexistindo, trilha vazia é o estado normal de todo ciclo antes de ser configurado.
 
-**Da rodada P3 (acompanhamento — RF32, D18):**
+**Vídeo (D58).** Considerado assistido **no clique**. Como o iframe do Drive é de outra origem, a página não enxerga o clique dentro dele: renderize um **botão de play próprio sobre o vídeo**, registre a marcação nesse clique e só então carregue o iframe. Não existe rastreamento de tempo assistido, e isso não é lacuna a preencher — é decisão (D10, D58).
 
-- **O painel do diretor (`/unidade`) agrupa por `Pessoa.coordenadorId` do docente** — na rodada D22-D38 isso virou `coordenadoresDoDocente()` sobre a entidade `Alocacao` (D35), já que `Pessoa.coordenadorId` não existe mais. Mesma leitura de fundo: um docente pode ter mais de um líder agora, então pode aparecer em mais de um cartão. Confirmar com o cliente se cada unidade deveria ter coordenadores fixos.
-- **"Avisar todos" no funil (`FunilEtapas`) alcança todo docente que não concluiu a etapa** (pendente, em andamento ou atrasado), não só quem está atrasado. Confirmar com o cliente.
+**Acompanhamento (D59).** O painel agregado indexa por **fase canônica**, nunca por etapa nomeada. O painel individual usa **percentual de trilha concluída**.
 
-**Da rodada D22-D38 (lapidação estrutural — modelo de dados, configuração, perfis):**
+**Portfólio.** Tem `TipoEtapa` próprio desde o Pacote 0 — estava mistipado como `"entrega"`. O seletor de parecer que ele herdava por acidente foi **mantido deliberadamente**, com `case "portfolio"` explícito: a função está em uso pelo coordenador.
 
-- **Painel inicial (`/`) deixou de ser uma tela (D28)** — vira redirecionamento por perfil (`docente`/`moderador` → `/jornada`; `coordenador` → `/equipe`; `operadora` → `/gestao`; `diretor` → `/unidade`). O resumo que ficava lá (contadores, atalho) foi descartado, não migrado — o resumo do docente virou o `EstadoBadge` dentro de Minha Jornada. Se o cliente sentir falta de um resumo por perfil na porta de entrada, é para trazer de volta como conteúdo de cada tela de destino, não recriar `/`.
-- **Agrupamento do painel do diretor por `coordenadorId` do docente** (não pela `unidade` do coordenador) — decisão já registrada na rodada P3, reafirmada aqui porque a fonte mudou de `Pessoa.coordenadorId` para `Alocacao`.
-- **6º critério de avanço `nota_minima`** usa a mesma mecânica de `tarefa_validada` (nota da devolutiva mais recente ≥ corte) — não é um critério pedagógico novo, é o mesmo mecanismo com um nome diferente, para permitir ativar "nota mínima" sem exigir "tarefa entregue" como critério separado. Confirmar com o cliente se faz sentido como está.
-- **Subtipo (D30) só tem cadastro de criação** — a etapa cria um subtipo novo direto da cascata tipo→subtipo, mas não há tela para editar ou excluir um subtipo já existente. "Pode ser simples", como a especificação pediu; editar/excluir fica para uma próxima rodada se for necessário.
-- **Tipo de participação (regente/corregente) é editável em dois lugares**: na Escolha do percurso (`/percurso`, no momento da inscrição) e na área Perfil (`/perfil`, a qualquer momento depois). Os dois escrevem no mesmo campo (`Inscricao.tipoParticipacao`) — não há conflito, é a mesma fonte de dado com dois pontos de entrada, como a especificação pedia os dois.
-- **Fluxo de "solicitar inclusão de professor não encontrado na base"** — não implementado, como a especificação já previa deixar em aberto.
-- **Hierarquia de macrociclo/mesociclo** e **tela de Encerramento (pesquisa de satisfação)** — não tocadas nesta rodada, como pedido; seguem para uma próxima reunião de lapidação.
-
-**Correções pós-validação de código (ver `correcoes-validacao-D22-D38.md`):**
-
-- **"Ciclo" ainda aparecia nas telas do docente (D27) — resolvido.** `/jornada`, `/percurso`, `/aulas` e `/entrega` liam `cicloConfig.nome` (seed: "Ciclo 2") em vez de `cicloConfig.descricao` (seed: "Jornada 2027 a 2030"). `nome` continua sendo o identificador interno; a exibição ao docente agora usa `descricao`. Telas da operadora (`/acesso`, `/gestao`, `/configuracao`) continuam usando "ciclo" normalmente — não fazem parte de D27.
-- **Moderador só lançava presença (D33) — resolvido.** `PainelModeracao` agora também reaproveita `PainelEquipe`/`DetalheDocente` (escopo `"moderador"`, filtrando por `linhasDaEquipe(estado, { turmaIds })`) para validar entrega e registrar devolutiva dos docentes das suas turmas — o mesmo padrão do coordenador, sem nenhuma configuração de turma/ciclo exposta ao moderador.
-- **Sem UI para atribuir turmas a um moderador (D33) — resolvido.** A aba Turmas da Configuração do Ciclo ganhou o card "Moderadores por turma": a operadora escolhe, por pessoa com perfil `moderador`, quais turmas ela cobre (grava direto em `Pessoa.turmaIds`). A base de pessoas continua só leitura quanto a cadastro (D36) — isso não muda; só a atribuição de turmas a quem já é moderador.
-- **`linkApoio` nunca chegava ao docente (D31) — resolvido.** O campo era salvo pela aba Conteúdo (tarefa e texto-base), mas nenhuma tela do docente o lia. `/aulas` agora mostra um link "Material de apoio" clicável, próximo à instrução da tarefa e ao final do texto-base, quando `linkApoio` está preenchido.
-- **Perfil moderador inacessível pelo seletor de demonstração (D33) — resolvido.** `ROTULO_PERFIL`, `PESSOA_PADRAO_POR_PERFIL` e `NAVEGACAO_POR_PERFIL` já tinham a entrada de `"moderador"`, mas o array `PERFIS` de `components/layout/AppShell.tsx` (que popula o `<Select>` "Demonstração") ficou faltando — encontrado depois do commit `2076379`, já com toda a implementação (rota `/moderacao`, "Entregas para validar", atribuição de turmas) pronta e sem como chegar lá pela UI. `PERFIS` agora inclui `"moderador"`.
-
----
-
-## 10. Como trabalhar aqui
-
-1. **Leia antes de escrever.** `src/data/types.ts` e o `src/lib/` relevante, sempre.
-2. **Commits pequenos e frequentes**, em português, um assunto por commit.
-3. **Rode `npm run lint` e `npm run build`** antes de considerar uma tarefa concluída.
-4. **Teste no preview** o caminho que você mexeu, nos dois perfis afetados.
-5. **Quando uma decisão de produto não estiver coberta aqui nem na especificação da tarefa, pare e pergunte.** Não invente regra pedagógica — foi exatamente para evitar isso que esta documentação existe.
-6. Ao terminar uma mudança estrutural, **atualize este arquivo**.
-
-**Repositório remoto:** `https://github.com/joaolucaspositivo/Prot-tipo-Jornada-Lovable.git`, branch `main`. Autoria dos commits: João Lucas / `joao.duarte@colegiopositivo.com.br`. GitHub CLI (`gh`) não está disponível nesta máquina (ambiente corporativo, instalação depende de liberação do TI) — `git push` funciona normalmente via Git Credential Manager, já configurado no Git for Windows.
+**Duas cargas horárias com o mesmo nome.** `Etapa.cargaHoraria` (por etapa, anterior a esta rodada) e `TemaNoMesociclo.cargaHoraria` (D56, por tema × mesociclo) são coisas diferentes. Não unifique.
