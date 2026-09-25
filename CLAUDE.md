@@ -19,7 +19,9 @@ O ativo central do sistema é o **histórico do percurso do docente**. Toda deci
 - Feature freeze em 1º/12/2026; entrega em 20/12/2026 (D07)
 - Ciclo real começa entre fevereiro e março de 2027 (D05)
 
-**Stack:** `<preencher: framework, build, roteamento, gerenciador de pacotes, comando de testes>`
+**Stack:** React 19.2 · TanStack Router 1.170 + TanStack Start 1.168 · Vite 8.1 ·
+TypeScript 5.8 · Tailwind · lucide-react 0.575 · npm.
+Scripts: `dev`, `build`, `build:dev`, `preview`, `lint`, `format`.
 Renderização com SSR. Estado em `store.tsx`, com `VERSAO_ESTADO` — ver §7.
 
 ---
@@ -30,11 +32,15 @@ Renderização com SSR. Estado em `store.tsx`, com `VERSAO_ESTADO` — ver §7.
 |---|---|---|
 | 0 | Schema de versionamento e correção de acesso | Concluído (D60) |
 | 1 | Macrociclo, mesociclo e temas | Concluído (D61, D62) |
-| 2 | Menu, trilha e composição | Próximo |
-| 3 | Turmas e encontros | Pendente |
-| 4 | Alocações | Pendente |
-| 5 | Moderador | Pendente |
+| 2 | Menu, trilha e composição | Concluído (D63) |
+| 2B | Configuração de ciclos como lista e detalhe | Concluído (D64) |
+| 3 | Turmas e encontros | Concluído (D65) |
+| 4 | Alocações | Concluído (D66) |
+| 5 | Moderador | Concluído (D67) |
 | 6 | Painéis agregados | Bloqueado até validação de D59 |
+
+Atualize esta tabela ao fechar cada pacote. Ela é a primeira coisa que
+você lê para saber o que já existe.
 
 ---
 
@@ -263,8 +269,13 @@ Auditoria                entidade, campo, valorAnterior, autor, data
 ## 7. Convenções
 
 - Commits pequenos e frequentes, **por camada** (núcleo → bibliotecas → rotas → componentes).
-- Persistência em `localStorage`. Esquema: `<preencher>`
-- Comando de testes: `<preencher>`
+- Persistência em `localStorage`, via `store.tsx`. `VERSAO_ESTADO` governa
+  a compatibilidade — ver a nota de migração abaixo.
+- **Não há suíte de testes automatizados.** A verificação é manual no
+  navegador, ao vivo, a cada pacote — e foi assim que apareceram a
+  impossibilidade circular do Pacote 2 e o progresso duplicado na emissão.
+  Antes de fechar qualquer pacote, rode `lint` e `build` e percorra as
+  telas tocadas. Não presuma que ler o código substitui isso.
 - Nada de dado mockado apresentado como real numa tela de demonstração.
 
 **Migração de estado.** Hoje o carregamento **descarta o estado salvo por inteiro** quando `VERSAO_ESTADO` não bate, recriando tudo a partir do seed. Correto no protótipo, onde o estado é descartável. **Deixa de valer no MVP** — dado de docente não pode ser jogado fora, e a partir daí toda mudança de schema exige migração real, com preenchimento retroativo das referências de versão.
@@ -296,3 +307,10 @@ Auditoria                entidade, campo, valorAnterior, autor, data
 **Portfólio.** Tem `TipoEtapa` próprio desde o Pacote 0 — estava mistipado como `"entrega"`. O seletor de parecer que ele herdava por acidente foi **mantido deliberadamente**, com `case "portfolio"` explícito: a função está em uso pelo coordenador.
 
 **Duas cargas horárias com o mesmo nome.** `Etapa.cargaHoraria` (por etapa, anterior a esta rodada) e `TemaNoMesociclo.cargaHoraria` (D56, por tema × mesociclo) são coisas diferentes. Não unifique.
+
+**Documentos históricos na raiz — não são instruções vigentes.** Quatro
+arquivos descrevem rodadas anteriores e estão superados:
+`instrucoes-lapidacao-prototipo-D22-D38.md`, `especificacao-lapidacao-p1-p2.md`,
+`especificacao-p3-acompanhamento.md` e `correcoes-validacao-D22-D38.md`.
+Um deles instrui explicitamente a lê-los antes de começar — ignore.
+Valem apenas `CLAUDE.md` e `ESPECIFICACAO-LAPIDACAO-V3.md`.
