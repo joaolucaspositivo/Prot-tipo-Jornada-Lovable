@@ -38,9 +38,22 @@ Renderização com SSR. Estado em `store.tsx`, com `VERSAO_ESTADO` — ver §7.
 | 4 | Alocações | Concluído (D66) |
 | 5 | Moderador | Concluído (D67) |
 | 6 | Painéis agregados | Bloqueado até validação de D59 |
+| 7 | Temas descem para o ciclo | Próximo |
+| 8 | Trilha por tema, com interface | Pendente |
+| 9 | Menu em dois grupos e modalidade na turma | Pendente |
+| 10 | Conteúdo com checkpoints e progresso contínuo | Pendente |
 
 Atualize esta tabela ao fechar cada pacote. Ela é a primeira coisa que
 você lê para saber o que já existe.
+
+Pacotes 7-10 vêm de R04 (lapidação v4) e **revogam decisões da v3** já
+implementadas — D40 (temas no macrociclo), D54/D62 (versionamento de tema
+entre macrociclos), D56 (carga por tema × mesociclo), D25 (modalidade como
+cadastro próprio) e D46/D63 (menu em seis itens). Isso já está refletido
+nas seções 4.2 e 6 abaixo; não é um erro de leitura se algo aqui parecer
+contradizer uma nota antiga de rodada anterior — a nota antiga é que ficou
+para trás. Ver `ESPECIFICACAO-LAPIDACAO-V4.md` para o detalhe de cada
+pacote.
 
 ---
 
@@ -80,24 +93,23 @@ Funções que atendem vários docentes de uma vez (`entregasRecebidas`, `confere
 
 Fora da regra, deliberadamente: filtros e agregados de página, cabeçalho geral, tela de identificação e `funilDeEtapas` — agregado de vários docentes não tem "uma turma" a seguir.
 
-### 4.2 Versionamento (D53, D54, D56, D62)
+### 4.2 Versionamento (D53)
 
-**Três referências que nunca apontam para o objeto, sempre para a versão:**
+**Duas referências que nunca apontam para o objeto vivo, sempre para um retrato congelado:**
 
-1. Conclusão e certificado referenciam `TemaVersao` — nunca `Tema`.
-2. Resposta de formulário referencia `FormularioVersao` — nunca `Formulario`.
-3. A carga horária é **congelada no registro de conclusão**, não lida do tema no momento da emissão.
+1. Resposta de formulário referencia `FormularioVersao` — nunca `Formulario`.
+2. A carga horária é **congelada no registro de conclusão**, não lida do tema no momento da emissão.
 
-Editar um tema entre macrociclos **cria uma versão nova**; não sobrescreve. Editar as perguntas de um formulário entre mesociclos **cria uma versão nova**; não sobrescreve.
+Editar as perguntas de um formulário entre mesociclos **cria uma versão nova**; não sobrescreve.
 
-Consequência prática: um docente que concluiu em 2027 e reemite o certificado em 2031 recebe o nome, a carga e o conteúdo **de 2027**. É a lógica de universidade — o certificado é do curso daquele ano.
+**Revogado por R04 (v4):** conclusão e certificado passavam por `TemaVersao`. Isso caiu porque o tema **desceu para o ciclo** (Pacote 7) — ele nasce e morre naquele ano, e a imutabilidade dentro do ciclo (D41) mais a trava após a primeira emissão (D42) já garantem que o certificado reflita o que a pessoa fez, sem precisar de uma cadeia de versões para protegê-lo. Conclusão e certificado passam a referenciar `Tema` **diretamente**. `TemaVersao` foi removido do modelo — ver §6.
 
-**Exceção que não é exceção:** a **carga horária de configuração** é chaveada por `temaId`, não por `temaVersaoId` (D62). Ela muda de ano para ano sem que o tema mude; chavear por versão obrigaria a criar versão só para alterar carga, poluindo a linhagem. A carga do certificado continua sendo a congelada na conclusão.
+A capacidade de saber que um tema de 2029 é a evolução de um de 2027 se preserva, mas não por estrutura obrigatória: é um `linhagemId` opcional em `Tema`, preenchido quando a operadora marca "este é o mesmo tema de X".
 
 ### 4.3 Imutabilidade (D41, D42, D43)
 
 - Tema com participante vinculado **não pode ser excluído** — bloqueio de fato, não aviso.
-- Dentro do macrociclo, o tema é imutável. Edição de nome é permitida apenas por erro de cadastro, **com auditoria**, e fica travada após a primeira emissão de certificado.
+- Dentro do ciclo, o tema é imutável. Edição de nome é permitida apenas por erro de cadastro, **com auditoria**, e fica travada após a primeira emissão de certificado.
 - Uma etapa é editável **enquanto nenhum participante a tiver iniciado**. Havendo qualquer dado de execução, trava.
 - **Nenhum registro com dado de execução pode ser excluído.** Em nenhuma tela, por nenhum perfil.
 
@@ -113,7 +125,7 @@ O princípio: **a área compõe livremente, com um vocabulário que ela não inv
 
 O custo não está na quantidade de coisas criadas — está na variedade de tipos que o sistema precisa tratar. A décima turma custa zero. O décimo tipo de etapa custa uma tela, um modelo de progresso, uma regra de conclusão e um tratamento em cada painel.
 
-**Nível 1 — a área configura sozinha:** macrociclo, temas, carga horária por tema × mesociclo, modalidades, turmas e encontros, etapas da trilha (quantas, ordem, tipo, rótulo, prazo), conteúdo, critérios de avanço, formulários, notificações, encerramento.
+**Nível 1 — a área configura sozinha:** macrociclo, temas (com carga horária própria), modalidades, turmas e encontros, etapas da trilha (quantas, ordem, tipo, rótulo, prazo), conteúdo, critérios de avanço, formulários, notificações, encerramento.
 
 **Nível 2 — fixo no código, com abertura prevista:** tipos de etapa, tipos de item de conteúdo, perfis de acesso, motor de progresso, modelo do certificado, escala da Enquete 360°, trilha específica por tema (existe no modelo, sem interface no MVP).
 
@@ -131,7 +143,7 @@ Não crie tipos de etapa, tipos de item de conteúdo ou perfis novos por iniciat
 
 ## 6. Modelo de dados
 
-> Reflete o que foi implementado nos Pacotes 0 e 1. Preserve as relações — especialmente as referências a versão.
+> Reflete o que foi implementado nos Pacotes 0 e 1, já com as revogações de R04/v4 (Pacote 7) incorporadas nas seções de Temas e Trilha — ver §2 e §4.2. Preserve as relações — especialmente as referências a versão que ainda valem.
 
 ### Estrutura de ciclos
 
@@ -150,32 +162,28 @@ CicloConfig
   id, mesocicloId, nome, descricao, periodo
   modalidades, etapas, subtipos, conquistas
   reflexoesPortfolio, dimensoesAutoavaliacao, enquete
-  // NÃO tem mais: temas (subiram para o macrociclo), dataInicioCiclo
+  // NÃO tem temas: array próprio em EstadoApp.temas, não aninhado aqui
+  // (Pacote 7 — desceram do macrociclo para o ciclo, mas continuam fora
+  // de CicloConfig). Também não tem dataInicioCiclo.
 ```
 
 ### Temas
 
 ```
-EstadoApp.temas: Tema[]     // array único, no macrociclo
+EstadoApp.temas: Tema[]     // array único, pertence ao CICLO (Pacote 7, revoga D40)
 Tema
-  id, macrocicloId, linhagemId, nome, descricao, ativo, ordem
-
-TemaVersao
-  id, temaId, linhagemId, numeroVersao
-  nome, descricao, criadaEmISO, criadaPorId
-
-TemaNoMesociclo
-  id, mesocicloId, temaId, cargaHoraria    // chave é temaId, não a versão
+  id, mesocicloId, nome, descricao, ativo, ordem
+  cargaHoraria              // atributo próprio do tema (revoga D56/TemaNoMesociclo)
+  linhagemId?               // opcional — preenchido ao marcar "mesmo tema de X"
 ```
 
-`versionarTema()` existe e está correta, mas **não tem acionador** — não há tela de criar macrociclo. Não é código morto.
+`TemaVersao` e `TemaNoMesociclo` foram **removidos do modelo** (Pacote 7) — ver §4.2. `versionarTema()` passa a ser acionada na criação de um tema dentro de um ciclo, com a opção "é o mesmo tema de X" — deixou de ser função sem acionador.
 
 ### Trilha
 
 ```
 Etapa   (nome mantido; "EtapaTrilha" era descritivo, não prescritivo)
-  id, mesocicloId
-  temaId?                 // null = trilha padrão; preenchido = específica (D59)
+  id, mesocicloId, temaId  // pertence ao PAR ciclo + tema (Pacote 8) — não mais opcional
   ordem                   // crescente; nova etapa entra ao final (D45)
   rotulo                  // legível na trilha do docente (D52 + D45)
   tipo: TipoEtapa
@@ -184,7 +192,7 @@ Etapa   (nome mantido; "EtapaTrilha" era descritivo, não prescritivo)
   prazoDias               // relativo, contado da dataInicio do MESOCICLO
   perfisParticipantes[]
   cargaHoraria?           // carga por etapa, anterior a esta rodada.
-                          // NÃO confundir com TemaNoMesociclo.cargaHoraria
+                          // NÃO confundir com Tema.cargaHoraria
 ```
 
 Sem limite de ocorrências por tipo dentro de um mesociclo (D52). Duas autoavaliações, três blocos de conteúdo, duas entregas — tudo válido. O que as distingue é o `rotulo` e a `ordem`.
@@ -294,7 +302,11 @@ Auditoria                entidade, campo, valorAnterior, autor, data
 
 ## 9. Notas de implementação que já custaram discussão
 
-**`usoDoTema` está correta porque o modelo mudou, não porque a função mudou (D62).** Ela varre turmas e inscrições **globalmente por `temaId`**, sem filtrar mesociclo. Antes da migração isso funcionava por acidente — os ids colidiam entre as cópias. Com array único no macrociclo, passou a ser correto por desenho: o id de um tema é único no macrociclo, logo qualquer uso em qualquer mesociclo impede a exclusão. **Não "corrija" acrescentando filtro por mesociclo** — seria regressão de D41.
+**`usoDoTema` protege a exclusão, e a premissa dela já mudou uma vez (D62, revisto no Pacote 7).** Ela varre turmas e inscrições globalmente por `temaId`, sem filtrar ciclo. Isso foi correto por dois motivos diferentes em dois modelos diferentes: antes, porque o id era único no macrociclo; agora, porque o id já nasce escopado ao ciclo — um tema de 2027 e um de 2029 são registros distintos.
+
+O que a função protege é a regra de D41: tema com participante vinculado não se exclui. Ao mexer nela, confira contra a regra, não contra a implementação anterior.
+
+**Ponto ainda não decidido:** se a exclusão deve considerar a LINHAGEM — bloquear "Bilinguismo 2029" porque "Bilinguismo 2027" tem participantes. Hoje não considera, e provavelmente está certo: são temas de anos distintos, com cargas e trilhas próprias. Mas é decisão, não conclusão óbvia. Não implemente linhagem aqui sem perguntar.
 
 **Ciclo vigente é declarado, não calculado (D61).** `mesocicloVigenteId` é campo explícito. Derivar da menor data de início devolveria 2027 para sempre: em 2028 todo docente continuaria vendo a configuração do ano anterior, sem erro e sem aviso.
 
